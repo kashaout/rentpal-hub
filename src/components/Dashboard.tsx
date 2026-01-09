@@ -1,100 +1,88 @@
-import { Building2, Users, DollarSign, AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { Building2, Users, DollarSign, AlertTriangle, Plus, Loader2 } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { PropertyCard } from "@/components/PropertyCard";
 import { TenantCard } from "@/components/TenantCard";
-
-// Mock data
-const properties = [
-  {
-    id: "1",
-    name: "Sunset Apartments",
-    address: "123 Main St, Downtown",
-    units: 12,
-    occupiedUnits: 11,
-    monthlyRent: 14500,
-  },
-  {
-    id: "2",
-    name: "Oak View Complex",
-    address: "456 Oak Ave, Westside",
-    units: 8,
-    occupiedUnits: 6,
-    monthlyRent: 9600,
-  },
-  {
-    id: "3",
-    name: "Pine Street House",
-    address: "789 Pine St, Eastside",
-    units: 4,
-    occupiedUnits: 4,
-    monthlyRent: 5200,
-  },
-];
-
-const tenants = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    email: "sarah.j@email.com",
-    phone: "(555) 123-4567",
-    property: "Sunset Apartments",
-    unit: "4B",
-    leaseEnd: "Mar 15, 2026",
-    paymentStatus: "paid" as const,
-  },
-  {
-    id: "2",
-    name: "Michael Chen",
-    email: "m.chen@email.com",
-    phone: "(555) 234-5678",
-    property: "Oak View Complex",
-    unit: "2A",
-    leaseEnd: "Jun 30, 2025",
-    paymentStatus: "pending" as const,
-  },
-  {
-    id: "3",
-    name: "Emily Rodriguez",
-    email: "emily.r@email.com",
-    phone: "(555) 345-6789",
-    property: "Pine Street House",
-    unit: "1",
-    leaseEnd: "Dec 1, 2025",
-    paymentStatus: "overdue" as const,
-  },
-];
+import { PropertyFormDialog } from "@/components/PropertyFormDialog";
+import { TenantFormDialog } from "@/components/TenantFormDialog";
+import { Button } from "@/components/ui/button";
+import { useProperties, PropertyWithStats } from "@/hooks/useProperties";
+import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 
 export function Dashboard() {
+  const [propertyDialogOpen, setPropertyDialogOpen] = useState(false);
+  const [tenantDialogOpen, setTenantDialogOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<PropertyWithStats | undefined>();
+  const [editingTenant, setEditingTenant] = useState<TenantWithDetails | undefined>();
+
+  const { data: properties, isLoading: propertiesLoading } = useProperties();
+  const { data: tenants, isLoading: tenantsLoading } = useTenants();
+
+  // Calculate stats
+  const totalProperties = properties?.length || 0;
+  const totalTenants = tenants?.length || 0;
+  const monthlyRevenue = properties?.reduce((sum, p) => sum + Number(p.monthly_rent), 0) || 0;
+  const overduePayments = tenants?.filter((t) => t.payment_status === "overdue").length || 0;
+
+  const handleEditProperty = (property: PropertyWithStats) => {
+    setEditingProperty(property);
+    setPropertyDialogOpen(true);
+  };
+
+  const handleEditTenant = (tenant: TenantWithDetails) => {
+    setEditingTenant(tenant);
+    setTenantDialogOpen(true);
+  };
+
+  const handlePropertyDialogClose = (open: boolean) => {
+    setPropertyDialogOpen(open);
+    if (!open) setEditingProperty(undefined);
+  };
+
+  const handleTenantDialogClose = (open: boolean) => {
+    setTenantDialogOpen(open);
+    if (!open) setEditingTenant(undefined);
+  };
+
+  const isLoading = propertiesLoading || tenantsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-accent" />
+          <p className="text-muted-foreground">Loading your data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 p-6">
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Properties"
-          value="3"
+          value={totalProperties}
           icon={Building2}
-          trend={{ value: 12, isPositive: true }}
           variant="default"
         />
         <StatCard
           title="Total Tenants"
-          value="21"
+          value={totalTenants}
           icon={Users}
-          trend={{ value: 8, isPositive: true }}
           variant="accent"
         />
         <StatCard
           title="Monthly Revenue"
-          value="$29,300"
+          value={`$${monthlyRevenue.toLocaleString()}`}
           icon={DollarSign}
-          trend={{ value: 5, isPositive: true }}
           variant="success"
         />
         <StatCard
           title="Overdue Payments"
-          value="2"
+          value={overduePayments}
           icon={AlertTriangle}
-          trend={{ value: -15, isPositive: true }}
           variant="default"
         />
       </div>
@@ -105,41 +93,93 @@ export function Dashboard() {
           <h2 className="font-display text-xl font-semibold text-foreground">
             Your Properties
           </h2>
-          <button className="text-sm font-medium text-accent hover:underline">
-            View all
-          </button>
+          <Button
+            onClick={() => setPropertyDialogOpen(true)}
+            className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
+          >
+            <Plus className="h-4 w-4" />
+            Add Property
+          </Button>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {properties.map((property, index) => (
-            <PropertyCard 
-              key={property.id} 
-              {...property}
-              className={`animation-delay-${index * 100}`}
-            />
-          ))}
-        </div>
+        {properties && properties.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {properties.map((property) => (
+              <PropertyCard
+                key={property.id}
+                property={property}
+                onEdit={handleEditProperty}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed bg-muted/50 p-8 text-center">
+            <Building2 className="mx-auto h-10 w-10 text-muted-foreground/50" />
+            <h3 className="mt-4 font-medium text-foreground">No properties yet</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Add your first property to get started.
+            </p>
+            <Button
+              onClick={() => setPropertyDialogOpen(true)}
+              className="mt-4 gap-2"
+              variant="outline"
+            >
+              <Plus className="h-4 w-4" />
+              Add Property
+            </Button>
+          </div>
+        )}
       </section>
 
-      {/* Recent Tenants Section */}
+      {/* Tenants Section */}
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-xl font-semibold text-foreground">
             Recent Tenants
           </h2>
-          <button className="text-sm font-medium text-accent hover:underline">
-            View all
-          </button>
+          <Button
+            onClick={() => setTenantDialogOpen(true)}
+            variant="outline"
+            className="gap-2"
+            disabled={!properties || properties.length === 0}
+          >
+            <Plus className="h-4 w-4" />
+            Add Tenant
+          </Button>
         </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          {tenants.map((tenant, index) => (
-            <TenantCard 
-              key={tenant.id} 
-              {...tenant}
-              className={`animation-delay-${index * 100}`}
-            />
-          ))}
-        </div>
+        {tenants && tenants.length > 0 ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {tenants.map((tenant) => (
+              <TenantCard
+                key={tenant.id}
+                tenant={tenant}
+                onEdit={handleEditTenant}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed bg-muted/50 p-8 text-center">
+            <Users className="mx-auto h-10 w-10 text-muted-foreground/50" />
+            <h3 className="mt-4 font-medium text-foreground">No tenants yet</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {properties && properties.length > 0
+                ? "Add your first tenant to a property."
+                : "Add a property first, then add tenants."}
+            </p>
+          </div>
+        )}
       </section>
+
+      {/* Dialogs */}
+      <PropertyFormDialog
+        open={propertyDialogOpen}
+        onOpenChange={handlePropertyDialogClose}
+        property={editingProperty}
+      />
+      <TenantFormDialog
+        open={tenantDialogOpen}
+        onOpenChange={handleTenantDialogClose}
+        tenant={editingTenant}
+      />
     </div>
   );
 }
