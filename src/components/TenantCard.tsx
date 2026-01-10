@@ -1,4 +1,4 @@
-import { Mail, Phone, Calendar, CheckCircle2, AlertCircle, Clock, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Mail, Phone, Calendar, CheckCircle2, AlertCircle, Clock, MoreHorizontal, Pencil, Trash2, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -47,10 +47,11 @@ const statusConfig: Record<PaymentStatus, { label: string; icon: typeof CheckCir
 interface TenantCardProps {
   tenant: TenantWithDetails;
   onEdit: (tenant: TenantWithDetails) => void;
+  onViewPayments?: (tenant: TenantWithDetails) => void;
   className?: string;
 }
 
-export function TenantCard({ tenant, onEdit, className }: TenantCardProps) {
+export function TenantCard({ tenant, onEdit, onViewPayments, className }: TenantCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const deleteTenant = useDeleteTenant();
   const updatePaymentStatus = useUpdatePaymentStatus();
@@ -140,6 +141,12 @@ export function TenantCard({ tenant, onEdit, className }: TenantCardProps) {
                       <Pencil className="mr-2 h-4 w-4" />
                       Edit Tenant
                     </DropdownMenuItem>
+                    {onViewPayments && (
+                      <DropdownMenuItem onClick={() => onViewPayments(tenant)}>
+                        <Receipt className="mr-2 h-4 w-4" />
+                        Payment History
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => setShowDeleteDialog(true)}
