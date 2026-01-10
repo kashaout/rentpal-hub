@@ -5,6 +5,7 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { TenantCard } from "@/components/TenantCard";
 import { PropertyFormDialog } from "@/components/PropertyFormDialog";
 import { TenantFormDialog } from "@/components/TenantFormDialog";
+import { PaymentHistorySheet } from "@/components/PaymentHistorySheet";
 import { Button } from "@/components/ui/button";
 import { useProperties, PropertyWithStats } from "@/hooks/useProperties";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
@@ -12,8 +13,10 @@ import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 export function Dashboard() {
   const [propertyDialogOpen, setPropertyDialogOpen] = useState(false);
   const [tenantDialogOpen, setTenantDialogOpen] = useState(false);
+  const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<PropertyWithStats | undefined>();
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | undefined>();
+  const [paymentTenant, setPaymentTenant] = useState<TenantWithDetails | null>(null);
 
   const { data: properties, isLoading: propertiesLoading } = useProperties();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
@@ -34,6 +37,11 @@ export function Dashboard() {
     setTenantDialogOpen(true);
   };
 
+  const handleViewPayments = (tenant: TenantWithDetails) => {
+    setPaymentTenant(tenant);
+    setPaymentSheetOpen(true);
+  };
+
   const handlePropertyDialogClose = (open: boolean) => {
     setPropertyDialogOpen(open);
     if (!open) setEditingProperty(undefined);
@@ -42,6 +50,11 @@ export function Dashboard() {
   const handleTenantDialogClose = (open: boolean) => {
     setTenantDialogOpen(open);
     if (!open) setEditingTenant(undefined);
+  };
+
+  const handlePaymentSheetClose = (open: boolean) => {
+    setPaymentSheetOpen(open);
+    if (!open) setPaymentTenant(null);
   };
 
   const isLoading = propertiesLoading || tenantsLoading;
@@ -153,6 +166,7 @@ export function Dashboard() {
                 key={tenant.id}
                 tenant={tenant}
                 onEdit={handleEditTenant}
+                onViewPayments={handleViewPayments}
               />
             ))}
           </div>
@@ -179,6 +193,11 @@ export function Dashboard() {
         open={tenantDialogOpen}
         onOpenChange={handleTenantDialogClose}
         tenant={editingTenant}
+      />
+      <PaymentHistorySheet
+        open={paymentSheetOpen}
+        onOpenChange={handlePaymentSheetClose}
+        tenant={paymentTenant}
       />
     </div>
   );
