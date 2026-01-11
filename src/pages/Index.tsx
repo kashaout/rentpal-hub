@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { Dashboard } from "@/components/Dashboard";
+import { AdminPanel } from "@/components/admin/AdminPanel";
 import { useAuth } from "@/hooks/useAuth";
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
@@ -25,12 +26,22 @@ const Index = () => {
     ? `Welcome back, ${profile.full_name.split(" ")[0]}! Here's your overview.`
     : viewInfo.subtitle;
 
+  const renderContent = () => {
+    switch (currentView) {
+      case "manage-users":
+      case "roles":
+        return <AdminPanel defaultTab={currentView === "roles" ? "assignments" : "users"} />;
+      default:
+        return <Dashboard />;
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar currentView={currentView} onViewChange={setCurrentView} />
       <main className="flex-1 overflow-auto">
         <Header title={viewInfo.title} subtitle={subtitle} />
-        <Dashboard />
+        {renderContent()}
       </main>
     </div>
   );
