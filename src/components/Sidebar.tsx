@@ -50,10 +50,11 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
 
   // Base nav items
   const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: true },
+    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isAdmin || isConsultant || isLandlord },
+    { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant },
     { icon: Building2, label: "Properties", id: "properties", show: isAdmin || isConsultant || isLandlord },
     { icon: Users, label: "Tenants", id: "tenants", show: isAdmin || isConsultant || isLandlord },
-    { icon: Receipt, label: "Payments", id: "payments", show: isAdmin || isConsultant || isLandlord || isTenant },
+    { icon: Receipt, label: "Payments", id: "payments", show: isAdmin || isConsultant || isLandlord },
     { icon: FileText, label: "Documents", id: "documents", show: true },
   ];
 
