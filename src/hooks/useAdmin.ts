@@ -100,31 +100,37 @@ export function useConsultantAssignments() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("consultant_assignments")
-        .select(`
-          *,
-          profiles!consultant_assignments_consultant_id_fkey (
-            full_name,
-            email
-          ),
-          properties!consultant_assignments_property_id_fkey (
-            name,
-            address
-          )
-        `)
+        .select("*")
         .order("assigned_at", { ascending: false });
 
       if (error) throw error;
 
-      return data.map((item: any) => ({
-        id: item.id,
-        consultant_id: item.consultant_id,
-        property_id: item.property_id,
-        assigned_at: item.assigned_at,
-        consultant_name: item.profiles?.full_name || "Unknown",
-        consultant_email: item.profiles?.email || "",
-        property_name: item.properties?.name || "Unknown",
-        property_address: item.properties?.address || "",
-      })) as ConsultantAssignment[];
+      // Fetch related data separately
+      const consultantIds = [...new Set(data.map((a) => a.consultant_id))];
+      const propertyIds = [...new Set(data.map((a) => a.property_id))];
+
+      const [profilesRes, propertiesRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, full_name, email").in("user_id", consultantIds),
+        supabase.from("properties").select("id, name, address").in("id", propertyIds),
+      ]);
+
+      const profilesMap = new Map(profilesRes.data?.map((p) => [p.user_id, p]) || []);
+      const propertiesMap = new Map(propertiesRes.data?.map((p) => [p.id, p]) || []);
+
+      return data.map((item) => {
+        const profile = profilesMap.get(item.consultant_id);
+        const property = propertiesMap.get(item.property_id);
+        return {
+          id: item.id,
+          consultant_id: item.consultant_id,
+          property_id: item.property_id,
+          assigned_at: item.assigned_at,
+          consultant_name: profile?.full_name || "Unknown",
+          consultant_email: profile?.email || "",
+          property_name: property?.name || "Unknown",
+          property_address: property?.address || "",
+        };
+      }) as ConsultantAssignment[];
     },
   });
 }
