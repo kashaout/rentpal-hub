@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { Dashboard } from "@/components/Dashboard";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 import { TenantPortal } from "@/components/tenant/TenantPortal";
+import { PaymentsPage } from "@/components/PaymentsPage";
 import { useAuth } from "@/hooks/useAuth";
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
@@ -41,6 +42,8 @@ const Index = () => {
         return <AdminPanel defaultTab={currentView === "roles" ? "assignments" : "users"} />;
       case "tenant-portal":
         return <TenantPortal />;
+      case "payments":
+        return <PaymentsPage />;
       default:
         return <Dashboard />;
     }
