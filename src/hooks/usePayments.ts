@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { sanitizeErrorMessage } from "@/lib/errorUtils";
 
 export interface Payment {
   id: string;
@@ -114,7 +115,7 @@ export function useCreatePayment() {
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },
@@ -156,7 +157,7 @@ export function useUpdatePayment() {
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },
@@ -181,7 +182,7 @@ export function useDeletePayment() {
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },
