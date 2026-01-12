@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { sanitizeErrorMessage } from "@/lib/errorUtils";
 
 export interface Property {
   id: string;
@@ -110,7 +111,7 @@ export function useCreateProperty() {
     onError: (error: Error) => {
       toast({
         title: "Failed to create property",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },
@@ -141,7 +142,7 @@ export function useUpdateProperty() {
     onError: (error: Error) => {
       toast({
         title: "Failed to update property",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },
@@ -164,7 +165,7 @@ export function useDeleteProperty() {
     onError: (error: Error) => {
       toast({
         title: "Failed to delete property",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },

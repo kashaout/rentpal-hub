@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { sanitizeErrorMessage } from "@/lib/errorUtils";
 
 export interface Tenant {
   id: string;
@@ -138,7 +139,7 @@ export function useCreateTenant() {
     onError: (error: Error) => {
       toast({
         title: "Failed to add tenant",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },
@@ -170,7 +171,7 @@ export function useUpdateTenant() {
     onError: (error: Error) => {
       toast({
         title: "Failed to update tenant",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },
@@ -194,7 +195,7 @@ export function useDeleteTenant() {
     onError: (error: Error) => {
       toast({
         title: "Failed to remove tenant",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },
@@ -224,7 +225,7 @@ export function useUpdatePaymentStatus() {
     onError: (error: Error) => {
       toast({
         title: "Failed to update payment status",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },

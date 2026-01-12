@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { sanitizeErrorMessage } from "@/lib/errorUtils";
 
 export interface UserWithRoles {
   id: string;
@@ -166,7 +167,7 @@ export function useAddRole() {
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },
@@ -203,7 +204,7 @@ export function useRemoveRole() {
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },
@@ -241,7 +242,7 @@ export function useAssignConsultant() {
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },
@@ -271,7 +272,7 @@ export function useRemoveAssignment() {
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message,
+        description: sanitizeErrorMessage(error),
         variant: "destructive",
       });
     },
