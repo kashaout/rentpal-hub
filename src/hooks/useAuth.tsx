@@ -23,9 +23,27 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string, role: AppRole) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
+  /**
+   * UI-ONLY FLAG: For conditional rendering of admin UI elements.
+   * DO NOT use for authorization decisions - all data access is protected by RLS policies.
+   * @security This flag is derived from server-validated roles but should never be trusted
+   * for sensitive operations without server-side verification.
+   */
   isAdmin: boolean;
+  /**
+   * UI-ONLY FLAG: For conditional rendering of consultant UI elements.
+   * DO NOT use for authorization decisions - all data access is protected by RLS policies.
+   */
   isConsultant: boolean;
+  /**
+   * UI-ONLY FLAG: For conditional rendering of landlord UI elements.
+   * DO NOT use for authorization decisions - all data access is protected by RLS policies.
+   */
   isLandlord: boolean;
+  /**
+   * UI-ONLY FLAG: For conditional rendering of tenant UI elements.
+   * DO NOT use for authorization decisions - all data access is protected by RLS policies.
+   */
   isTenant: boolean;
 }
 
