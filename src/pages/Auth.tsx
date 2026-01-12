@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Home, Mail, Lock, User, ArrowRight, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,8 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { checkRateLimit, recordAttempt, resetRateLimit } from "@/lib/rateLimiter";
 
 type AppRole = "admin" | "consultant" | "landlord" | "tenant";
 
@@ -23,25 +25,71 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<AppRole>("landlord");
   const [isLoading, setIsLoading] = useState(false);
+  const [rateLimitError, setRateLimitError] = useState<string | null>(null);
+  const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
 
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn, signUp } = useAuth();
 
+  // Check rate limit on mount and periodically
+  useEffect(() => {
+    const checkLimit = () => {
+      const { allowed, message, remainingAttempts: remaining } = checkRateLimit();
+      if (!allowed) {
+        setRateLimitError(message);
+      } else {
+        setRateLimitError(null);
+        setRemainingAttempts(remaining);
+      }
+    };
+
+    checkLimit();
+    const interval = setInterval(checkLimit, 30000); // Re-check every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check rate limit before attempting auth
+    const { allowed, message } = checkRateLimit();
+    if (!allowed) {
+      setRateLimitError(message);
+      toast({
+        title: "Rate limit exceeded",
+        description: message,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
+      // Record the attempt before making the request
+      recordAttempt();
+      
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
+          // Update remaining attempts after failed login
+          const { remainingAttempts: remaining, message: limitMsg } = checkRateLimit();
+          setRemainingAttempts(remaining);
+          if (remaining <= 2 && remaining > 0) {
+            setRateLimitError(`Warning: ${remaining} attempt${remaining > 1 ? 's' : ''} remaining before temporary lockout.`);
+          } else if (!remaining) {
+            setRateLimitError(limitMsg);
+          }
+          
           toast({
             title: "Sign in failed",
             description: error.message,
             variant: "destructive",
           });
         } else {
+          // Reset rate limit on successful login
+          resetRateLimit();
           toast({ title: "Welcome back!" });
           navigate("/");
         }
@@ -54,6 +102,7 @@ export default function Auth() {
             variant: "destructive",
           });
         } else {
+          resetRateLimit();
           toast({ title: "Account created successfully!" });
           navigate("/");
         }
@@ -114,6 +163,13 @@ export default function Auth() {
                 : "Get started with your property management journey"}
             </p>
           </div>
+
+          {rateLimitError && (
+            <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
+              <ShieldAlert className="h-4 w-4" />
+              <AlertDescription>{rateLimitError}</AlertDescription>
+            </Alert>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
