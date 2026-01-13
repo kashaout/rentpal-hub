@@ -16,14 +16,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { checkRateLimit, recordAttempt, resetRateLimit } from "@/lib/rateLimiter";
 
-type AppRole = "admin" | "consultant" | "landlord" | "tenant";
+// Only allow public signup for landlord and tenant roles
+// Admin and consultant roles must be assigned by existing admins
+type PublicAppRole = "landlord" | "tenant";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<AppRole>("landlord");
+  const [role, setRole] = useState<PublicAppRole>("landlord");
   const [isLoading, setIsLoading] = useState(false);
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
   const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
@@ -226,15 +228,13 @@ export default function Auth() {
             {!isLogin && (
               <div className="space-y-2">
                 <Label htmlFor="role">I am a...</Label>
-                <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
+                <Select value={role} onValueChange={(v) => setRole(v as PublicAppRole)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="landlord">Landlord</SelectItem>
-                    <SelectItem value="consultant">Property Consultant</SelectItem>
                     <SelectItem value="tenant">Tenant</SelectItem>
-                    <SelectItem value="admin">Administrator</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
