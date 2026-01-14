@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { sanitizeErrorMessage } from "@/lib/errorUtils";
+import { sendSecurityAlert } from "@/lib/securityAlerts";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface UserWithRoles {
   id: string;
@@ -139,13 +141,16 @@ export function useConsultantAssignments() {
 // Add role to user
 export function useAddRole() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({
       userId,
+      userEmail,
       role,
     }: {
       userId: string;
+      userEmail?: string;
       role: "admin" | "consultant" | "landlord" | "tenant";
     }) => {
       const { data, error } = await supabase
@@ -155,6 +160,17 @@ export function useAddRole() {
         .single();
 
       if (error) throw error;
+
+      // Send security alert for admin role assignment
+      if (role === "admin" && user?.id) {
+        await sendSecurityAlert({
+          event_type: "admin_role_assigned",
+          affected_user_id: userId,
+          affected_user_email: userEmail,
+          actor_user_id: user.id,
+        });
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -177,13 +193,16 @@ export function useAddRole() {
 // Remove role from user
 export function useRemoveRole() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({
       userId,
+      userEmail,
       role,
     }: {
       userId: string;
+      userEmail?: string;
       role: "admin" | "consultant" | "landlord" | "tenant";
     }) => {
       const { error } = await supabase
@@ -193,6 +212,16 @@ export function useRemoveRole() {
         .eq("role", role);
 
       if (error) throw error;
+
+      // Send security alert for admin role removal
+      if (role === "admin" && user?.id) {
+        await sendSecurityAlert({
+          event_type: "admin_role_removed",
+          affected_user_id: userId,
+          affected_user_email: userEmail,
+          actor_user_id: user.id,
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin"] });
@@ -210,6 +239,7 @@ export function useRemoveRole() {
     },
   });
 }
+
 
 // Assign consultant to property
 export function useAssignConsultant() {
