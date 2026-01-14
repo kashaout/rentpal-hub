@@ -70,15 +70,17 @@ export function UserManagement() {
 
   const handleAddRole = async (
     userId: string,
+    userEmail: string,
     role: "admin" | "consultant" | "landlord" | "tenant"
   ) => {
-    await addRole.mutateAsync({ userId, role });
+    await addRole.mutateAsync({ userId, userEmail, role });
   };
 
   const handleRemoveRole = async () => {
     if (confirmRemove) {
       await removeRole.mutateAsync({
         userId: confirmRemove.user.user_id,
+        userEmail: confirmRemove.user.email,
         role: confirmRemove.role as "admin" | "consultant" | "landlord" | "tenant",
       });
       setConfirmRemove(null);
@@ -198,7 +200,7 @@ export function UserManagement() {
                             <DropdownMenuItem
                               key={role}
                               onClick={() =>
-                                handleAddRole(user.user_id, role)
+                                handleAddRole(user.user_id, user.email, role)
                               }
                               className="capitalize"
                             >

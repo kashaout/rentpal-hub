@@ -1,1 +1,4 @@
 project_id = "rsudeyfaoblhrjnbmvuq"
+
+[functions.send-security-alert]
+verify_jwt = false
