@@ -44,6 +44,22 @@ const Index = () => {
         return <TenantPortal />;
       case "payments":
         return <PaymentsPage />;
+      case "properties":
+      case "tenants":
+      case "dashboard":
+        return <Dashboard />;
+      case "documents":
+        return (
+          <div className="p-8 text-center text-muted-foreground">
+            <p>Documents feature coming soon.</p>
+          </div>
+        );
+      case "settings":
+        return (
+          <div className="p-8 text-center text-muted-foreground">
+            <p>Settings feature coming soon.</p>
+          </div>
+        );
       default:
         return <Dashboard />;
     }
