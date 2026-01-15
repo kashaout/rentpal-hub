@@ -5,6 +5,10 @@ import { Dashboard } from "@/components/Dashboard";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 import { TenantPortal } from "@/components/tenant/TenantPortal";
 import { PaymentsPage } from "@/components/PaymentsPage";
+import { PropertiesPage } from "@/components/PropertiesPage";
+import { TenantsPage } from "@/components/TenantsPage";
+import { DocumentsPage } from "@/components/DocumentsPage";
+import { SettingsPage } from "@/components/SettingsPage";
 import { useAuth } from "@/hooks/useAuth";
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
@@ -45,21 +49,14 @@ const Index = () => {
       case "payments":
         return <PaymentsPage />;
       case "properties":
+        return <PropertiesPage />;
       case "tenants":
-      case "dashboard":
-        return <Dashboard />;
+        return <TenantsPage />;
       case "documents":
-        return (
-          <div className="p-8 text-center text-muted-foreground">
-            <p>Documents feature coming soon.</p>
-          </div>
-        );
+        return <DocumentsPage />;
       case "settings":
-        return (
-          <div className="p-8 text-center text-muted-foreground">
-            <p>Settings feature coming soon.</p>
-          </div>
-        );
+        return <SettingsPage />;
+      case "dashboard":
       default:
         return <Dashboard />;
     }
