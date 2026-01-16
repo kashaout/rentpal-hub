@@ -10,6 +10,7 @@ import {
   Home,
   UserCog,
   Shield,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -55,6 +56,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     { icon: Building2, label: "Properties", id: "properties", show: isAdmin || isConsultant || isLandlord },
     { icon: Users, label: "Tenants", id: "tenants", show: isAdmin || isConsultant || isLandlord },
     { icon: Receipt, label: "Payments", id: "payments", show: isAdmin || isConsultant || isLandlord },
+    { icon: BarChart3, label: "Reports", id: "reports", show: isAdmin || isConsultant || isLandlord },
     { icon: FileText, label: "Documents", id: "documents", show: true },
   ];
 

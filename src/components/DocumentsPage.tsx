@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   FileText,
   Upload,
@@ -10,7 +10,7 @@ import {
   Download,
   Trash2,
   MoreHorizontal,
-  Plus,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,71 +21,60 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useDocuments, Document } from "@/hooks/useDocuments";
+import { useProperties } from "@/hooks/useProperties";
+import { format } from "date-fns";
 
-interface Document {
-  id: string;
-  name: string;
-  type: "pdf" | "doc" | "xlsx" | "image" | "other";
-  category: string;
-  size: string;
-  uploadedAt: string;
-  property?: string;
-}
-
-// Mock data - in production this would come from Supabase storage
-const mockDocuments: Document[] = [
-  {
-    id: "1",
-    name: "Lease Agreement - Unit 4B.pdf",
-    type: "pdf",
-    category: "Leases",
-    size: "2.4 MB",
-    uploadedAt: "2025-01-10",
-    property: "Sunset Apartments",
-  },
-  {
-    id: "2",
-    name: "Property Inspection Report.pdf",
-    type: "pdf",
-    category: "Reports",
-    size: "1.8 MB",
-    uploadedAt: "2025-01-08",
-    property: "Oak Street Complex",
-  },
-  {
-    id: "3",
-    name: "Rent Roll - January 2025.xlsx",
-    type: "xlsx",
-    category: "Financial",
-    size: "456 KB",
-    uploadedAt: "2025-01-05",
-  },
-  {
-    id: "4",
-    name: "Insurance Certificate.pdf",
-    type: "pdf",
-    category: "Insurance",
-    size: "890 KB",
-    uploadedAt: "2025-01-03",
-  },
-];
-
-const categories = ["All", "Leases", "Reports", "Financial", "Insurance", "Maintenance"];
+const categories = ["All", "Leases", "Reports", "Financial", "Insurance", "Maintenance", "Other"];
 
 const typeIcons: Record<string, typeof FileText> = {
   pdf: FileText,
   doc: File,
+  docx: File,
   xlsx: FileSpreadsheet,
-  image: FileImage,
-  other: File,
+  xls: FileSpreadsheet,
+  png: FileImage,
+  jpg: FileImage,
+  jpeg: FileImage,
+  gif: FileImage,
 };
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export function DocumentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [documents] = useState<Document[]>(mockDocuments);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadCategory, setUploadCategory] = useState("Other");
+  const [uploadPropertyId, setUploadPropertyId] = useState<string>("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { documents, isLoading, uploading, uploadDocument, deleteDocument, downloadDocument } =
+    useDocuments();
+  const { data: properties = [] } = useProperties();
 
   const filteredDocs = documents.filter((doc) => {
     const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -94,22 +83,76 @@ export function DocumentsPage() {
   });
 
   const getTypeColor = (type: string) => {
-    switch (type) {
+    switch (type.toLowerCase()) {
       case "pdf":
         return "text-red-500";
       case "xlsx":
+      case "xls":
         return "text-green-600";
       case "doc":
+      case "docx":
         return "text-blue-500";
-      case "image":
+      case "png":
+      case "jpg":
+      case "jpeg":
+      case "gif":
         return "text-purple-500";
       default:
         return "text-muted-foreground";
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setUploadDialogOpen(true);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    await uploadDocument.mutateAsync({
+      file: selectedFile,
+      category: uploadCategory,
+      propertyId: uploadPropertyId || undefined,
+    });
+
+    setUploadDialogOpen(false);
+    setSelectedFile(null);
+    setUploadCategory("Other");
+    setUploadPropertyId("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleDelete = async (doc: Document) => {
+    if (confirm(`Are you sure you want to delete "${doc.name}"?`)) {
+      await deleteDocument.mutateAsync(doc);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 p-6">
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileSelect}
+        className="hidden"
+        accept=".pdf,.doc,.docx,.xlsx,.xls,.png,.jpg,.jpeg,.gif,.txt"
+      />
+
       {/* Toolbar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-sm">
@@ -121,8 +164,16 @@ export function DocumentsPage() {
             className="pl-10"
           />
         </div>
-        <Button className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90">
-          <Upload className="h-4 w-4" />
+        <Button
+          className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Upload className="h-4 w-4" />
+          )}
           Upload Document
         </Button>
       </div>
@@ -158,15 +209,20 @@ export function DocumentsPage() {
           </div>
           <div className="divide-y">
             {filteredDocs.map((doc) => {
-              const Icon = typeIcons[doc.type] || File;
+              const Icon = typeIcons[doc.file_type.toLowerCase()] || File;
               return (
                 <div
                   key={doc.id}
                   className="grid grid-cols-12 items-center gap-4 px-4 py-3 hover:bg-muted/30 transition-colors"
                 >
                   <div className="col-span-5 flex items-center gap-3">
-                    <Icon className={cn("h-5 w-5 shrink-0", getTypeColor(doc.type))} />
-                    <span className="truncate font-medium text-foreground">{doc.name}</span>
+                    <Icon className={cn("h-5 w-5 shrink-0", getTypeColor(doc.file_type))} />
+                    <div className="min-w-0">
+                      <span className="truncate font-medium text-foreground block">{doc.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(doc.created_at), "MMM d, yyyy")}
+                      </span>
+                    </div>
                   </div>
                   <div className="col-span-2">
                     <Badge variant="secondary" className="font-normal">
@@ -174,11 +230,18 @@ export function DocumentsPage() {
                     </Badge>
                   </div>
                   <div className="col-span-2 text-sm text-muted-foreground truncate">
-                    {doc.property || "—"}
+                    {doc.properties?.name || "—"}
                   </div>
-                  <div className="col-span-1 text-sm text-muted-foreground">{doc.size}</div>
+                  <div className="col-span-1 text-sm text-muted-foreground">
+                    {formatFileSize(doc.file_size)}
+                  </div>
                   <div className="col-span-2 flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => downloadDocument(doc)}
+                    >
                       <Download className="h-4 w-4" />
                     </Button>
                     <DropdownMenu>
@@ -188,12 +251,15 @@ export function DocumentsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => downloadDocument(doc)}>
                           <Download className="mr-2 h-4 w-4" />
                           Download
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive focus:text-destructive">
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => handleDelete(doc)}
+                        >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
@@ -217,8 +283,12 @@ export function DocumentsPage() {
               : "Upload your first document to get started."}
           </p>
           {!searchQuery && selectedCategory === "All" && (
-            <Button className="mt-4 gap-2" variant="outline">
-              <Plus className="h-4 w-4" />
+            <Button
+              className="mt-4 gap-2"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="h-4 w-4" />
               Upload Document
             </Button>
           )}
@@ -230,14 +300,14 @@ export function DocumentsPage() {
         <div className="rounded-lg border bg-card p-4 text-center">
           <FileText className="mx-auto h-6 w-6 text-red-500" />
           <p className="mt-2 text-2xl font-semibold">
-            {documents.filter((d) => d.type === "pdf").length}
+            {documents.filter((d) => d.file_type.toLowerCase() === "pdf").length}
           </p>
           <p className="text-sm text-muted-foreground">PDF Files</p>
         </div>
         <div className="rounded-lg border bg-card p-4 text-center">
           <FileSpreadsheet className="mx-auto h-6 w-6 text-green-600" />
           <p className="mt-2 text-2xl font-semibold">
-            {documents.filter((d) => d.type === "xlsx").length}
+            {documents.filter((d) => ["xlsx", "xls"].includes(d.file_type.toLowerCase())).length}
           </p>
           <p className="text-sm text-muted-foreground">Spreadsheets</p>
         </div>
@@ -254,6 +324,66 @@ export function DocumentsPage() {
           <p className="text-sm text-muted-foreground">Total Files</p>
         </div>
       </div>
+
+      {/* Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Document</DialogTitle>
+            <DialogDescription>
+              {selectedFile && `Uploading: ${selectedFile.name}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Select value={uploadCategory} onValueChange={setUploadCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.filter((c) => c !== "All").map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="property">Property (Optional)</Label>
+              <Select value={uploadPropertyId} onValueChange={setUploadPropertyId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select property" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {properties.map((prop) => (
+                    <SelectItem key={prop.id} value={prop.id}>
+                      {prop.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpload} disabled={uploading}>
+              {uploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                "Upload"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
