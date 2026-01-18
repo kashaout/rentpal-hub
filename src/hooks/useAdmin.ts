@@ -5,6 +5,8 @@ import { sanitizeErrorMessage } from "@/lib/errorUtils";
 import { sendSecurityAlert } from "@/lib/securityAlerts";
 import { useAuth } from "@/hooks/useAuth";
 
+export type AppRole = "admin" | "consultant" | "landlord" | "tenant" | "maintenance";
+
 export interface UserWithRoles {
   id: string;
   user_id: string;
@@ -13,7 +15,7 @@ export interface UserWithRoles {
   avatar_url: string | null;
   phone: string | null;
   created_at: string;
-  roles: Array<"admin" | "consultant" | "landlord" | "tenant">;
+  roles: Array<AppRole>;
 }
 
 export interface ConsultantAssignment {
@@ -58,7 +60,7 @@ export function useAllUsers() {
         created_at: profile.created_at,
         roles: userRoles
           .filter((r) => r.user_id === profile.user_id)
-          .map((r) => r.role) as Array<"admin" | "consultant" | "landlord" | "tenant">,
+          .map((r) => r.role) as Array<AppRole>,
       }));
 
       return usersWithRoles;
@@ -151,7 +153,7 @@ export function useAddRole() {
     }: {
       userId: string;
       userEmail?: string;
-      role: "admin" | "consultant" | "landlord" | "tenant";
+      role: AppRole;
     }) => {
       const { data, error } = await supabase
         .from("user_roles")
@@ -203,7 +205,7 @@ export function useRemoveRole() {
     }: {
       userId: string;
       userEmail?: string;
-      role: "admin" | "consultant" | "landlord" | "tenant";
+      role: AppRole;
     }) => {
       const { error } = await supabase
         .from("user_roles")
