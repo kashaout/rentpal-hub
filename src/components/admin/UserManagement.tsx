@@ -34,6 +34,7 @@ import {
   useAddRole,
   useRemoveRole,
   UserWithRoles,
+  AppRole,
 } from "@/hooks/useAdmin";
 import { cn } from "@/lib/utils";
 
@@ -42,13 +43,15 @@ const roleColors: Record<string, string> = {
   consultant: "bg-accent/10 text-accent border-accent/20",
   landlord: "bg-success/10 text-success border-success/20",
   tenant: "bg-primary/10 text-primary border-primary/20",
+  maintenance: "bg-warning/10 text-warning border-warning/20",
 };
 
-const allRoles: Array<"admin" | "consultant" | "landlord" | "tenant"> = [
+const allRoles: Array<AppRole> = [
   "admin",
   "consultant",
   "landlord",
   "tenant",
+  "maintenance",
 ];
 
 export function UserManagement() {
@@ -71,7 +74,7 @@ export function UserManagement() {
   const handleAddRole = async (
     userId: string,
     userEmail: string,
-    role: "admin" | "consultant" | "landlord" | "tenant"
+    role: AppRole
   ) => {
     await addRole.mutateAsync({ userId, userEmail, role });
   };
@@ -81,7 +84,7 @@ export function UserManagement() {
       await removeRole.mutateAsync({
         userId: confirmRemove.user.user_id,
         userEmail: confirmRemove.user.email,
-        role: confirmRemove.role as "admin" | "consultant" | "landlord" | "tenant",
+        role: confirmRemove.role as AppRole,
       });
       setConfirmRemove(null);
     }
