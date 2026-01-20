@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type AppRole = "admin" | "consultant" | "landlord" | "tenant";
+type AppRole = "admin" | "consultant" | "landlord" | "tenant" | "maintenance";
 
 interface Profile {
   id: string;
@@ -45,6 +45,11 @@ interface AuthContextType {
    * DO NOT use for authorization decisions - all data access is protected by RLS policies.
    */
   isTenant: boolean;
+  /**
+   * UI-ONLY FLAG: For conditional rendering of maintenance UI elements.
+   * DO NOT use for authorization decisions - all data access is protected by RLS policies.
+   */
+  isMaintenance: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -173,6 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isConsultant: hasRole("consultant"),
     isLandlord: hasRole("landlord"),
     isTenant: hasRole("tenant"),
+    isMaintenance: hasRole("maintenance"),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

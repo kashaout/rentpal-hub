@@ -11,6 +11,7 @@ import {
   UserCog,
   Shield,
   BarChart3,
+  Wrench,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -47,12 +48,13 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
-  const { signOut, isAdmin, isConsultant, isLandlord, isTenant, profile, roles } = useAuth();
+  const { signOut, isAdmin, isConsultant, isLandlord, isTenant, isMaintenance, profile, roles } = useAuth();
 
   // Base nav items
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isAdmin || isConsultant || isLandlord },
     { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant },
+    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isMaintenance },
     { icon: Building2, label: "Properties", id: "properties", show: isAdmin || isConsultant || isLandlord },
     { icon: Users, label: "Tenants", id: "tenants", show: isAdmin || isConsultant || isLandlord },
     { icon: Receipt, label: "Payments", id: "payments", show: isAdmin || isConsultant || isLandlord },
@@ -72,6 +74,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     if (isAdmin) return { label: "Admin", className: "bg-destructive/20 text-destructive" };
     if (isConsultant) return { label: "Consultant", className: "bg-accent/20 text-accent" };
     if (isLandlord) return { label: "Landlord", className: "bg-success/20 text-success" };
+    if (isMaintenance) return { label: "Maintenance", className: "bg-warning/20 text-warning" };
     if (isTenant) return { label: "Tenant", className: "bg-primary/20 text-primary-foreground" };
     return null;
   };

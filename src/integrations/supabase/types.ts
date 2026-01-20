@@ -137,8 +137,10 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          photo_urls: string[] | null
           priority: string
           property_id: string
+          repair_notes: string | null
           resolved_at: string | null
           status: string
           tenant_id: string
@@ -149,8 +151,10 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          photo_urls?: string[] | null
           priority?: string
           property_id: string
+          repair_notes?: string | null
           resolved_at?: string | null
           status?: string
           tenant_id: string
@@ -161,8 +165,10 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          photo_urls?: string[] | null
           priority?: string
           property_id?: string
+          repair_notes?: string | null
           resolved_at?: string | null
           status?: string
           tenant_id?: string
