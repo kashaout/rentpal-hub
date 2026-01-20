@@ -14,6 +14,8 @@ export interface MaintenanceRequest {
   created_at: string;
   updated_at: string;
   resolved_at: string | null;
+  repair_notes: string | null;
+  photo_urls: string[] | null;
 }
 
 export interface MaintenanceRequestWithDetails extends MaintenanceRequest {
@@ -107,6 +109,8 @@ interface UpdateMaintenanceRequestInput {
   id: string;
   status?: "pending" | "in_progress" | "completed" | "cancelled";
   resolved_at?: string | null;
+  repair_notes?: string;
+  photo_urls?: string[];
 }
 
 export function useUpdateMaintenanceRequest() {

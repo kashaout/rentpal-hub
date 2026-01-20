@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { Dashboard } from "@/components/Dashboard";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 import { TenantPortal } from "@/components/tenant/TenantPortal";
+import { MaintenancePortal } from "@/components/maintenance/MaintenancePortal";
 import { PaymentsPage } from "@/components/PaymentsPage";
 import { PropertiesPage } from "@/components/PropertiesPage";
 import { TenantsPage } from "@/components/TenantsPage";
@@ -15,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Welcome back! Here's your overview." },
   "tenant-portal": { title: "My Portal", subtitle: "View your lease, payments, and submit requests." },
+  "maintenance-portal": { title: "Maintenance", subtitle: "Manage repair requests and track work orders." },
   properties: { title: "Properties", subtitle: "Manage your rental properties." },
   tenants: { title: "Tenants", subtitle: "View and manage your tenants." },
   payments: { title: "Payments", subtitle: "Track rent and payment history." },
@@ -26,11 +28,13 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
 };
 
 const Index = () => {
-  const { profile, isTenant, isAdmin, isConsultant, isLandlord } = useAuth();
+  const { profile, isTenant, isAdmin, isConsultant, isLandlord, isMaintenance } = useAuth();
   
-  // Default to tenant portal for tenant-only users
-  const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord;
-  const [currentView, setCurrentView] = useState(isTenantOnly ? "tenant-portal" : "dashboard");
+  // Default to appropriate portal based on role
+  const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance;
+  const isMaintenanceOnly = isMaintenance && !isAdmin && !isConsultant && !isLandlord && !isTenant;
+  const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : "dashboard";
+  const [currentView, setCurrentView] = useState(defaultView);
   
   const viewInfo = viewTitles[currentView] || viewTitles.dashboard;
 
@@ -48,6 +52,8 @@ const Index = () => {
         return <AdminPanel defaultTab={currentView === "roles" ? "assignments" : "users"} />;
       case "tenant-portal":
         return <TenantPortal />;
+      case "maintenance-portal":
+        return <MaintenancePortal />;
       case "payments":
         return <PaymentsPage />;
       case "properties":
