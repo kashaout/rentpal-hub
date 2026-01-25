@@ -123,6 +123,12 @@ export function MaintenancePortal() {
                   <MapPin className="h-3 w-3" />
                   {request.property_address}
                 </span>
+                {request.assigned_user_name && (
+                  <span className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    {request.assigned_user_name}
+                  </span>
+                )}
               </div>
 
               <p className="text-xs text-muted-foreground">
