@@ -134,6 +134,7 @@ export type Database = {
       }
       maintenance_requests: {
         Row: {
+          assigned_to: string | null
           created_at: string
           description: string
           id: string
@@ -148,6 +149,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
           created_at?: string
           description: string
           id?: string
@@ -162,6 +164,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
           created_at?: string
           description?: string
           id?: string
@@ -381,6 +384,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_maintenance_users: {
+        Args: never
+        Returns: {
+          email: string
+          full_name: string
+          user_id: string
+        }[]
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]

@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Camera, Upload, X, Loader2 } from "lucide-react";
+import { Camera, X, Loader2, User } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,7 @@ import {
   useUpdateMaintenanceRequest,
   MaintenanceRequestWithDetails,
 } from "@/hooks/useMaintenanceRequests";
+import { useMaintenanceUsers } from "@/hooks/useMaintenanceUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,15 +40,19 @@ export function MaintenanceUpdateDialog({
   onOpenChange,
   request,
 }: MaintenanceUpdateDialogProps) {
-  const { user } = useAuth();
+  const { user, isAdmin, isLandlord, isConsultant } = useAuth();
   const [status, setStatus] = useState<MaintenanceStatus>(request.status);
   const [repairNotes, setRepairNotes] = useState(request.repair_notes || "");
+  const [assignedTo, setAssignedTo] = useState<string>(request.assigned_to || "unassigned");
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoUrls, setPhotoUrls] = useState<string[]>(request.photo_urls || []);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateRequest = useUpdateMaintenanceRequest();
+  const { data: maintenanceUsers, isLoading: loadingUsers } = useMaintenanceUsers();
+
+  const canAssign = isAdmin || isLandlord || isConsultant;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -116,6 +121,7 @@ export function MaintenanceUpdateDialog({
         resolved_at: status === "completed" ? new Date().toISOString() : null,
         repair_notes: repairNotes || undefined,
         photo_urls: allPhotoUrls.length > 0 ? allPhotoUrls : undefined,
+        assigned_to: assignedTo === "unassigned" ? null : assignedTo,
       });
 
       onOpenChange(false);
@@ -159,7 +165,36 @@ export function MaintenanceUpdateDialog({
             </Select>
           </div>
 
-          {/* Repair Notes */}
+          {/* Assign To (only for admins, landlords, consultants) */}
+          {canAssign && (
+            <div className="space-y-2">
+              <Label htmlFor="assigned-to">Assign To</Label>
+              <Select value={assignedTo} onValueChange={setAssignedTo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select maintenance worker" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">
+                    <span className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      Unassigned
+                    </span>
+                  </SelectItem>
+                  {maintenanceUsers?.map((worker) => (
+                    <SelectItem key={worker.user_id} value={worker.user_id}>
+                      <span className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        {worker.full_name || worker.email}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {loadingUsers && (
+                <p className="text-xs text-muted-foreground">Loading workers...</p>
+              )}
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="notes">Repair Notes</Label>
             <Textarea

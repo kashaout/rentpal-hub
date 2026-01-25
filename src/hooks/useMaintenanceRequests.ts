@@ -16,11 +16,14 @@ export interface MaintenanceRequest {
   resolved_at: string | null;
   repair_notes: string | null;
   photo_urls: string[] | null;
+  assigned_to: string | null;
 }
 
 export interface MaintenanceRequestWithDetails extends MaintenanceRequest {
   property_name: string;
   property_address: string;
+  assigned_user_name: string | null;
+  assigned_user_email: string | null;
 }
 
 export function useMaintenanceRequests(tenantId?: string) {
@@ -48,12 +51,28 @@ export function useMaintenanceRequests(tenantId?: string) {
 
       const propertiesMap = new Map(properties?.map((p) => [p.id, p]) || []);
 
+      // Fetch assigned user details
+      const assignedUserIds = [...new Set(data.filter(r => r.assigned_to).map(r => r.assigned_to))];
+      let profilesMap = new Map<string, { full_name: string | null; email: string }>();
+      
+      if (assignedUserIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, email")
+          .in("user_id", assignedUserIds);
+        
+        profilesMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
+      }
+
       return data.map((request) => {
         const property = propertiesMap.get(request.property_id);
+        const assignedProfile = request.assigned_to ? profilesMap.get(request.assigned_to) : null;
         return {
           ...request,
           property_name: property?.name || "Unknown",
           property_address: property?.address || "",
+          assigned_user_name: assignedProfile?.full_name || null,
+          assigned_user_email: assignedProfile?.email || null,
         };
       }) as MaintenanceRequestWithDetails[];
     },
@@ -111,6 +130,7 @@ interface UpdateMaintenanceRequestInput {
   resolved_at?: string | null;
   repair_notes?: string;
   photo_urls?: string[];
+  assigned_to?: string | null;
 }
 
 export function useUpdateMaintenanceRequest() {
