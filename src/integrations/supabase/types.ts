@@ -407,6 +407,14 @@ export type Database = {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
       }
+      is_landlord_of_property: {
+        Args: { _property_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_tenant_of_property: {
+        Args: { _property_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "consultant" | "landlord" | "tenant" | "maintenance"
