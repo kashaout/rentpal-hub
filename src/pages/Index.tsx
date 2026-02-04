@@ -11,6 +11,7 @@ import { TenantsPage } from "@/components/TenantsPage";
 import { DocumentsPage } from "@/components/DocumentsPage";
 import { SettingsPage } from "@/components/SettingsPage";
 import { ReportsPage } from "@/components/ReportsPage";
+import { IssueReportingPage } from "@/components/IssueReportingPage";
 import { useAuth } from "@/hooks/useAuth";
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
@@ -19,6 +20,7 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   "maintenance-portal": { title: "Maintenance", subtitle: "Manage repair requests and track work orders." },
   properties: { title: "Properties", subtitle: "Manage your rental properties." },
   tenants: { title: "Tenants", subtitle: "View and manage your tenants." },
+  "issue-reports": { title: "Issue Reports", subtitle: "Track all maintenance issues and assignments." },
   payments: { title: "Payments", subtitle: "Track rent and payment history." },
   reports: { title: "Reports", subtitle: "Analytics and performance metrics." },
   documents: { title: "Documents", subtitle: "Leases, contracts, and more." },
@@ -54,6 +56,8 @@ const Index = () => {
         return <TenantPortal />;
       case "maintenance-portal":
         return <MaintenancePortal />;
+      case "issue-reports":
+        return <IssueReportingPage />;
       case "payments":
         return <PaymentsPage />;
       case "properties":
