@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Camera, X, Loader2, User } from "lucide-react";
 import {
   Dialog,
@@ -26,6 +26,7 @@ import { useMaintenanceUsers } from "@/hooks/useMaintenanceUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { getSignedUrl } from "@/hooks/useSignedUrls";
 
 interface MaintenanceUpdateDialogProps {
   open: boolean;
@@ -45,14 +46,39 @@ export function MaintenanceUpdateDialog({
   const [repairNotes, setRepairNotes] = useState(request.repair_notes || "");
   const [assignedTo, setAssignedTo] = useState<string>(request.assigned_to || "unassigned");
   const [photos, setPhotos] = useState<File[]>([]);
-  const [photoUrls, setPhotoUrls] = useState<string[]>(request.photo_urls || []);
+  // Store the original file paths (not URLs) for existing photos
+  const [photoPaths, setPhotoPaths] = useState<string[]>(request.photo_urls || []);
+  // Store signed URLs for display
+  const [signedPhotoUrls, setSignedPhotoUrls] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateRequest = useUpdateMaintenanceRequest();
   const { data: maintenanceUsers, isLoading: loadingUsers } = useMaintenanceUsers();
 
   const canAssign = isAdmin || isLandlord || isConsultant;
+
+  // Load signed URLs for existing photos
+  useEffect(() => {
+    const loadSignedUrls = async () => {
+      if (photoPaths.length === 0) {
+        setSignedPhotoUrls([]);
+        return;
+      }
+
+      setLoadingPhotos(true);
+      const urls: string[] = [];
+      for (const path of photoPaths) {
+        const url = await getSignedUrl("maintenance-photos", path);
+        if (url) urls.push(url);
+      }
+      setSignedPhotoUrls(urls);
+      setLoadingPhotos(false);
+    };
+
+    loadSignedUrls();
+  }, [photoPaths.join(",")]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -75,13 +101,14 @@ export function MaintenanceUpdateDialog({
   };
 
   const removeExistingPhoto = (index: number) => {
-    setPhotoUrls((prev) => prev.filter((_, i) => i !== index));
+    setPhotoPaths((prev) => prev.filter((_, i) => i !== index));
+    setSignedPhotoUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   const uploadPhotos = async (): Promise<string[]> => {
     if (photos.length === 0) return [];
 
-    const uploadedUrls: string[] = [];
+    const uploadedPaths: string[] = [];
 
     for (const photo of photos) {
       const fileExt = photo.name.split(".").pop();
@@ -96,14 +123,11 @@ export function MaintenanceUpdateDialog({
         throw error;
       }
 
-      const { data: urlData } = supabase.storage
-        .from("maintenance-photos")
-        .getPublicUrl(data.path);
-
-      uploadedUrls.push(urlData.publicUrl);
+      // Store the file path, not the public URL (bucket is now private)
+      uploadedPaths.push(data.path);
     }
 
-    return uploadedUrls;
+    return uploadedPaths;
   };
 
   const handleSubmit = async () => {
@@ -111,8 +135,8 @@ export function MaintenanceUpdateDialog({
       setIsUploading(true);
 
       // Upload new photos
-      const newPhotoUrls = await uploadPhotos();
-      const allPhotoUrls = [...photoUrls, ...newPhotoUrls];
+      const newPhotoPaths = await uploadPhotos();
+      const allPhotoPaths = [...photoPaths, ...newPhotoPaths];
 
       // Update the request
       await updateRequest.mutateAsync({
@@ -120,7 +144,7 @@ export function MaintenanceUpdateDialog({
         status: status as "pending" | "in_progress" | "completed" | "cancelled",
         resolved_at: status === "completed" ? new Date().toISOString() : null,
         repair_notes: repairNotes || undefined,
-        photo_urls: allPhotoUrls.length > 0 ? allPhotoUrls : undefined,
+        photo_urls: allPhotoPaths.length > 0 ? allPhotoPaths : undefined,
         assigned_to: assignedTo === "unassigned" ? null : assignedTo,
       });
 
@@ -220,8 +244,16 @@ export function MaintenanceUpdateDialog({
               />
               
               <div className="flex flex-wrap gap-2 mb-3">
-                {/* Existing photos */}
-                {photoUrls.map((url, idx) => (
+                {/* Loading indicator for existing photos */}
+                {loadingPhotos && photoPaths.length > 0 && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Loading photos...
+                  </div>
+                )}
+                
+                {/* Existing photos with signed URLs */}
+                {!loadingPhotos && signedPhotoUrls.map((url, idx) => (
                   <div key={`existing-${idx}`} className="relative h-16 w-16">
                     <img
                       src={url}
@@ -262,13 +294,13 @@ export function MaintenanceUpdateDialog({
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full gap-2"
-                disabled={photos.length + photoUrls.length >= 10}
+                disabled={photos.length + photoPaths.length >= 10}
               >
                 <Camera className="h-4 w-4" />
                 Add Photos
               </Button>
               <p className="mt-2 text-center text-xs text-muted-foreground">
-                {photos.length + photoUrls.length}/10 photos
+                {photos.length + photoPaths.length}/10 photos
               </p>
             </div>
           </div>
