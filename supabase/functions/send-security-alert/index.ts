@@ -27,9 +27,72 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Authenticate the request
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Missing or invalid authorization header" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Create a client with the user's token to verify their identity
+    const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify the user's token
+    const { data: userData, error: userError } = await userSupabase.auth.getUser();
+
+    if (userError || !userData?.user) {
+      return new Response(
+        JSON.stringify({ error: "Invalid or expired token" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const authenticatedUserId = userData.user.id;
+
+    // Parse request body
+    const { event_type, affected_user_id, affected_user_email, actor_user_id, details }: SecurityAlertRequest = await req.json();
+
+    // Verify the actor_user_id matches the authenticated user
+    if (actor_user_id !== authenticatedUserId) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: actor_user_id does not match authenticated user" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Create service role client for admin operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { event_type, affected_user_id, affected_user_email, actor_user_id, details }: SecurityAlertRequest = await req.json();
+    // Verify the user has appropriate role for triggering security alerts
+    // Admin role changes should only be triggered by admins
+    if (event_type === "admin_role_assigned" || event_type === "admin_role_removed") {
+      const { data: userRoles, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", authenticatedUserId);
+
+      if (roleError) {
+        console.error("Error checking user roles:", roleError);
+        return new Response(
+          JSON.stringify({ error: "Failed to verify user permissions" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      const isAdmin = userRoles?.some(r => r.role === "admin");
+      if (!isAdmin) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized: only admins can trigger admin role alerts" }),
+          { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    }
 
     // Fetch actor's profile
     const { data: actorProfile } = await supabase
@@ -181,7 +244,7 @@ const handler = async (req: Request): Promise<Response> => {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("Error sending security alert:", errorMessage);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ error: "Failed to process security alert" }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

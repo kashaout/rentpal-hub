@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import {
   Wrench,
@@ -24,6 +24,7 @@ import {
 } from "@/hooks/useMaintenanceRequests";
 import { MaintenanceUpdateDialog } from "./MaintenanceUpdateDialog";
 import { cn } from "@/lib/utils";
+import { getSignedUrl } from "@/hooks/useSignedUrls";
 
 const statusStyles: Record<string, string> = {
   pending: "bg-warning/10 text-warning border-warning/20",
@@ -45,6 +46,68 @@ const priorityStyles: Record<string, string> = {
   high: "bg-warning/10 text-warning",
   urgent: "bg-destructive/10 text-destructive",
 };
+
+// Component for displaying maintenance photos with signed URLs
+function MaintenancePhotos({ photoPaths }: { photoPaths: string[] }) {
+  const [signedUrls, setSignedUrls] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadSignedUrls = async () => {
+      setLoading(true);
+      const urls: string[] = [];
+      for (const path of photoPaths) {
+        const url = await getSignedUrl("maintenance-photos", path);
+        if (url) urls.push(url);
+      }
+      setSignedUrls(urls);
+      setLoading(false);
+    };
+
+    if (photoPaths.length > 0) {
+      loadSignedUrls();
+    } else {
+      setLoading(false);
+    }
+  }, [photoPaths.join(",")]);
+
+  if (loading) {
+    return (
+      <div className="flex gap-2 mt-2">
+        {[...Array(Math.min(4, photoPaths.length))].map((_, idx) => (
+          <div key={idx} className="h-12 w-12 rounded-md border bg-muted animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (signedUrls.length === 0) return null;
+
+  return (
+    <div className="flex gap-2 mt-2">
+      {signedUrls.slice(0, 4).map((url, idx) => (
+        <a
+          key={idx}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="relative h-12 w-12 overflow-hidden rounded-md border"
+        >
+          <img
+            src={url}
+            alt={`Repair photo ${idx + 1}`}
+            className="h-full w-full object-cover"
+          />
+        </a>
+      ))}
+      {signedUrls.length > 4 && (
+        <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-muted text-xs text-muted-foreground">
+          +{signedUrls.length - 4}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function MaintenancePortal() {
   const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequestWithDetails | null>(null);
@@ -146,28 +209,7 @@ export function MaintenancePortal() {
               )}
 
               {request.photo_urls && request.photo_urls.length > 0 && (
-                <div className="flex gap-2 mt-2">
-                  {request.photo_urls.slice(0, 4).map((url, idx) => (
-                    <a
-                      key={idx}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="relative h-12 w-12 overflow-hidden rounded-md border"
-                    >
-                      <img
-                        src={url}
-                        alt={`Repair photo ${idx + 1}`}
-                        className="h-full w-full object-cover"
-                      />
-                    </a>
-                  ))}
-                  {request.photo_urls.length > 4 && (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-muted text-xs text-muted-foreground">
-                      +{request.photo_urls.length - 4}
-                    </div>
-                  )}
-                </div>
+                <MaintenancePhotos photoPaths={request.photo_urls} />
               )}
             </div>
 
