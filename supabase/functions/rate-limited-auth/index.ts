@@ -1,13 +1,19 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 
+interface RateLimitEntry {
+  id: string;
+  identifier: string;
+  attempts: number;
+  first_attempt: string;
+  blocked_until: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
-
-// In-memory rate limiting store (resets on function cold start)
-// For production, consider using Redis or a database table
-const rateLimitStore = new Map<string, { attempts: number; firstAttempt: number; blockedUntil: number | null }>()
 
 const RATE_LIMIT_CONFIG = {
   maxAttempts: 5,           // Maximum attempts before blocking
@@ -24,18 +30,43 @@ function getClientIdentifier(req: Request): string {
   return req.headers.get('x-real-ip') || 'unknown'
 }
 
-function checkRateLimit(identifier: string): { allowed: boolean; message: string } {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function checkRateLimit(identifier: string, supabaseAdmin: any): Promise<{ allowed: boolean; message: string }> {
   const now = Date.now()
-  const entry = rateLimitStore.get(identifier)
+  
+  // Fetch rate limit entry from database
+  const { data, error } = await supabaseAdmin
+    .from('rate_limits')
+    .select('*')
+    .eq('identifier', identifier)
+    .single()
+  
+  const entry = data as RateLimitEntry | null
 
-  if (!entry) {
-    rateLimitStore.set(identifier, { attempts: 1, firstAttempt: now, blockedUntil: null })
+  if (error && error.code !== 'PGRST116') {
+    // PGRST116 = no rows found, which is fine
+    console.error('Rate limit check error:', error)
+    // Allow on error to not block legitimate users
     return { allowed: true, message: '' }
   }
 
+  if (!entry) {
+    // Create new entry
+    await supabaseAdmin.from('rate_limits').insert({
+      identifier,
+      attempts: 1,
+      first_attempt: new Date(now).toISOString(),
+      blocked_until: null
+    })
+    return { allowed: true, message: '' }
+  }
+
+  const blockedUntil = entry.blocked_until ? new Date(entry.blocked_until as string).getTime() : null
+  const firstAttempt = new Date(entry.first_attempt as string).getTime()
+
   // Check if blocked
-  if (entry.blockedUntil && now < entry.blockedUntil) {
-    const remainingMinutes = Math.ceil((entry.blockedUntil - now) / 60000)
+  if (blockedUntil && now < blockedUntil) {
+    const remainingMinutes = Math.ceil((blockedUntil - now) / 60000)
     return { 
       allowed: false, 
       message: `Too many login attempts. Please try again in ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}.`
@@ -43,21 +74,38 @@ function checkRateLimit(identifier: string): { allowed: boolean; message: string
   }
 
   // Reset if block expired
-  if (entry.blockedUntil && now >= entry.blockedUntil) {
-    rateLimitStore.set(identifier, { attempts: 1, firstAttempt: now, blockedUntil: null })
+  if (blockedUntil && now >= blockedUntil) {
+    await supabaseAdmin
+      .from('rate_limits')
+      .update({
+        attempts: 1,
+        first_attempt: new Date(now).toISOString(),
+        blocked_until: null
+      })
+      .eq('identifier', identifier)
     return { allowed: true, message: '' }
   }
 
   // Reset if window expired
-  if (now - entry.firstAttempt > RATE_LIMIT_CONFIG.windowMs) {
-    rateLimitStore.set(identifier, { attempts: 1, firstAttempt: now, blockedUntil: null })
+  if (now - firstAttempt > RATE_LIMIT_CONFIG.windowMs) {
+    await supabaseAdmin
+      .from('rate_limits')
+      .update({
+        attempts: 1,
+        first_attempt: new Date(now).toISOString(),
+        blocked_until: null
+      })
+      .eq('identifier', identifier)
     return { allowed: true, message: '' }
   }
 
   // Check max attempts
   if (entry.attempts >= RATE_LIMIT_CONFIG.maxAttempts) {
-    const blockedUntil = now + RATE_LIMIT_CONFIG.blockDurationMs
-    rateLimitStore.set(identifier, { ...entry, blockedUntil })
+    const newBlockedUntil = new Date(now + RATE_LIMIT_CONFIG.blockDurationMs).toISOString()
+    await supabaseAdmin
+      .from('rate_limits')
+      .update({ blocked_until: newBlockedUntil })
+      .eq('identifier', identifier)
     return { 
       allowed: false, 
       message: `Too many login attempts. Please try again in 30 minutes.`
@@ -65,7 +113,10 @@ function checkRateLimit(identifier: string): { allowed: boolean; message: string
   }
 
   // Increment attempts
-  rateLimitStore.set(identifier, { ...entry, attempts: entry.attempts + 1 })
+  await supabaseAdmin
+    .from('rate_limits')
+    .update({ attempts: entry.attempts + 1 })
+    .eq('identifier', identifier)
   return { allowed: true, message: '' }
 }
 
@@ -76,8 +127,15 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+    
+    // Admin client for rate limiting (bypasses RLS)
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+    
     const clientId = getClientIdentifier(req)
-    const rateCheck = checkRateLimit(clientId)
+    const rateCheck = await checkRateLimit(clientId, supabaseAdmin)
 
     if (!rateCheck.allowed) {
       return new Response(
@@ -115,9 +173,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseAnonKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY')!
-    
+    // Client for auth operations (uses anon key)
     const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
     let result
