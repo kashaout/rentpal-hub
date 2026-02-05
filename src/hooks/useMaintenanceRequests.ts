@@ -17,6 +17,7 @@ export interface MaintenanceRequest {
   repair_notes: string | null;
   photo_urls: string[] | null;
   assigned_to: string | null;
+  rating: number | null;
 }
 
 export interface MaintenanceRequestWithDetails extends MaintenanceRequest {
@@ -131,6 +132,7 @@ interface UpdateMaintenanceRequestInput {
   repair_notes?: string;
   photo_urls?: string[];
   assigned_to?: string | null;
+  rating?: number;
 }
 
 export function useUpdateMaintenanceRequest() {

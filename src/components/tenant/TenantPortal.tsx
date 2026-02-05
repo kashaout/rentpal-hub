@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   AlertCircle,
   AlertTriangle,
+  Star,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ import { useTenantLease } from "@/hooks/useTenantPortal";
 import { usePaymentsByTenant } from "@/hooks/usePayments";
 import { useMaintenanceRequests } from "@/hooks/useMaintenanceRequests";
 import { MaintenanceRequestDialog } from "./MaintenanceRequestDialog";
+import { RateMaintenanceDialog } from "./RateMaintenanceDialog";
 import { cn } from "@/lib/utils";
 
 const paymentStatusStyles: Record<string, string> = {
@@ -59,6 +61,7 @@ const priorityStyles: Record<string, string> = {
 
 export function TenantPortal() {
   const [requestDialogOpen, setRequestDialogOpen] = useState(false);
+  const [ratingRequest, setRatingRequest] = useState<{ id: string; title: string } | null>(null);
 
   const { data: lease, isLoading: leaseLoading } = useTenantLease();
   const { data: payments, isLoading: paymentsLoading } = usePaymentsByTenant(lease?.id || "");
@@ -255,13 +258,41 @@ export function TenantPortal() {
                     <p className="text-xs text-muted-foreground">
                       Submitted {format(new Date(request.created_at), "MMM d, yyyy")}
                     </p>
+                    {request.status === "completed" && request.rating && (
+                      <div className="flex items-center gap-1 mt-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={cn(
+                              "h-3 w-3",
+                              star <= request.rating!
+                                ? "fill-warning text-warning"
+                                : "text-muted-foreground/30"
+                            )}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <Badge
-                    variant="outline"
-                    className={cn("shrink-0 capitalize", requestStatusStyles[request.status])}
-                  >
-                    {request.status.replace("_", " ")}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-2">
+                    <Badge
+                      variant="outline"
+                      className={cn("shrink-0 capitalize", requestStatusStyles[request.status])}
+                    >
+                      {request.status.replace("_", " ")}
+                    </Badge>
+                    {request.status === "completed" && !request.rating && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setRatingRequest({ id: request.id, title: request.title })}
+                        className="gap-1 text-xs"
+                      >
+                        <Star className="h-3 w-3" />
+                        Rate
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -288,6 +319,15 @@ export function TenantPortal() {
         tenantId={lease.id}
         propertyId={lease.property_id}
       />
+
+      {ratingRequest && (
+        <RateMaintenanceDialog
+          open={!!ratingRequest}
+          onOpenChange={(open) => !open && setRatingRequest(null)}
+          requestId={ratingRequest.id}
+          requestTitle={ratingRequest.title}
+        />
+      )}
     </div>
   );
 }

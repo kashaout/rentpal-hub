@@ -132,10 +132,12 @@ Deno.serve(async (req) => {
       }
 
       // Validate role if provided
-      const validRoles = ['tenant', 'landlord', 'consultant', 'admin']
+      // Only allow self-registration for tenant and landlord roles
+      // Admin, consultant, and maintenance roles must be assigned by admins
+      const validRoles = ['tenant', 'landlord']
       if (role && !validRoles.includes(role)) {
         return new Response(
-          JSON.stringify({ error: 'Invalid role specified' }),
+          JSON.stringify({ error: 'Invalid role. You can only register as a landlord or tenant.' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }

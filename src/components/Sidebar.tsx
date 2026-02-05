@@ -13,6 +13,7 @@ import {
   BarChart3,
   Wrench,
   ClipboardList,
+   TrendingUp,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -68,6 +69,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const adminItems = [
     { icon: UserCog, label: "Manage Users", id: "manage-users" },
     { icon: Shield, label: "Roles & Permissions", id: "roles" },
+    { icon: TrendingUp, label: "Worker Performance", id: "worker-performance" },
   ];
 
   const filteredNavItems = navItems.filter((item) => item.show);
