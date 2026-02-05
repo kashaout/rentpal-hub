@@ -12,6 +12,7 @@ import { DocumentsPage } from "@/components/DocumentsPage";
 import { SettingsPage } from "@/components/SettingsPage";
 import { ReportsPage } from "@/components/ReportsPage";
 import { IssueReportingPage } from "@/components/IssueReportingPage";
+import { MaintenancePerformanceDashboard } from "@/components/admin/MaintenancePerformanceDashboard";
 import { useAuth } from "@/hooks/useAuth";
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
@@ -26,6 +27,7 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   documents: { title: "Documents", subtitle: "Leases, contracts, and more." },
   "manage-users": { title: "Manage Users", subtitle: "Add and manage user accounts." },
   roles: { title: "Roles & Permissions", subtitle: "Configure access levels." },
+  "worker-performance": { title: "Worker Performance", subtitle: "Track maintenance team metrics and ratings." },
   settings: { title: "Settings", subtitle: "Configure your preferences." },
 };
 
@@ -52,6 +54,8 @@ const Index = () => {
       case "manage-users":
       case "roles":
         return <AdminPanel defaultTab={currentView === "roles" ? "assignments" : "users"} />;
+      case "worker-performance":
+        return <MaintenancePerformanceDashboard />;
       case "tenant-portal":
         return <TenantPortal />;
       case "maintenance-portal":

@@ -141,6 +141,7 @@ export type Database = {
           photo_urls: string[] | null
           priority: string
           property_id: string
+          rating: number | null
           repair_notes: string | null
           resolved_at: string | null
           status: string
@@ -156,6 +157,7 @@ export type Database = {
           photo_urls?: string[] | null
           priority?: string
           property_id: string
+          rating?: number | null
           repair_notes?: string | null
           resolved_at?: string | null
           status?: string
@@ -171,6 +173,7 @@ export type Database = {
           photo_urls?: string[] | null
           priority?: string
           property_id?: string
+          rating?: number | null
           repair_notes?: string | null
           resolved_at?: string | null
           status?: string
