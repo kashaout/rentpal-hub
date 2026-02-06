@@ -2,3 +2,9 @@ project_id = "rsudeyfaoblhrjnbmvuq"
 
 [functions.send-security-alert]
 verify_jwt = false
+
+[functions.generate-insights]
+verify_jwt = false
+
+[functions.rate-limited-auth]
+verify_jwt = false

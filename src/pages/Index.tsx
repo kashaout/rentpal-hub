@@ -13,12 +13,14 @@ import { SettingsPage } from "@/components/SettingsPage";
 import { ReportsPage } from "@/components/ReportsPage";
 import { IssueReportingPage } from "@/components/IssueReportingPage";
 import { MaintenancePerformanceDashboard } from "@/components/admin/MaintenancePerformanceDashboard";
+import { FinanceDashboard } from "@/components/finance/FinanceDashboard";
 import { useAuth } from "@/hooks/useAuth";
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Welcome back! Here's your overview." },
   "tenant-portal": { title: "My Portal", subtitle: "View your lease, payments, and submit requests." },
   "maintenance-portal": { title: "Maintenance", subtitle: "Manage repair requests and track work orders." },
+  finance: { title: "Financial Intelligence", subtitle: "P&L, cashflow, ROI analytics and AI insights." },
   properties: { title: "Properties", subtitle: "Manage your rental properties." },
   tenants: { title: "Tenants", subtitle: "View and manage your tenants." },
   "issue-reports": { title: "Issue Reports", subtitle: "Track all maintenance issues and assignments." },
@@ -60,6 +62,8 @@ const Index = () => {
         return <TenantPortal />;
       case "maintenance-portal":
         return <MaintenancePortal />;
+      case "finance":
+        return <FinanceDashboard />;
       case "issue-reports":
         return <IssueReportingPage />;
       case "payments":

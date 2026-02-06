@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_insights: {
+        Row: {
+          action_items: Json | null
+          created_at: string
+          description: string
+          expires_at: string | null
+          id: string
+          insight_type: string
+          is_dismissed: boolean
+          property_id: string | null
+          severity: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          action_items?: Json | null
+          created_at?: string
+          description: string
+          expires_at?: string | null
+          id?: string
+          insight_type: string
+          is_dismissed?: boolean
+          property_id?: string | null
+          severity?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          action_items?: Json | null
+          created_at?: string
+          description?: string
+          expires_at?: string | null
+          id?: string
+          insight_type?: string
+          is_dismissed?: boolean
+          property_id?: string | null
+          severity?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_insights_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -132,6 +182,72 @@ export type Database = {
           },
         ]
       }
+      financial_transactions: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          id: string
+          payment_method: string | null
+          property_id: string
+          reference_number: string | null
+          tenant_id: string | null
+          transaction_date: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          payment_method?: string | null
+          property_id: string
+          reference_number?: string | null
+          tenant_id?: string | null
+          transaction_date?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          id?: string
+          payment_method?: string | null
+          property_id?: string
+          reference_number?: string | null
+          tenant_id?: string | null
+          transaction_date?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_transactions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_requests: {
         Row: {
           assigned_to: string | null
@@ -245,6 +361,47 @@ export type Database = {
           },
         ]
       }
+      portfolio_metrics: {
+        Row: {
+          calculated_at: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          metric_type: string
+          metric_value: number
+          property_id: string | null
+          user_id: string
+        }
+        Insert: {
+          calculated_at?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_type: string
+          metric_value: number
+          property_id?: string | null
+          user_id: string
+        }
+        Update: {
+          calculated_at?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_type?: string
+          metric_value?: number
+          property_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_metrics_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -280,35 +437,53 @@ export type Database = {
       }
       properties: {
         Row: {
+          acquisition_cost: number | null
           address: string
+          annual_expenses: number | null
           created_at: string
+          currency: string
+          current_value: number | null
           id: string
           image_url: string | null
           landlord_id: string | null
           monthly_rent: number
           name: string
+          property_type: string
+          region: string
           units: number
           updated_at: string
         }
         Insert: {
+          acquisition_cost?: number | null
           address: string
+          annual_expenses?: number | null
           created_at?: string
+          currency?: string
+          current_value?: number | null
           id?: string
           image_url?: string | null
           landlord_id?: string | null
           monthly_rent?: number
           name: string
+          property_type?: string
+          region?: string
           units?: number
           updated_at?: string
         }
         Update: {
+          acquisition_cost?: number | null
           address?: string
+          annual_expenses?: number | null
           created_at?: string
+          currency?: string
+          current_value?: number | null
           id?: string
           image_url?: string | null
           landlord_id?: string | null
           monthly_rent?: number
           name?: string
+          property_type?: string
+          region?: string
           units?: number
           updated_at?: string
         }
