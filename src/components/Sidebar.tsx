@@ -13,7 +13,8 @@ import {
   BarChart3,
   Wrench,
   ClipboardList,
-   TrendingUp,
+  TrendingUp,
+  Wallet,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -57,6 +58,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isAdmin || isConsultant || isLandlord },
     { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant },
     { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isMaintenance },
+    { icon: Wallet, label: "Finance", id: "finance", show: isAdmin || isConsultant || isLandlord },
     { icon: Building2, label: "Properties", id: "properties", show: isAdmin || isConsultant || isLandlord },
     { icon: Users, label: "Tenants", id: "tenants", show: isAdmin || isConsultant || isLandlord },
     { icon: ClipboardList, label: "Issue Reports", id: "issue-reports", show: isAdmin || isConsultant || isLandlord },
