@@ -8,10 +8,11 @@ const currencyFormats: Record<Currency, { symbol: string; locale: string }> = {
 
 export function formatCurrency(
   amount: number,
-  currency: Currency = "NGN",
+  currency: Currency | string = "NGN",
   compact: boolean = false
 ): string {
-  const format = currencyFormats[currency] || currencyFormats.NGN;
+  const validCurrency = (["NGN", "GBP", "USD"].includes(currency) ? currency : "NGN") as Currency;
+  const format = currencyFormats[validCurrency] || currencyFormats.NGN;
 
   if (compact && Math.abs(amount) >= 1000000) {
     return `${format.symbol}${(amount / 1000000).toFixed(1)}M`;
@@ -22,7 +23,7 @@ export function formatCurrency(
 
   return new Intl.NumberFormat(format.locale, {
     style: "currency",
-    currency: currency,
+    currency: validCurrency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);

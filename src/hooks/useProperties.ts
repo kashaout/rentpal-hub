@@ -14,6 +14,12 @@ export interface Property {
   landlord_id: string | null;
   created_at: string;
   updated_at: string;
+  currency: string;
+  region: string;
+  property_type: string;
+  acquisition_cost: number | null;
+  current_value: number | null;
+  annual_expenses: number | null;
 }
 
 export interface PropertyWithStats extends Property {

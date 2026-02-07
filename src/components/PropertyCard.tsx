@@ -1,6 +1,7 @@
-import { MapPin, Users, DollarSign, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { MapPin, Users, DollarSign, MoreHorizontal, Pencil, Trash2, TrendingUp, TrendingDown, AlertTriangle, Wrench, Clock, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { PropertyWithStats, useDeleteProperty } from "@/hooks/useProperties";
+import { formatCurrency } from "@/lib/formatCurrency";
+import { usePropertyComplianceScore } from "@/hooks/useCompliance";
 
 interface PropertyCardProps {
   property: PropertyWithStats;
@@ -27,16 +30,74 @@ interface PropertyCardProps {
   className?: string;
 }
 
+// Calculate ROI percentage
+function calculateROI(annualIncome: number, acquisitionCost: number): number | null {
+  if (!acquisitionCost || acquisitionCost === 0) return null;
+  return ((annualIncome / acquisitionCost) * 100);
+}
+
+// Calculate profit/loss
+function calculateProfitLoss(monthlyRent: number, annualExpenses: number): number {
+  const annualRent = monthlyRent * 12;
+  return annualRent - (annualExpenses || 0);
+}
+
 export function PropertyCard({ property, onEdit, className }: PropertyCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const deleteProperty = useDeleteProperty();
+  const { data: complianceScore } = usePropertyComplianceScore(property.id);
 
-  const { name, address, units, occupied_units, monthly_rent, image_url } = property;
+  const { 
+    name, 
+    address, 
+    units, 
+    occupied_units, 
+    monthly_rent, 
+    image_url, 
+    currency,
+    acquisition_cost,
+    annual_expenses,
+  } = property;
+  
   const occupancyRate = units > 0 ? Math.round((occupied_units / units) * 100) : 0;
+  const annualIncome = Number(monthly_rent) * 12;
+  const roi = calculateROI(annualIncome, Number(acquisition_cost));
+  const profitLoss = calculateProfitLoss(Number(monthly_rent), Number(annual_expenses));
+  const isProfitable = profitLoss > 0;
+
+  // Determine status badges
+  const badges = [];
+  
+  if (isProfitable) {
+    badges.push({ label: "Profitable", variant: "success" as const, icon: TrendingUp });
+  } else if (profitLoss < 0) {
+    badges.push({ label: "Loss", variant: "destructive" as const, icon: TrendingDown });
+  }
+  
+  if (occupancyRate < 50) {
+    badges.push({ label: "High Vacancy", variant: "warning" as const, icon: AlertTriangle });
+  }
+  
+  if (complianceScore !== undefined && complianceScore < 70) {
+    badges.push({ label: "Compliance Risk", variant: "destructive" as const, icon: ShieldCheck });
+  }
 
   const handleDelete = async () => {
     await deleteProperty.mutateAsync(property.id);
     setShowDeleteDialog(false);
+  };
+
+  const getVariantClasses = (variant: string) => {
+    switch (variant) {
+      case "success":
+        return "bg-success/10 text-success border-success/20";
+      case "destructive":
+        return "bg-destructive/10 text-destructive border-destructive/20";
+      case "warning":
+        return "bg-warning/10 text-warning border-warning/20";
+      default:
+        return "";
+    }
   };
 
   return (
@@ -60,6 +121,29 @@ export function PropertyCard({ property, onEdit, className }: PropertyCardProps)
               <MapPin className="h-10 w-10 text-primary-foreground/50" />
             </div>
           )}
+          
+          {/* Status Badges */}
+          {badges.length > 0 && (
+            <div className="absolute left-2 top-2 flex flex-wrap gap-1.5">
+              {badges.slice(0, 2).map((badge, index) => {
+                const Icon = badge.icon;
+                return (
+                  <Badge
+                    key={index}
+                    variant="outline"
+                    className={cn(
+                      "gap-1 border text-xs font-medium shadow-sm backdrop-blur-sm",
+                      getVariantClasses(badge.variant)
+                    )}
+                  >
+                    <Icon className="h-3 w-3" />
+                    {badge.label}
+                  </Badge>
+                );
+              })}
+            </div>
+          )}
+          
           <div className="absolute right-2 top-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -99,6 +183,34 @@ export function PropertyCard({ property, onEdit, className }: PropertyCardProps)
             {address}
           </p>
 
+          {/* Financial Summary */}
+          <div className="mt-3 flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              {isProfitable ? (
+                <TrendingUp className="h-4 w-4 text-success" />
+              ) : (
+                <TrendingDown className="h-4 w-4 text-destructive" />
+              )}
+              <span className={cn(
+                "text-sm font-semibold",
+                isProfitable ? "text-success" : "text-destructive"
+              )}>
+                {formatCurrency(Math.abs(profitLoss), currency || "NGN")}/yr
+              </span>
+            </div>
+            {roi !== null && (
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted-foreground">ROI:</span>
+                <span className={cn(
+                  "text-sm font-semibold",
+                  roi >= 10 ? "text-success" : roi >= 5 ? "text-warning" : "text-destructive"
+                )}>
+                  {roi.toFixed(1)}%
+                </span>
+              </div>
+            )}
+          </div>
+
           {/* Stats */}
           <div className="mt-4 grid grid-cols-3 gap-3">
             <div className="rounded-md bg-secondary p-2.5 text-center">
@@ -131,10 +243,38 @@ export function PropertyCard({ property, onEdit, className }: PropertyCardProps)
                 Rent
               </div>
               <p className="mt-1 text-sm font-semibold text-secondary-foreground">
-                ${Number(monthly_rent).toLocaleString()}
+                {formatCurrency(Number(monthly_rent), currency || "NGN", true)}
               </p>
             </div>
           </div>
+
+          {/* Compliance Score Indicator */}
+          {complianceScore !== undefined && (
+            <div className="mt-3 flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
+              <span className="text-xs text-muted-foreground">Compliance</span>
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn(
+                      "h-full transition-all",
+                      complianceScore >= 90 ? "bg-success" :
+                      complianceScore >= 70 ? "bg-primary" :
+                      complianceScore >= 50 ? "bg-warning" : "bg-destructive"
+                    )}
+                    style={{ width: `${complianceScore}%` }}
+                  />
+                </div>
+                <span className={cn(
+                  "text-xs font-semibold",
+                  complianceScore >= 90 ? "text-success" :
+                  complianceScore >= 70 ? "text-primary" :
+                  complianceScore >= 50 ? "text-warning" : "text-destructive"
+                )}>
+                  {complianceScore}%
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

@@ -14,6 +14,7 @@ import { ReportsPage } from "@/components/ReportsPage";
 import { IssueReportingPage } from "@/components/IssueReportingPage";
 import { MaintenancePerformanceDashboard } from "@/components/admin/MaintenancePerformanceDashboard";
 import { FinanceDashboard } from "@/components/finance/FinanceDashboard";
+import { ComplianceDashboard } from "@/components/compliance/ComplianceDashboard";
 import { useAuth } from "@/hooks/useAuth";
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
@@ -24,6 +25,7 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   properties: { title: "Properties", subtitle: "Manage your rental properties." },
   tenants: { title: "Tenants", subtitle: "View and manage your tenants." },
   "issue-reports": { title: "Issue Reports", subtitle: "Track all maintenance issues and assignments." },
+  compliance: { title: "Compliance Tracker", subtitle: "Monitor certifications, inspections, and legal requirements." },
   payments: { title: "Payments", subtitle: "Track rent and payment history." },
   reports: { title: "Reports", subtitle: "Analytics and performance metrics." },
   documents: { title: "Documents", subtitle: "Leases, contracts, and more." },
@@ -66,6 +68,8 @@ const Index = () => {
         return <FinanceDashboard />;
       case "issue-reports":
         return <IssueReportingPage />;
+      case "compliance":
+        return <ComplianceDashboard />;
       case "payments":
         return <PaymentsPage />;
       case "properties":

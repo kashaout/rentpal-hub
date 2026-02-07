@@ -106,6 +106,122 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_alerts: {
+        Row: {
+          alert_type: string
+          compliance_item_id: string
+          created_at: string
+          dismissed_at: string | null
+          dismissed_by: string | null
+          id: string
+          is_dismissed: boolean
+          message: string
+          property_id: string
+        }
+        Insert: {
+          alert_type: string
+          compliance_item_id: string
+          created_at?: string
+          dismissed_at?: string | null
+          dismissed_by?: string | null
+          id?: string
+          is_dismissed?: boolean
+          message: string
+          property_id: string
+        }
+        Update: {
+          alert_type?: string
+          compliance_item_id?: string
+          created_at?: string
+          dismissed_at?: string | null
+          dismissed_by?: string | null
+          id?: string
+          is_dismissed?: boolean
+          message?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_alerts_compliance_item_id_fkey"
+            columns: ["compliance_item_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_alerts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_items: {
+        Row: {
+          category: Database["public"]["Enums"]["compliance_category"]
+          created_at: string
+          description: string | null
+          document_url: string | null
+          expiry_date: string | null
+          id: string
+          inspector_name: string | null
+          issue_date: string | null
+          last_inspection_date: string | null
+          name: string
+          next_inspection_date: string | null
+          notes: string | null
+          property_id: string
+          reminder_days: number | null
+          status: Database["public"]["Enums"]["compliance_status"]
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["compliance_category"]
+          created_at?: string
+          description?: string | null
+          document_url?: string | null
+          expiry_date?: string | null
+          id?: string
+          inspector_name?: string | null
+          issue_date?: string | null
+          last_inspection_date?: string | null
+          name: string
+          next_inspection_date?: string | null
+          notes?: string | null
+          property_id: string
+          reminder_days?: number | null
+          status?: Database["public"]["Enums"]["compliance_status"]
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["compliance_category"]
+          created_at?: string
+          description?: string | null
+          document_url?: string | null
+          expiry_date?: string | null
+          id?: string
+          inspector_name?: string | null
+          issue_date?: string | null
+          last_inspection_date?: string | null
+          name?: string
+          next_inspection_date?: string | null
+          notes?: string | null
+          property_id?: string
+          reminder_days?: number | null
+          status?: Database["public"]["Enums"]["compliance_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_items_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultant_assignments: {
         Row: {
           assigned_at: string
@@ -627,6 +743,22 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "consultant" | "landlord" | "tenant" | "maintenance"
+      compliance_category:
+        | "tenancy_agreement"
+        | "land_title"
+        | "service_charge"
+        | "building_permit"
+        | "fire_safety"
+        | "environmental"
+        | "utility_registration"
+        | "insurance"
+        | "other"
+      compliance_status:
+        | "compliant"
+        | "pending"
+        | "expired"
+        | "non_compliant"
+        | "not_applicable"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -755,6 +887,24 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "consultant", "landlord", "tenant", "maintenance"],
+      compliance_category: [
+        "tenancy_agreement",
+        "land_title",
+        "service_charge",
+        "building_permit",
+        "fire_safety",
+        "environmental",
+        "utility_registration",
+        "insurance",
+        "other",
+      ],
+      compliance_status: [
+        "compliant",
+        "pending",
+        "expired",
+        "non_compliant",
+        "not_applicable",
+      ],
     },
   },
 } as const
