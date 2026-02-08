@@ -106,6 +106,48 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_workflows: {
+        Row: {
+          action_config: Json
+          created_at: string
+          description: string | null
+          id: string
+          is_enabled: boolean
+          last_triggered_at: string | null
+          name: string
+          trigger_config: Json
+          updated_at: string
+          user_id: string
+          workflow_type: Database["public"]["Enums"]["workflow_type"]
+        }
+        Insert: {
+          action_config?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_enabled?: boolean
+          last_triggered_at?: string | null
+          name: string
+          trigger_config?: Json
+          updated_at?: string
+          user_id: string
+          workflow_type: Database["public"]["Enums"]["workflow_type"]
+        }
+        Update: {
+          action_config?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_enabled?: boolean
+          last_triggered_at?: string | null
+          name?: string
+          trigger_config?: Json
+          updated_at?: string
+          user_id?: string
+          workflow_type?: Database["public"]["Enums"]["workflow_type"]
+        }
+        Relationships: []
+      }
       compliance_alerts: {
         Row: {
           alert_type: string
@@ -635,6 +677,45 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          features: Json
+          id: string
+          is_active: boolean
+          plan: Database["public"]["Enums"]["subscription_plan"]
+          property_limit: number
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          property_limit?: number
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          property_limit?: number
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           created_at: string
@@ -703,6 +784,85 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_alerts: {
+        Row: {
+          alert_type: Database["public"]["Enums"]["workflow_type"]
+          created_at: string
+          dismissed_at: string | null
+          id: string
+          is_dismissed: boolean
+          is_read: boolean
+          message: string
+          metadata: Json | null
+          property_id: string | null
+          read_at: string | null
+          severity: string
+          tenant_id: string | null
+          title: string
+          triggered_at: string
+          user_id: string
+          workflow_id: string
+        }
+        Insert: {
+          alert_type: Database["public"]["Enums"]["workflow_type"]
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          is_dismissed?: boolean
+          is_read?: boolean
+          message: string
+          metadata?: Json | null
+          property_id?: string | null
+          read_at?: string | null
+          severity?: string
+          tenant_id?: string | null
+          title: string
+          triggered_at?: string
+          user_id: string
+          workflow_id: string
+        }
+        Update: {
+          alert_type?: Database["public"]["Enums"]["workflow_type"]
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          is_dismissed?: boolean
+          is_read?: boolean
+          message?: string
+          metadata?: Json | null
+          property_id?: string | null
+          read_at?: string | null
+          severity?: string
+          tenant_id?: string | null
+          title?: string
+          triggered_at?: string
+          user_id?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_alerts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_alerts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_alerts_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "automation_workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -720,6 +880,15 @@ export type Database = {
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
+      }
+      get_user_subscription: {
+        Args: { _user_id: string }
+        Returns: {
+          features: Json
+          is_active: boolean
+          plan: Database["public"]["Enums"]["subscription_plan"]
+          property_limit: number
+        }[]
       }
       has_role: {
         Args: {
@@ -759,6 +928,14 @@ export type Database = {
         | "expired"
         | "non_compliant"
         | "not_applicable"
+      subscription_plan: "free" | "basic" | "pro" | "business"
+      workflow_status: "active" | "paused" | "triggered" | "completed"
+      workflow_type:
+        | "overdue_rent"
+        | "lease_expiry"
+        | "low_occupancy"
+        | "compliance_expiry"
+        | "high_maintenance"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -904,6 +1081,15 @@ export const Constants = {
         "expired",
         "non_compliant",
         "not_applicable",
+      ],
+      subscription_plan: ["free", "basic", "pro", "business"],
+      workflow_status: ["active", "paused", "triggered", "completed"],
+      workflow_type: [
+        "overdue_rent",
+        "lease_expiry",
+        "low_occupancy",
+        "compliance_expiry",
+        "high_maintenance",
       ],
     },
   },
