@@ -15,6 +15,8 @@ import { IssueReportingPage } from "@/components/IssueReportingPage";
 import { MaintenancePerformanceDashboard } from "@/components/admin/MaintenancePerformanceDashboard";
 import { FinanceDashboard } from "@/components/finance/FinanceDashboard";
 import { ComplianceDashboard } from "@/components/compliance/ComplianceDashboard";
+import { AutomationDashboard } from "@/components/automation/AutomationDashboard";
+import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { useAuth } from "@/hooks/useAuth";
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
@@ -26,12 +28,14 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   tenants: { title: "Tenants", subtitle: "View and manage your tenants." },
   "issue-reports": { title: "Issue Reports", subtitle: "Track all maintenance issues and assignments." },
   compliance: { title: "Compliance Tracker", subtitle: "Monitor certifications, inspections, and legal requirements." },
+  automation: { title: "Automation", subtitle: "Configure workflows for alerts and notifications." },
   payments: { title: "Payments", subtitle: "Track rent and payment history." },
   reports: { title: "Reports", subtitle: "Analytics and performance metrics." },
   documents: { title: "Documents", subtitle: "Leases, contracts, and more." },
   "manage-users": { title: "Manage Users", subtitle: "Add and manage user accounts." },
   roles: { title: "Roles & Permissions", subtitle: "Configure access levels." },
   "worker-performance": { title: "Worker Performance", subtitle: "Track maintenance team metrics and ratings." },
+  subscription: { title: "Subscription Plans", subtitle: "Manage your plan and unlock features." },
   settings: { title: "Settings", subtitle: "Configure your preferences." },
 };
 
@@ -60,6 +64,8 @@ const Index = () => {
         return <AdminPanel defaultTab={currentView === "roles" ? "assignments" : "users"} />;
       case "worker-performance":
         return <MaintenancePerformanceDashboard />;
+      case "subscription":
+        return <SubscriptionPlans />;
       case "tenant-portal":
         return <TenantPortal />;
       case "maintenance-portal":
@@ -70,6 +76,8 @@ const Index = () => {
         return <IssueReportingPage />;
       case "compliance":
         return <ComplianceDashboard />;
+      case "automation":
+        return <AutomationDashboard />;
       case "payments":
         return <PaymentsPage />;
       case "properties":

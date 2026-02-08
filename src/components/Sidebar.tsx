@@ -16,17 +16,22 @@ import {
   ClipboardList,
   TrendingUp,
   Wallet,
+  Zap,
+  Crown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useUnreadAlertCount } from "@/hooks/useAutomationWorkflows";
+import { Badge } from "@/components/ui/badge";
 
 interface NavItemProps {
   icon: React.ElementType;
   label: string;
   active?: boolean;
   onClick?: () => void;
+  badge?: number;
 }
 
-function NavItem({ icon: Icon, label, active, onClick }: NavItemProps) {
+function NavItem({ icon: Icon, label, active, onClick, badge }: NavItemProps) {
   return (
     <button
       onClick={onClick}
@@ -39,7 +44,12 @@ function NavItem({ icon: Icon, label, active, onClick }: NavItemProps) {
     >
       <Icon className="h-5 w-5" />
       {label}
-      {active && (
+      {badge !== undefined && badge > 0 && (
+        <Badge variant="destructive" className="ml-auto h-5 min-w-5 p-0 flex items-center justify-center text-xs">
+          {badge > 99 ? "99+" : badge}
+        </Badge>
+      )}
+      {active && !badge && (
         <div className="ml-auto h-1.5 w-1.5 rounded-full bg-sidebar-primary" />
       )}
     </button>
@@ -53,6 +63,7 @@ interface SidebarProps {
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const { signOut, isAdmin, isConsultant, isLandlord, isTenant, isMaintenance, profile, roles } = useAuth();
+  const unreadAlerts = useUnreadAlertCount();
 
   // Base nav items
   const navItems = [
@@ -64,6 +75,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     { icon: Users, label: "Tenants", id: "tenants", show: isAdmin || isConsultant || isLandlord },
     { icon: ClipboardList, label: "Issue Reports", id: "issue-reports", show: isAdmin || isConsultant || isLandlord },
     { icon: ShieldCheck, label: "Compliance", id: "compliance", show: isAdmin || isConsultant || isLandlord },
+    { icon: Zap, label: "Automation", id: "automation", show: isAdmin || isConsultant || isLandlord, badge: unreadAlerts },
     { icon: Receipt, label: "Payments", id: "payments", show: isAdmin || isConsultant || isLandlord },
     { icon: BarChart3, label: "Reports", id: "reports", show: isAdmin || isConsultant || isLandlord },
     { icon: FileText, label: "Documents", id: "documents", show: true },
@@ -74,6 +86,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     { icon: UserCog, label: "Manage Users", id: "manage-users" },
     { icon: Shield, label: "Roles & Permissions", id: "roles" },
     { icon: TrendingUp, label: "Worker Performance", id: "worker-performance" },
+    { icon: Crown, label: "Subscription", id: "subscription" },
   ];
 
   const filteredNavItems = navItems.filter((item) => item.show);
@@ -120,7 +133,6 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
         </div>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto p-4">
         {filteredNavItems.map((item) => (
           <NavItem
@@ -129,6 +141,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
             label={item.label}
             active={currentView === item.id}
             onClick={() => onViewChange(item.id)}
+            badge={'badge' in item ? item.badge : undefined}
           />
         ))}
 
