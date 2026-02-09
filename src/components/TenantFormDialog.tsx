@@ -1,12 +1,13 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { User, Mail, Phone, Home, Calendar, DollarSign } from "lucide-react";
+import { Home, Calendar, DollarSign, UserCheck, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -25,13 +27,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCreateTenant, useUpdateTenant, TenantWithDetails } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";
+import { useAvailableTenantUsers } from "@/hooks/useTenantUsers";
 
 const tenantSchema = z.object({
-  full_name: z.string().min(1, "Name is required").max(100),
-  email: z.string().email("Invalid email").max(255),
-  phone: z.string().max(20).optional(),
+  user_id: z.string().optional(),
   property_id: z.string().uuid("Select a property"),
   unit_number: z.string().min(1, "Unit number is required").max(20),
   lease_start: z.string().min(1, "Lease start date is required"),
@@ -53,13 +55,12 @@ export function TenantFormDialog({ open, onOpenChange, tenant, defaultPropertyId
   const createTenant = useCreateTenant();
   const updateTenant = useUpdateTenant();
   const { data: properties } = useProperties();
+  const { data: availableUsers, isLoading: usersLoading } = useAvailableTenantUsers();
 
   const form = useForm<TenantFormData>({
     resolver: zodResolver(tenantSchema),
     defaultValues: {
-      full_name: tenant?.profile?.full_name || "",
-      email: tenant?.profile?.email || "",
-      phone: tenant?.profile?.phone || "",
+      user_id: tenant?.user_id || "",
       property_id: tenant?.property_id || defaultPropertyId || "",
       unit_number: tenant?.unit_number || "",
       lease_start: tenant?.lease_start || "",
@@ -73,6 +74,7 @@ export function TenantFormDialog({ open, onOpenChange, tenant, defaultPropertyId
       if (isEditing) {
         await updateTenant.mutateAsync({
           id: tenant.id,
+          user_id: data.user_id || undefined,
           unit_number: data.unit_number,
           lease_start: data.lease_start,
           lease_end: data.lease_end,
@@ -85,9 +87,7 @@ export function TenantFormDialog({ open, onOpenChange, tenant, defaultPropertyId
           lease_start: data.lease_start,
           lease_end: data.lease_end,
           rent_amount: data.rent_amount,
-          email: data.email,
-          full_name: data.full_name,
-          phone: data.phone,
+          user_id: data.user_id || undefined,
         });
       }
       onOpenChange(false);
@@ -106,62 +106,61 @@ export function TenantFormDialog({ open, onOpenChange, tenant, defaultPropertyId
           <DialogTitle className="font-display">
             {isEditing ? "Edit Tenant" : "Add New Tenant"}
           </DialogTitle>
+          <DialogDescription>
+            {isEditing 
+              ? "Update the tenant's lease information."
+              : "Create a new lease and optionally link it to an existing user account."
+            }
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="full_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input placeholder="John Doe" className="pl-10" {...field} disabled={isEditing} />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input placeholder="john@email.com" className="pl-10" {...field} disabled={isEditing} />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
+            {/* User Linking */}
             <FormField
               control={form.control}
-              name="phone"
+              name="user_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone (optional)</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input placeholder="(555) 123-4567" className="pl-10" {...field} disabled={isEditing} />
-                    </div>
-                  </FormControl>
+                  <FormLabel className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4" />
+                    Link to User Account
+                  </FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value}
+                    disabled={usersLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={usersLoading ? "Loading users..." : "Select a user (optional)"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">No user linked</SelectItem>
+                      {availableUsers?.map((user) => (
+                        <SelectItem key={user.user_id} value={user.user_id}>
+                          {user.full_name || user.email} ({user.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Link this lease to a user with the tenant role so they can access the Tenant Portal.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {availableUsers?.length === 0 && !usersLoading && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  No available tenant users found. Users need to sign up with the "Tenant" role, or an admin can assign the tenant role to existing users.
+                </AlertDescription>
+              </Alert>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
