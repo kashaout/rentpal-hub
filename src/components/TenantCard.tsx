@@ -56,9 +56,10 @@ export function TenantCard({ tenant, onEdit, onViewPayments, className }: Tenant
   const deleteTenant = useDeleteTenant();
   const updatePaymentStatus = useUpdatePaymentStatus();
 
-  const { property_name, unit_number, lease_end, payment_status, profile } = tenant;
-  const name = profile?.full_name || "Unknown Tenant";
-  const email = profile?.email || "No email";
+  const { property_name, unit_number, lease_end, payment_status, profile, user_id } = tenant;
+  const hasLinkedUser = !!user_id && !!profile;
+  const name = hasLinkedUser ? (profile?.full_name || profile?.email) : "Unlinked Unit";
+  const email = profile?.email || "";
   const phone = profile?.phone || "";
 
   const status = statusConfig[payment_status];
@@ -162,13 +163,20 @@ export function TenantCard({ tenant, onEdit, onViewPayments, className }: Tenant
 
             {/* Contact Info */}
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-              <a
-                href={`mailto:${email}`}
-                className="flex items-center gap-1 transition-colors hover:text-foreground"
-              >
-                <Mail className="h-3.5 w-3.5" />
-                {email}
-              </a>
+              {hasLinkedUser && email ? (
+                <a
+                  href={`mailto:${email}`}
+                  className="flex items-center gap-1 transition-colors hover:text-foreground"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  {email}
+                </a>
+              ) : (
+                <span className="flex items-center gap-1 text-warning">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  No user linked - tenant cannot access portal
+                </span>
+              )}
               {phone && (
                 <a
                   href={`tel:${phone}`}

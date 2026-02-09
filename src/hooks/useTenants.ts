@@ -39,7 +39,7 @@ export interface CreateTenantData {
   phone?: string;
 }
 
-export interface UpdateTenantData extends Partial<Omit<CreateTenantData, "property_id">> {
+export interface UpdateTenantData extends Partial<Omit<CreateTenantData, "property_id" | "email" | "full_name" | "phone">> {
   id: string;
   payment_status?: "paid" | "pending" | "overdue";
 }

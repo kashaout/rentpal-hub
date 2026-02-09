@@ -1,7 +1,10 @@
-import { Bell, Search, Plus } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
+import { useUnreadAlertCount } from "@/hooks/useAutomationWorkflows";
+import { Badge } from "@/components/ui/badge";
 
 interface HeaderProps {
   title: string;
@@ -9,6 +12,16 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
+  const { profile } = useAuth();
+  const unreadAlerts = useUnreadAlertCount();
+
+  const initials = profile?.full_name
+    ?.split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || profile?.email?.[0]?.toUpperCase() || "U";
+
   return (
     <header className="flex h-16 items-center justify-between border-b bg-card px-6">
       <div>
@@ -30,22 +43,25 @@ export function Header({ title, subtitle }: HeaderProps) {
           />
         </div>
 
-        {/* Add Button */}
-        <Button className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90 transition-opacity">
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Add New</span>
-        </Button>
-
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
-          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-accent" />
+          {unreadAlerts > 0 ? (
+            <Badge 
+              variant="destructive" 
+              className="absolute -right-1 -top-1 h-5 min-w-5 p-0 flex items-center justify-center text-xs"
+            >
+              {unreadAlerts > 99 ? "99+" : unreadAlerts}
+            </Badge>
+          ) : (
+            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-accent" />
+          )}
         </Button>
 
         {/* User Avatar */}
         <Avatar className="h-9 w-9 cursor-pointer border-2 border-transparent transition-colors hover:border-accent">
           <AvatarFallback className="bg-gradient-slate text-primary-foreground text-sm font-medium">
-            JD
+            {initials}
           </AvatarFallback>
         </Avatar>
       </div>
