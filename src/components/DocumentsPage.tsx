@@ -11,6 +11,11 @@ import {
   Trash2,
   MoreHorizontal,
   Loader2,
+  Pen,
+  CheckCircle2,
+  Clock,
+  Eye,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,9 +43,13 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useDocuments, Document } from "@/hooks/useDocuments";
 import { useProperties } from "@/hooks/useProperties";
+import { useMyLeaseAgreements, useSignLeaseAgreement, LeaseAgreement } from "@/hooks/useLeaseAgreements";
+import { useAuth } from "@/hooks/useAuth";
+import { formatCurrency } from "@/lib/formatCurrency";
 import { format } from "date-fns";
 
 const categories = ["All", "Leases", "Reports", "Financial", "Insurance", "Maintenance", "Other"];
@@ -70,11 +79,15 @@ export function DocumentsPage() {
   const [uploadCategory, setUploadCategory] = useState("Other");
   const [uploadPropertyId, setUploadPropertyId] = useState<string>("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [reviewAgreement, setReviewAgreement] = useState<LeaseAgreement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { user, isLandlord } = useAuth();
   const { documents, isLoading, uploading, uploadDocument, deleteDocument, downloadDocument } =
     useDocuments();
   const { data: properties = [] } = useProperties();
+  const { data: leaseAgreements = [] } = useMyLeaseAgreements();
+  const signAgreement = useSignLeaseAgreement();
 
   const filteredDocs = documents.filter((doc) => {
     const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -325,6 +338,78 @@ export function DocumentsPage() {
         </div>
       </div>
 
+      {/* Lease Agreements Section */}
+      {leaseAgreements.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold text-foreground">Lease Agreements</h3>
+          <p className="text-sm text-muted-foreground">
+            {isLandlord
+              ? "Review and counter-sign tenant agreements below."
+              : "Your signed lease agreements are listed below."}
+          </p>
+          <div className="rounded-lg border bg-card divide-y">
+            {leaseAgreements.map((agreement) => {
+              const needsCounterSign = isLandlord && agreement.landlord_user_id === user?.id && agreement.tenant_signed && !agreement.landlord_signed;
+              return (
+                <div
+                  key={agreement.id}
+                  className={cn(
+                    "flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-muted/30",
+                    needsCounterSign && "bg-warning/5"
+                  )}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <FileText className="h-5 w-5 shrink-0 text-primary" />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground truncate">
+                          Lease — Unit {agreement.unit_number}
+                        </span>
+                        {needsCounterSign && (
+                          <Badge className="bg-warning text-warning-foreground text-xs">
+                            Needs Signature
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span>{agreement.tenant_name}</span>
+                        <span>•</span>
+                        <span>{format(new Date(agreement.lease_start), "MMM d, yyyy")} – {format(new Date(agreement.lease_end), "MMM d, yyyy")}</span>
+                        <span>•</span>
+                        <span>{formatCurrency(agreement.rent_amount, agreement.currency)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1 text-xs">
+                      {agreement.tenant_signed ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                      ) : (
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                      {agreement.landlord_signed ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                      ) : (
+                        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => setReviewAgreement(agreement)}
+                    >
+                      <Eye className="h-4 w-4" />
+                      Review
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Upload Dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
         <DialogContent>
@@ -382,6 +467,124 @@ export function DocumentsPage() {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lease Agreement Review & Sign Dialog */}
+      <Dialog open={!!reviewAgreement} onOpenChange={(open) => !open && setReviewAgreement(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          {reviewAgreement && (() => {
+            const isLandlordParty = reviewAgreement.landlord_user_id === user?.id;
+            const needsCounterSign = isLandlord && isLandlordParty && reviewAgreement.tenant_signed && !reviewAgreement.landlord_signed;
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    Lease Agreement — Unit {reviewAgreement.unit_number}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Review the full agreement details below.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4 py-2">
+                  {needsCounterSign && (
+                    <div className="rounded-lg bg-warning/10 border border-warning/20 p-3 flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                      <p className="text-sm text-warning">
+                        The tenant ({reviewAgreement.tenant_name}) has signed this agreement. Please review the terms and counter-sign to activate the lease.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Tenant</p>
+                      <p className="font-medium text-foreground">{reviewAgreement.tenant_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Landlord</p>
+                      <p className="font-medium text-foreground">{reviewAgreement.landlord_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Lease Period</p>
+                      <p className="font-medium text-foreground">
+                        {format(new Date(reviewAgreement.lease_start), "MMM d, yyyy")} – {format(new Date(reviewAgreement.lease_end), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Rent Amount</p>
+                      <p className="font-medium text-foreground">
+                        {formatCurrency(reviewAgreement.rent_amount, reviewAgreement.currency)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <p className="font-medium text-foreground mb-2">Terms & Conditions</p>
+                    <div className="rounded-lg bg-secondary p-4 text-sm text-muted-foreground whitespace-pre-line max-h-60 overflow-y-auto">
+                      {reviewAgreement.terms}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="flex items-center gap-6 text-sm">
+                    <div className="flex items-center gap-2">
+                      {reviewAgreement.tenant_signed ? (
+                        <CheckCircle2 className="h-4 w-4 text-success" />
+                      ) : (
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className={reviewAgreement.tenant_signed ? "text-success" : "text-muted-foreground"}>
+                        Tenant {reviewAgreement.tenant_signed
+                          ? `Signed ${reviewAgreement.tenant_signed_at ? format(new Date(reviewAgreement.tenant_signed_at), "MMM d, yyyy") : ""}`
+                          : "Pending"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {reviewAgreement.landlord_signed ? (
+                        <CheckCircle2 className="h-4 w-4 text-success" />
+                      ) : (
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className={reviewAgreement.landlord_signed ? "text-success" : "text-muted-foreground"}>
+                        Landlord {reviewAgreement.landlord_signed
+                          ? `Signed ${reviewAgreement.landlord_signed_at ? format(new Date(reviewAgreement.landlord_signed_at), "MMM d, yyyy") : ""}`
+                          : "Pending"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setReviewAgreement(null)}>
+                    Close
+                  </Button>
+                  {needsCounterSign && (
+                    <Button
+                      className="gap-2 bg-warning text-warning-foreground hover:bg-warning/90"
+                      disabled={signAgreement.isPending}
+                      onClick={async () => {
+                        await signAgreement.mutateAsync({ agreementId: reviewAgreement.id, role: "landlord" });
+                        setReviewAgreement(null);
+                      }}
+                    >
+                      {signAgreement.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Pen className="h-4 w-4" />
+                      )}
+                      Counter-Sign Agreement
+                    </Button>
+                  )}
+                </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
