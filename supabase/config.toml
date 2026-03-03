@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.rate-limited-auth]
 verify_jwt = false
+
+[functions.daily-workflow-check]
+verify_jwt = false
