@@ -7,6 +7,53 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Rate limiting: max 10 requests per hour per user
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+async function checkRateLimit(supabaseService: any, userId: string): Promise<{ allowed: boolean; remaining: number }> {
+  const identifier = `generate-insights:${userId}`;
+  const now = new Date();
+  const windowStart = new Date(now.getTime() - RATE_LIMIT_WINDOW_MS);
+
+  const { data: existing } = await supabaseService
+    .from("rate_limits")
+    .select("*")
+    .eq("identifier", identifier)
+    .maybeSingle();
+
+  if (!existing) {
+    await supabaseService.from("rate_limits").insert({
+      identifier,
+      attempts: 1,
+      first_attempt: now.toISOString(),
+    });
+    return { allowed: true, remaining: RATE_LIMIT_MAX - 1 };
+  }
+
+  const firstAttempt = new Date(existing.first_attempt);
+
+  // Reset window if expired
+  if (firstAttempt < windowStart) {
+    await supabaseService
+      .from("rate_limits")
+      .update({ attempts: 1, first_attempt: now.toISOString() })
+      .eq("id", existing.id);
+    return { allowed: true, remaining: RATE_LIMIT_MAX - 1 };
+  }
+
+  if (existing.attempts >= RATE_LIMIT_MAX) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  await supabaseService
+    .from("rate_limits")
+    .update({ attempts: existing.attempts + 1 })
+    .eq("id", existing.id);
+
+  return { allowed: true, remaining: RATE_LIMIT_MAX - existing.attempts - 1 };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -23,6 +70,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
@@ -38,6 +86,27 @@ serve(async (req) => {
     }
 
     const userId = claims.claims.sub;
+
+    // Rate limit check using service role client (rate_limits table blocks all user access)
+    const supabaseService = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false },
+    });
+
+    const { allowed, remaining } = await checkRateLimit(supabaseService, userId);
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: "Rate limit exceeded. Max 10 requests per hour." }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": "3600",
+            "X-RateLimit-Remaining": "0",
+          },
+        }
+      );
+    }
 
     // Fetch financial data for analysis
     const [propertiesRes, transactionsRes, tenantsRes, paymentsRes] = await Promise.all([
@@ -170,7 +239,6 @@ Be specific with Nigerian Naira amounts and percentages.`;
     // Parse AI response
     let insights = [];
     try {
-      // Extract JSON from response (handle markdown code blocks)
       const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || content.match(/\{[\s\S]*\}/);
       const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
       const parsed = JSON.parse(jsonStr);
@@ -200,7 +268,7 @@ Be specific with Nigerian Naira amounts and percentages.`;
       await supabase.from("ai_insights").insert(insightRecords);
     }
 
-    return new Response(JSON.stringify({ success: true, count: insights.length }), {
+    return new Response(JSON.stringify({ success: true, count: insights.length, rate_limit_remaining: remaining }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
