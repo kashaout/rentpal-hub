@@ -16,6 +16,7 @@ import {
   ChevronUp,
   Calendar,
   TrendingUp,
+  MessageSquare,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,10 +54,18 @@ import {
   useUpdateMaintenanceRequest,
   MaintenanceRequestWithDetails,
 } from "@/hooks/useMaintenanceRequests";
+import { useLandlordTenantRequests, useRespondToRequest, TenantRequest } from "@/hooks/useTenantRequests";
 import { useMaintenanceUsers } from "@/hooks/useMaintenanceUsers";
 import { useProperties } from "@/hooks/useProperties";
 import { MaintenanceUpdateDialog } from "./maintenance/MaintenanceUpdateDialog";
 import { cn } from "@/lib/utils";
+
+// Unified issue type combining both tables
+interface UnifiedIssue extends MaintenanceRequestWithDetails {
+  source: "maintenance" | "tenant_request";
+  category?: string;
+  landlord_response?: string | null;
+}
 
 const statusConfig = {
   pending: { 
@@ -100,6 +109,7 @@ export function IssueReportingPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [propertyFilter, setPropertyFilter] = useState<string>("all");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("created_at");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
@@ -107,15 +117,55 @@ export function IssueReportingPage() {
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
 
   const { data: requests, isLoading: loadingRequests } = useMaintenanceRequests();
+  const { data: tenantRequests, isLoading: loadingTenantRequests } = useLandlordTenantRequests();
   const { data: maintenanceUsers, isLoading: loadingUsers } = useMaintenanceUsers();
   const { data: properties } = useProperties();
   const updateRequest = useUpdateMaintenanceRequest();
 
+  // Merge maintenance_requests and tenant_requests into unified list
+  const allIssues: UnifiedIssue[] = useMemo(() => {
+    const maintenanceIssues: UnifiedIssue[] = (requests || []).map((r) => ({
+      ...r,
+      source: "maintenance" as const,
+    }));
+
+    // Map tenant_requests to the unified shape
+    const propertyMap = new Map(properties?.map((p) => [p.id, p]) || []);
+    const tenantIssues: UnifiedIssue[] = (tenantRequests || []).map((tr) => {
+      const prop = propertyMap.get(tr.property_id);
+      return {
+        id: tr.id,
+        source: "tenant_request" as const,
+        tenant_id: tr.tenant_user_id,
+        property_id: tr.property_id,
+        title: tr.subject,
+        description: tr.message,
+        priority: tr.priority as any,
+        status: tr.status === "open" ? "pending" : tr.status === "responded" ? "completed" : tr.status as any,
+        created_at: tr.created_at,
+        updated_at: tr.updated_at,
+        resolved_at: tr.responded_at,
+        assigned_to: null,
+        assigned_user_name: null,
+        assigned_user_email: null,
+        repair_notes: null,
+        photo_urls: null,
+        rating: null,
+        property_name: prop?.name || "Unknown",
+        property_address: prop?.address || "",
+        category: tr.category,
+        landlord_response: tr.landlord_response,
+      };
+    });
+
+    return [...maintenanceIssues, ...tenantIssues];
+  }, [requests, tenantRequests, properties]);
+
   // Compute stats
   const stats = useMemo(() => {
-    if (!requests) return { total: 0, pending: 0, inProgress: 0, completed: 0, avgResolutionTime: 0 };
+    if (allIssues.length === 0) return { total: 0, pending: 0, inProgress: 0, completed: 0, avgResolutionTime: 0, tenantRequests: 0 };
     
-    const completed = requests.filter(r => r.status === "completed");
+    const completed = allIssues.filter(r => r.status === "completed");
     const avgTime = completed.length > 0
       ? completed.reduce((acc, r) => {
           if (r.resolved_at) {
@@ -124,23 +174,22 @@ export function IssueReportingPage() {
             return acc + (resolved - created);
           }
           return acc;
-        }, 0) / completed.length / (1000 * 60 * 60 * 24) // Convert to days
+        }, 0) / completed.length / (1000 * 60 * 60 * 24)
       : 0;
 
     return {
-      total: requests.length,
-      pending: requests.filter(r => r.status === "pending").length,
-      inProgress: requests.filter(r => r.status === "in_progress").length,
+      total: allIssues.length,
+      pending: allIssues.filter(r => r.status === "pending").length,
+      inProgress: allIssues.filter(r => r.status === "in_progress").length,
       completed: completed.length,
       avgResolutionTime: Math.round(avgTime * 10) / 10,
+      tenantRequests: allIssues.filter(r => r.source === "tenant_request").length,
     };
-  }, [requests]);
+  }, [allIssues]);
 
-  // Filter and sort requests
+  // Filter and sort
   const filteredRequests = useMemo(() => {
-    if (!requests) return [];
-
-    let filtered = requests.filter(r => {
+    let filtered = allIssues.filter(r => {
       const matchesSearch = 
         r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -149,8 +198,9 @@ export function IssueReportingPage() {
       const matchesStatus = statusFilter === "all" || r.status === statusFilter;
       const matchesPriority = priorityFilter === "all" || r.priority === priorityFilter;
       const matchesProperty = propertyFilter === "all" || r.property_id === propertyFilter;
+      const matchesSource = sourceFilter === "all" || r.source === sourceFilter;
 
-      return matchesSearch && matchesStatus && matchesPriority && matchesProperty;
+      return matchesSearch && matchesStatus && matchesPriority && matchesProperty && matchesSource;
     });
 
     // Sort
@@ -176,7 +226,7 @@ export function IssueReportingPage() {
     });
 
     return filtered;
-  }, [requests, searchQuery, statusFilter, priorityFilter, propertyFilter, sortField, sortDirection]);
+  }, [allIssues, searchQuery, statusFilter, priorityFilter, propertyFilter, sourceFilter, sortField, sortDirection]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -209,7 +259,7 @@ export function IssueReportingPage() {
 
   const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
-  if (loadingRequests) {
+  if (loadingRequests && loadingTenantRequests) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
@@ -309,7 +359,7 @@ export function IssueReportingPage() {
             Issue Reports
           </CardTitle>
           <CardDescription>
-            Track and manage all maintenance issues raised by tenants
+            Track and manage all issues and requests raised by tenants
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -362,6 +412,17 @@ export function IssueReportingPage() {
                     {property.name}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sources</SelectItem>
+                <SelectItem value="maintenance">Maintenance</SelectItem>
+                <SelectItem value="tenant_request">Tenant Requests</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -455,7 +516,12 @@ export function IssueReportingPage() {
                           </TableCell>
                           <TableCell>
                             <div className="space-y-1">
-                              <p className="font-medium">{request.title}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium">{request.title}</p>
+                                <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0", request.source === "tenant_request" ? "bg-accent/10 text-accent border-accent/20" : "bg-primary/10 text-primary border-primary/20")}>
+                                  {request.source === "tenant_request" ? (request.category ? request.category.replace("_", " ") : "Request") : "Maintenance"}
+                                </Badge>
+                              </div>
                               <p className="text-xs text-muted-foreground line-clamp-1">
                                 {request.description}
                               </p>
@@ -540,13 +606,20 @@ export function IssueReportingPage() {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleOpenUpdate(request)}
-                            >
-                              Update
-                            </Button>
+                            {request.source === "maintenance" ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenUpdate(request)}
+                              >
+                                Update
+                              </Button>
+                            ) : (
+                              <Badge variant="outline" className="text-xs">
+                                <MessageSquare className="h-3 w-3 mr-1" />
+                                Request
+                              </Badge>
+                            )}
                           </TableCell>
                         </TableRow>
                         <CollapsibleContent asChild>
@@ -565,6 +638,12 @@ export function IssueReportingPage() {
                                     <div className="mt-3">
                                       <p className="text-xs font-medium text-muted-foreground mb-1">Repair Notes</p>
                                       <p className="text-sm">{request.repair_notes}</p>
+                                    </div>
+                                  )}
+                                  {request.landlord_response && (
+                                    <div className="mt-3">
+                                      <p className="text-xs font-medium text-muted-foreground mb-1">Landlord Response</p>
+                                      <p className="text-sm">{request.landlord_response}</p>
                                     </div>
                                   )}
                                 </div>
@@ -591,7 +670,7 @@ export function IssueReportingPage() {
           </div>
 
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <p>Showing {filteredRequests.length} of {requests?.length || 0} issues</p>
+            <p>Showing {filteredRequests.length} of {allIssues.length} issues</p>
           </div>
         </CardContent>
       </Card>

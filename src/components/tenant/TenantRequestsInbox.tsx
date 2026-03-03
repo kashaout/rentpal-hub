@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMyTenantRequests, useCreateTenantRequest } from "@/hooks/useTenantRequests";
-import { useMaintenanceRequests } from "@/hooks/useMaintenanceRequests";
+import { useMaintenanceRequests, useCreateMaintenanceRequest } from "@/hooks/useMaintenanceRequests";
 import { useTenantLease } from "@/hooks/useTenantPortal";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -32,9 +32,10 @@ const categoryIcons: Record<string, any> = {
   maintenance: Wrench,
 };
 
-function NewRequestDialog({ propertyId }: { propertyId: string }) {
+function NewRequestDialog({ propertyId, tenantId }: { propertyId: string; tenantId?: string }) {
   const { user } = useAuth();
   const createRequest = useCreateTenantRequest();
+  const createMaintenanceRequest = useCreateMaintenanceRequest();
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -44,14 +45,25 @@ function NewRequestDialog({ propertyId }: { propertyId: string }) {
   const handleSubmit = async () => {
     if (!subject.trim() || !message.trim() || !user) return;
 
-    await createRequest.mutateAsync({
-      tenant_user_id: user.id,
-      property_id: propertyId,
-      category,
-      subject: subject.trim(),
-      message: message.trim(),
-      priority,
-    });
+    if (category === "maintenance" && tenantId) {
+      // Create as a maintenance_request so it shows on the issues screen
+      await createMaintenanceRequest.mutateAsync({
+        tenant_id: tenantId,
+        property_id: propertyId,
+        title: subject.trim(),
+        description: message.trim(),
+        priority: priority as any,
+      });
+    } else {
+      await createRequest.mutateAsync({
+        tenant_user_id: user.id,
+        property_id: propertyId,
+        category,
+        subject: subject.trim(),
+        message: message.trim(),
+        priority,
+      });
+    }
 
     setSubject("");
     setMessage("");
@@ -59,6 +71,8 @@ function NewRequestDialog({ propertyId }: { propertyId: string }) {
     setPriority("medium");
     setOpen(false);
   };
+
+  const isPending = createRequest.isPending || createMaintenanceRequest.isPending;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -82,6 +96,7 @@ function NewRequestDialog({ propertyId }: { propertyId: string }) {
                   <SelectItem value="general">General</SelectItem>
                   <SelectItem value="complaint">Complaint</SelectItem>
                   <SelectItem value="lease_question">Lease Question</SelectItem>
+                  <SelectItem value="maintenance">Maintenance Issue</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -106,8 +121,8 @@ function NewRequestDialog({ propertyId }: { propertyId: string }) {
             <Label>Message</Label>
             <Textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Describe your request in detail..." className="mt-1 h-28" />
           </div>
-          <Button onClick={handleSubmit} disabled={!subject.trim() || !message.trim() || createRequest.isPending} className="w-full gap-2">
-            {createRequest.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          <Button onClick={handleSubmit} disabled={!subject.trim() || !message.trim() || isPending} className="w-full gap-2">
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             Submit Request
           </Button>
         </div>
@@ -171,7 +186,7 @@ export function TenantRequestsInbox() {
           <h2 className="font-display text-xl font-semibold text-foreground">Inbox</h2>
           <p className="text-sm text-muted-foreground">All your requests and maintenance issues in one place</p>
         </div>
-        {lease && <NewRequestDialog propertyId={lease.property_id} />}
+        {lease && <NewRequestDialog propertyId={lease.property_id} tenantId={lease.id} />}
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
