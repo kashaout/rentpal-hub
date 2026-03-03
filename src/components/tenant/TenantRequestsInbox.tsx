@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { MessageSquare, Plus, Send, Loader2, Clock, CheckCircle2, AlertCircle, Wrench, HelpCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MessageSquare, Plus, Send, Loader2, Wrench, HelpCircle, AlertCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMyTenantRequests, useCreateTenantRequest } from "@/hooks/useTenantRequests";
 import { useMaintenanceRequests, useCreateMaintenanceRequest } from "@/hooks/useMaintenanceRequests";
 import { useTenantLease } from "@/hooks/useTenantPortal";
+import { useProperties } from "@/hooks/useProperties";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
@@ -32,52 +33,41 @@ const categoryIcons: Record<string, any> = {
   maintenance: Wrench,
 };
 
-function NewRequestDialog({ propertyId, tenantId }: { propertyId: string; tenantId?: string }) {
+function NewRequestDialog({ defaultPropertyId }: { defaultPropertyId?: string }) {
   const { user } = useAuth();
+  const { data: properties } = useProperties();
   const createRequest = useCreateTenantRequest();
-  const createMaintenanceRequest = useCreateMaintenanceRequest();
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("general");
   const [priority, setPriority] = useState("medium");
+  const [propertyId, setPropertyId] = useState(defaultPropertyId || "");
 
   const handleSubmit = async () => {
-    if (!subject.trim() || !message.trim() || !user) return;
+    if (!subject.trim() || !message.trim() || !user || !propertyId) return;
 
-    if (category === "maintenance" && tenantId) {
-      // Create as a maintenance_request so it shows on the issues screen
-      await createMaintenanceRequest.mutateAsync({
-        tenant_id: tenantId,
-        property_id: propertyId,
-        title: subject.trim(),
-        description: message.trim(),
-        priority: priority as any,
-      });
-    } else {
-      await createRequest.mutateAsync({
-        tenant_user_id: user.id,
-        property_id: propertyId,
-        category,
-        subject: subject.trim(),
-        message: message.trim(),
-        priority,
-      });
-    }
+    await createRequest.mutateAsync({
+      tenant_user_id: user.id,
+      property_id: propertyId,
+      category,
+      subject: subject.trim(),
+      message: message.trim(),
+      priority,
+    });
 
     setSubject("");
     setMessage("");
     setCategory("general");
     setPriority("medium");
+    if (!defaultPropertyId) setPropertyId("");
     setOpen(false);
   };
-
-  const isPending = createRequest.isPending || createMaintenanceRequest.isPending;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
+        <Button variant="outline" className="gap-2">
           <Plus className="h-4 w-4" />
           New Request
         </Button>
@@ -87,6 +77,19 @@ function NewRequestDialog({ propertyId, tenantId }: { propertyId: string; tenant
           <DialogTitle>Submit a Request</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
+          {!defaultPropertyId && (
+            <div>
+              <Label>Property</Label>
+              <Select value={propertyId} onValueChange={setPropertyId}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select property..." /></SelectTrigger>
+                <SelectContent>
+                  {properties?.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Category</Label>
@@ -96,7 +99,6 @@ function NewRequestDialog({ propertyId, tenantId }: { propertyId: string; tenant
                   <SelectItem value="general">General</SelectItem>
                   <SelectItem value="complaint">Complaint</SelectItem>
                   <SelectItem value="lease_question">Lease Question</SelectItem>
-                  <SelectItem value="maintenance">Maintenance Issue</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -121,9 +123,96 @@ function NewRequestDialog({ propertyId, tenantId }: { propertyId: string; tenant
             <Label>Message</Label>
             <Textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Describe your request in detail..." className="mt-1 h-28" />
           </div>
-          <Button onClick={handleSubmit} disabled={!subject.trim() || !message.trim() || isPending} className="w-full gap-2">
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          <Button onClick={handleSubmit} disabled={!subject.trim() || !message.trim() || !propertyId || createRequest.isPending} className="w-full gap-2">
+            {createRequest.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             Submit Request
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function NewMaintenanceDialog({ defaultPropertyId, defaultTenantId }: { defaultPropertyId?: string; defaultTenantId?: string }) {
+  const { user } = useAuth();
+  const { data: properties } = useProperties();
+  const createMaintenanceRequest = useCreateMaintenanceRequest();
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState("medium");
+  const [propertyId, setPropertyId] = useState(defaultPropertyId || "");
+
+  const handleSubmit = async () => {
+    if (!title.trim() || !description.trim() || !user || !propertyId) return;
+
+    // Use defaultTenantId if available, otherwise use user.id as fallback
+    const tenantId = defaultTenantId || user.id;
+
+    await createMaintenanceRequest.mutateAsync({
+      tenant_id: tenantId,
+      property_id: propertyId,
+      title: title.trim(),
+      description: description.trim(),
+      priority: priority as any,
+    });
+
+    setTitle("");
+    setDescription("");
+    setPriority("medium");
+    if (!defaultPropertyId) setPropertyId("");
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <Wrench className="h-4 w-4" />
+          New Maintenance
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Report Maintenance Issue</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 pt-2">
+          {!defaultPropertyId && (
+            <div>
+              <Label>Property</Label>
+              <Select value={propertyId} onValueChange={setPropertyId}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select property..." /></SelectTrigger>
+                <SelectContent>
+                  {properties?.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div>
+            <Label>Priority</Label>
+            <Select value={priority} onValueChange={setPriority}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Title</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Leaking faucet in kitchen" className="mt-1" />
+          </div>
+          <div>
+            <Label>Description</Label>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the issue in detail..." className="mt-1 h-28" />
+          </div>
+          <Button onClick={handleSubmit} disabled={!title.trim() || !description.trim() || !propertyId || createMaintenanceRequest.isPending} className="w-full gap-2">
+            {createMaintenanceRequest.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Submit Issue
           </Button>
         </div>
       </DialogContent>
@@ -139,7 +228,6 @@ export function TenantRequestsInbox() {
 
   const isLoading = requestsLoading || maintenanceLoading;
 
-  // Combine general requests and maintenance requests into unified view
   const allItems = [
     ...(requests || []).map((r) => ({
       id: r.id,
@@ -186,7 +274,10 @@ export function TenantRequestsInbox() {
           <h2 className="font-display text-xl font-semibold text-foreground">Inbox</h2>
           <p className="text-sm text-muted-foreground">All your requests and maintenance issues in one place</p>
         </div>
-        {lease && <NewRequestDialog propertyId={lease.property_id} tenantId={lease.id} />}
+        <div className="flex gap-2">
+          <NewRequestDialog defaultPropertyId={lease?.property_id} />
+          <NewMaintenanceDialog defaultPropertyId={lease?.property_id} defaultTenantId={lease?.id} />
+        </div>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
