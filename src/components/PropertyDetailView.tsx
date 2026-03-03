@@ -94,7 +94,8 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
   };
 
   const notifyLandlord = async (agreementId: string, landlordId: string) => {
-    if (!user || !property) return;
+    if (!user || !property || !selectedRange.from || !selectedRange.to) return;
+    // In-app notification
     await supabase.from("landlord_notifications" as any).insert({
       landlord_user_id: landlordId,
       tenant_user_id: user.id,
@@ -104,6 +105,18 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
       title: "New Lease Agreement Awaiting Your Signature",
       message: `${fullName || "A tenant"} has signed a lease agreement for ${property.name}, Unit ${unitNumber}. Please review and counter-sign.`,
     } as any);
+
+    // Email notification (fire-and-forget)
+    supabase.functions.invoke("notify-landlord-lease", {
+      body: {
+        landlord_user_id: landlordId,
+        tenant_name: fullName || "A tenant",
+        property_name: property.name,
+        unit_number: unitNumber,
+        lease_start: format(selectedRange.from, "MMM d, yyyy"),
+        lease_end: format(selectedRange.to, "MMM d, yyyy"),
+      },
+    }).catch(console.error);
   };
 
   // Get booked date ranges
