@@ -39,6 +39,7 @@ const tenantSchema = z.object({
   lease_start: z.string().min(1, "Lease start date is required"),
   lease_end: z.string().min(1, "Lease end date is required"),
   rent_amount: z.coerce.number().min(0, "Rent must be positive"),
+  tenant_type: z.enum(["long_stay", "short_stay"]).optional(),
 });
 
 type TenantFormData = z.infer<typeof tenantSchema>;
@@ -66,8 +67,13 @@ export function TenantFormDialog({ open, onOpenChange, tenant, defaultPropertyId
       lease_start: tenant?.lease_start || "",
       lease_end: tenant?.lease_end || "",
       rent_amount: tenant?.rent_amount || 0,
+      tenant_type: (tenant?.tenant_type as "long_stay" | "short_stay") || "long_stay",
     },
   });
+
+  const selectedPropertyId = form.watch("property_id");
+  const selectedProperty = properties?.find((p) => p.id === selectedPropertyId);
+  const isAirbnbProperty = selectedProperty?.listing_type === "airbnb";
 
   const onSubmit = async (data: TenantFormData) => {
     try {
@@ -79,6 +85,7 @@ export function TenantFormDialog({ open, onOpenChange, tenant, defaultPropertyId
           lease_start: data.lease_start,
           lease_end: data.lease_end,
           rent_amount: data.rent_amount,
+          tenant_type: isAirbnbProperty ? data.tenant_type : undefined,
         });
       } else {
         await createTenant.mutateAsync({
@@ -88,6 +95,7 @@ export function TenantFormDialog({ open, onOpenChange, tenant, defaultPropertyId
           lease_end: data.lease_end,
           rent_amount: data.rent_amount,
           user_id: data.user_id || undefined,
+          tenant_type: isAirbnbProperty ? data.tenant_type : undefined,
         });
       }
       onOpenChange(false);
@@ -160,6 +168,34 @@ export function TenantFormDialog({ open, onOpenChange, tenant, defaultPropertyId
                   No available tenant users found. Users need to sign up with the "Tenant" role, or an admin can assign the tenant role to existing users.
                 </AlertDescription>
               </Alert>
+            )}
+
+            {/* Tenant Type - only for Airbnb properties */}
+            {isAirbnbProperty && (
+              <FormField
+                control={form.control}
+                name="tenant_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stay Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || "long_stay"}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select stay type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="long_stay">Long Stay</SelectItem>
+                        <SelectItem value="short_stay">Short Stay</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Choose whether this tenant is a long-term or short-term guest.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
 
             <div className="grid grid-cols-2 gap-4">

@@ -17,6 +17,7 @@ export interface Property {
   currency: string;
   region: string;
   property_type: string;
+  listing_type: string;
   acquisition_cost: number | null;
   current_value: number | null;
   annual_expenses: number | null;
@@ -32,6 +33,7 @@ export interface CreatePropertyData {
   units: number;
   monthly_rent: number;
   image_url?: string;
+  listing_type?: string;
 }
 
 export interface UpdatePropertyData extends Partial<CreatePropertyData> {

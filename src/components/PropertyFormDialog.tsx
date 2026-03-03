@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Building2, MapPin, DollarSign, Hash, ImageIcon } from "lucide-react";
+import { Building2, MapPin, DollarSign, Hash, ImageIcon, Home } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Form,
   FormControl,
@@ -19,7 +18,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useCreateProperty, useUpdateProperty, Property } from "@/hooks/useProperties";
 
 const propertySchema = z.object({
@@ -28,6 +35,7 @@ const propertySchema = z.object({
   units: z.coerce.number().min(1, "Must have at least 1 unit"),
   monthly_rent: z.coerce.number().min(0, "Rent must be positive"),
   image_url: z.string().url().optional().or(z.literal("")),
+  listing_type: z.enum(["standard", "airbnb"]),
 });
 
 type PropertyFormData = z.infer<typeof propertySchema>;
@@ -51,8 +59,11 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
       units: property?.units || 1,
       monthly_rent: property?.monthly_rent || 0,
       image_url: property?.image_url || "",
+      listing_type: (property?.listing_type as "standard" | "airbnb") || "standard",
     },
   });
+
+  const listingType = form.watch("listing_type");
 
   const onSubmit = async (data: PropertyFormData) => {
     try {
@@ -64,6 +75,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
           units: data.units,
           monthly_rent: data.monthly_rent,
           image_url: data.image_url || undefined,
+          listing_type: data.listing_type,
         });
       } else {
         await createProperty.mutateAsync({
@@ -72,6 +84,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
           units: data.units,
           monthly_rent: data.monthly_rent,
           image_url: data.image_url || undefined,
+          listing_type: data.listing_type,
         });
       }
       onOpenChange(false);
@@ -94,6 +107,33 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="listing_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Listing Type</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select listing type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="standard">Standard (Annual Rent)</SelectItem>
+                      <SelectItem value="airbnb">Airbnb (Short-term Rental)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    {listingType === "airbnb"
+                      ? "Airbnb properties support Long Stay and Short Stay tenants."
+                      : "Standard properties use annual rent billing."}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="name"
@@ -151,7 +191,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
                 name="monthly_rent"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Monthly Rent ($)</FormLabel>
+                    <FormLabel>{listingType === "airbnb" ? "Nightly Rate (₦)" : "Monthly Rent (₦)"}</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

@@ -1,4 +1,4 @@
-import { MapPin, Users, DollarSign, MoreHorizontal, Pencil, Trash2, TrendingUp, TrendingDown, AlertTriangle, Wrench, Clock, ShieldCheck } from "lucide-react";
+import { MapPin, Users, DollarSign, MoreHorizontal, Pencil, Trash2, TrendingUp, TrendingDown, AlertTriangle, Wrench, Clock, ShieldCheck, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +67,10 @@ export function PropertyCard({ property, onEdit, className }: PropertyCardProps)
 
   // Determine status badges
   const badges = [];
+
+  if (property.listing_type === "airbnb") {
+    badges.push({ label: "Airbnb", variant: "default" as const, icon: Home });
+  }
   
   if (isProfitable) {
     badges.push({ label: "Profitable", variant: "success" as const, icon: TrendingUp });
@@ -95,6 +99,8 @@ export function PropertyCard({ property, onEdit, className }: PropertyCardProps)
         return "bg-destructive/10 text-destructive border-destructive/20";
       case "warning":
         return "bg-warning/10 text-warning border-warning/20";
+      case "default":
+        return "bg-primary/10 text-primary border-primary/20";
       default:
         return "";
     }

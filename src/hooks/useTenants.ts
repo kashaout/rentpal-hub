@@ -13,6 +13,7 @@ export interface Tenant {
   lease_end: string;
   rent_amount: number;
   payment_status: "paid" | "pending" | "overdue";
+  tenant_type: "long_stay" | "short_stay";
   created_at: string;
   updated_at: string;
 }
@@ -32,6 +33,7 @@ export interface CreateTenantData {
   lease_start: string;
   lease_end: string;
   rent_amount: number;
+  tenant_type?: "long_stay" | "short_stay";
   user_id?: string;
   // For creating a new user/profile inline
   email?: string;
@@ -42,6 +44,7 @@ export interface CreateTenantData {
 export interface UpdateTenantData extends Partial<Omit<CreateTenantData, "property_id" | "email" | "full_name" | "phone">> {
   id: string;
   payment_status?: "paid" | "pending" | "overdue";
+  tenant_type?: "long_stay" | "short_stay";
 }
 
 export function useTenants(propertyId?: string) {
@@ -83,6 +86,7 @@ export function useTenants(propertyId?: string) {
           return {
             ...tenant,
             payment_status: tenant.payment_status as "paid" | "pending" | "overdue",
+            tenant_type: (tenant.tenant_type as "long_stay" | "short_stay") || "long_stay",
             property_name: property?.name || "Unknown Property",
             profile,
           };
