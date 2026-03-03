@@ -20,6 +20,8 @@ import { FinanceDashboard } from "@/components/finance/FinanceDashboard";
 import { ComplianceDashboard } from "@/components/compliance/ComplianceDashboard";
 import { AutomationDashboard } from "@/components/automation/AutomationDashboard";
 import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
+import { WorkOrdersDashboard } from "@/components/workorders/WorkOrdersDashboard";
+import { EscrowDisputesDashboard } from "@/components/escrow/EscrowDisputesDashboard";
 import { useAuth } from "@/hooks/useAuth";
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
@@ -29,13 +31,16 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   "agreements": { title: "Lease Agreements", subtitle: "Review and sign your lease agreements." },
   "tenant-inbox": { title: "Inbox", subtitle: "All your requests and communication in one place." },
   "maintenance-portal": { title: "Maintenance", subtitle: "Manage repair requests and track work orders." },
+  "work-orders": { title: "Work Orders", subtitle: "9-stage work order lifecycle with SLA tracking." },
   finance: { title: "Financial Intelligence", subtitle: "P&L, cashflow, ROI analytics and AI insights." },
+  escrow: { title: "Escrow & Disputes", subtitle: "Manage escrow payments, payouts, and dispute resolution." },
   properties: { title: "Properties", subtitle: "Manage your rental properties." },
   tenants: { title: "Tenants", subtitle: "View and manage your tenants." },
   "issue-reports": { title: "Issue Reports", subtitle: "Track all maintenance issues and assignments." },
   compliance: { title: "Compliance Tracker", subtitle: "Monitor certifications, inspections, and legal requirements." },
   automation: { title: "Automation", subtitle: "Configure workflows for alerts and notifications." },
   payments: { title: "Payments", subtitle: "Track rent and payment history." },
+  "reviews-page": { title: "Reviews", subtitle: "Property and service reviews from guests and hosts." },
   reports: { title: "Reports", subtitle: "Analytics and performance metrics." },
   documents: { title: "Documents", subtitle: "Leases, contracts, and more." },
   "manage-users": { title: "Manage Users", subtitle: "Add and manage user accounts." },
@@ -82,8 +87,12 @@ const Index = () => {
         return <TenantRequestsInbox />;
       case "maintenance-portal":
         return <MaintenancePortal />;
+      case "work-orders":
+        return <WorkOrdersDashboard />;
       case "finance":
         return <FinanceDashboard />;
+      case "escrow":
+        return <EscrowDisputesDashboard />;
       case "issue-reports":
         return <IssueReportingPage />;
       case "compliance":
@@ -92,6 +101,8 @@ const Index = () => {
         return <AutomationDashboard />;
       case "payments":
         return <PaymentsPage />;
+      case "reviews-page":
+        return <ReportsPage />; /* TODO: dedicated reviews page */
       case "properties":
         return <PropertiesPage />;
       case "tenants":
