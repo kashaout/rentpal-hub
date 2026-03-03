@@ -86,6 +86,7 @@ interface CreateMaintenanceRequestInput {
   title: string;
   description: string;
   priority?: "low" | "medium" | "high" | "urgent";
+  photo_urls?: string[];
 }
 
 export function useCreateMaintenanceRequest() {
@@ -101,6 +102,7 @@ export function useCreateMaintenanceRequest() {
           title: input.title,
           description: input.description,
           priority: input.priority || "medium",
+          photo_urls: input.photo_urls || [],
         })
         .select()
         .single();

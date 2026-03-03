@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { format } from "date-fns";
-import { MessageSquare, Plus, Send, Loader2, Wrench, HelpCircle, AlertCircle } from "lucide-react";
+import { MessageSquare, Plus, Send, Loader2, Wrench, HelpCircle, AlertCircle, ImagePlus, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,13 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMyTenantRequests, useCreateTenantRequest } from "@/hooks/useTenantRequests";
 import { useMaintenanceRequests, useCreateMaintenanceRequest } from "@/hooks/useMaintenanceRequests";
 import { useTenantLease } from "@/hooks/useTenantPortal";
 import { useProperties } from "@/hooks/useProperties";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const statusStyles: Record<string, string> = {
   open: "bg-accent/10 text-accent border-accent/20",
@@ -142,27 +144,77 @@ function NewMaintenanceDialog({ defaultPropertyId, defaultTenantId }: { defaultP
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("medium");
   const [propertyId, setPropertyId] = useState(defaultPropertyId || "");
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (photos.length + files.length > 5) {
+      toast.error("Maximum 5 photos allowed");
+      return;
+    }
+    const newPhotos = [...photos, ...files];
+    setPhotos(newPhotos);
+    // Generate previews
+    const newPreviews = files.map((f) => URL.createObjectURL(f));
+    setPreviews((prev) => [...prev, ...newPreviews]);
+  };
+
+  const removePhoto = (index: number) => {
+    URL.revokeObjectURL(previews[index]);
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadPhotos = async (): Promise<string[]> => {
+    if (photos.length === 0) return [];
+    const urls: string[] = [];
+    for (const photo of photos) {
+      const ext = photo.name.split(".").pop();
+      const path = `${user!.id}/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("maintenance-photos").upload(path, photo);
+      if (error) throw error;
+      urls.push(path);
+    }
+    return urls;
+  };
 
   const handleSubmit = async () => {
     if (!title.trim() || !description.trim() || !user || !propertyId) return;
 
-    // Use defaultTenantId if available, otherwise use user.id as fallback
-    const tenantId = defaultTenantId || user.id;
+    setUploading(true);
+    try {
+      const photoUrls = await uploadPhotos();
+      const tenantId = defaultTenantId || user.id;
 
-    await createMaintenanceRequest.mutateAsync({
-      tenant_id: tenantId,
-      property_id: propertyId,
-      title: title.trim(),
-      description: description.trim(),
-      priority: priority as any,
-    });
+      await createMaintenanceRequest.mutateAsync({
+        tenant_id: tenantId,
+        property_id: propertyId,
+        title: title.trim(),
+        description: description.trim(),
+        priority: priority as any,
+        photo_urls: photoUrls.length > 0 ? photoUrls : undefined,
+      });
 
-    setTitle("");
-    setDescription("");
-    setPriority("medium");
-    if (!defaultPropertyId) setPropertyId("");
-    setOpen(false);
+      // Cleanup
+      previews.forEach((p) => URL.revokeObjectURL(p));
+      setTitle("");
+      setDescription("");
+      setPriority("medium");
+      setPhotos([]);
+      setPreviews([]);
+      if (!defaultPropertyId) setPropertyId("");
+      setOpen(false);
+    } catch (err: any) {
+      toast.error(`Failed to submit: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
   };
+
+  const isPending = createMaintenanceRequest.isPending || uploading;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -208,11 +260,48 @@ function NewMaintenanceDialog({ defaultPropertyId, defaultTenantId }: { defaultP
           </div>
           <div>
             <Label>Description</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the issue in detail..." className="mt-1 h-28" />
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the issue in detail..." className="mt-1 h-24" />
           </div>
-          <Button onClick={handleSubmit} disabled={!title.trim() || !description.trim() || !propertyId || createMaintenanceRequest.isPending} className="w-full gap-2">
-            {createMaintenanceRequest.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            Submit Issue
+
+          {/* Photo Upload */}
+          <div>
+            <Label>Photos (optional, max 5)</Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
+              {previews.map((src, i) => (
+                <div key={i} className="relative h-16 w-16 rounded-md overflow-hidden border border-border">
+                  <img src={src} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(i)}
+                    className="absolute -top-1 -right-1 rounded-full bg-destructive p-0.5 text-destructive-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              {photos.length < 5 && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed border-border text-muted-foreground hover:bg-muted/50 transition-colors"
+                >
+                  <ImagePlus className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <Button onClick={handleSubmit} disabled={!title.trim() || !description.trim() || !propertyId || isPending} className="w-full gap-2">
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {uploading ? "Uploading photos..." : "Submit Issue"}
           </Button>
         </div>
       </DialogContent>

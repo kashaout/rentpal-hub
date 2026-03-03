@@ -183,18 +183,22 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
-  const { signOut, isAdmin, isConsultant, isLandlord, isTenant, isMaintenance, profile, roles } = useAuth();
+  const { signOut, isAdmin, isConsultant, isLandlord, isTenant, isMaintenance, isVendor, profile, roles } = useAuth();
   const unreadAlerts = useUnreadAlertCount();
 
-  // Base nav items
+  // Role-based navigation matrix
+  // Admin & Landlord: see everything
+  // Consultant: management views (no escrow/reviews)
+  // Tenant: portal, browse, agreements, inbox
+  // Maintenance/Vendor: maintenance portal, work orders, assigned issues
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isAdmin || isConsultant || isLandlord },
     { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant },
     { icon: Building2, label: "Browse Properties", id: "browse-properties", show: isTenant },
-    { icon: FileText, label: "Agreements", id: "agreements", show: isTenant || isLandlord },
+    { icon: FileText, label: "Agreements", id: "agreements", show: isTenant || isLandlord || isAdmin },
     { icon: Users, label: "Inbox", id: "tenant-inbox", show: isTenant },
-    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isMaintenance },
-    { icon: Clipboard, label: "Work Orders", id: "work-orders", show: isAdmin || isConsultant || isLandlord || isMaintenance },
+    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isMaintenance || isVendor },
+    { icon: Clipboard, label: "Work Orders", id: "work-orders", show: isAdmin || isConsultant || isLandlord || isMaintenance || isVendor },
     { icon: Wallet, label: "Finance", id: "finance", show: isAdmin || isConsultant || isLandlord },
     { icon: Scale, label: "Escrow & Disputes", id: "escrow", show: isAdmin || isLandlord },
     { icon: Building2, label: "Properties", id: "properties", show: isAdmin || isConsultant || isLandlord },
@@ -202,10 +206,10 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     { icon: ClipboardList, label: "Issue Reports", id: "issue-reports", show: isAdmin || isConsultant || isLandlord },
     { icon: ShieldCheck, label: "Compliance", id: "compliance", show: isAdmin || isConsultant || isLandlord },
     { icon: Zap, label: "Automation", id: "automation", show: isAdmin || isConsultant || isLandlord, badge: unreadAlerts },
-    { icon: Receipt, label: "Payments", id: "payments", show: isAdmin || isConsultant || isLandlord },
+    { icon: Receipt, label: "Payments", id: "payments", show: isAdmin || isConsultant || isLandlord || isTenant },
     { icon: Star, label: "Reviews", id: "reviews-page", show: isAdmin || isLandlord },
     { icon: BarChart3, label: "Reports", id: "reports", show: isAdmin || isConsultant || isLandlord },
-    { icon: FileText, label: "Documents", id: "documents", show: true },
+    { icon: FileText, label: "Documents", id: "documents", show: isAdmin || isConsultant || isLandlord || isTenant },
   ];
 
   // Admin-only items
@@ -223,6 +227,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     if (isConsultant) return { label: "Consultant", className: "bg-accent/20 text-accent" };
     if (isLandlord) return { label: "Landlord", className: "bg-success/20 text-success" };
     if (isMaintenance) return { label: "Maintenance", className: "bg-warning/20 text-warning" };
+    if (isVendor) return { label: "Vendor", className: "bg-secondary text-secondary-foreground" };
     if (isTenant) return { label: "Tenant", className: "bg-primary/20 text-primary-foreground" };
     return null;
   };
