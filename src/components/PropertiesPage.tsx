@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Building2, Plus, Search, Filter, Loader2, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PropertyDetailView } from "@/components/PropertyDetailView";
 import {
   Select,
   SelectContent,
@@ -19,8 +20,19 @@ export function PropertiesPage() {
   const [editingProperty, setEditingProperty] = useState<PropertyWithStats | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<string>("name");
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
 
   const { data: properties, isLoading } = useProperties();
+
+  // If a property is selected, show detail view
+  if (selectedPropertyId) {
+    return (
+      <PropertyDetailView
+        propertyId={selectedPropertyId}
+        onBack={() => setSelectedPropertyId(null)}
+      />
+    );
+  }
 
   const handleEdit = (property: PropertyWithStats) => {
     setEditingProperty(property);
@@ -79,7 +91,7 @@ export function PropertiesPage() {
     list.length > 0 ? (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {list.map((property) => (
-          <PropertyCard key={property.id} property={property} onEdit={handleEdit} />
+          <PropertyCard key={property.id} property={property} onEdit={handleEdit} onClick={(p) => setSelectedPropertyId(p.id)} />
         ))}
       </div>
     ) : (

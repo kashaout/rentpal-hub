@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Building2, MapPin, DollarSign, Hash, ImageIcon, Home } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +31,18 @@ import {
 } from "@/components/ui/select";
 import { useCreateProperty, useUpdateProperty, Property } from "@/hooks/useProperties";
 
+const AVAILABLE_AMENITIES = [
+  "wifi", "parking", "coffee", "kitchen", "pool",
+  "gym", "security", "ac", "tv", "bathroom", "bedroom",
+];
+
+const AMENITY_LABELS: Record<string, string> = {
+  wifi: "Free WiFi", parking: "Free Parking", coffee: "Coffee Maker",
+  kitchen: "Full Kitchen", pool: "Swimming Pool", gym: "Fitness Center",
+  security: "24/7 Security", ac: "Air Conditioning", tv: "Smart TV",
+  bathroom: "Private Bathroom", bedroom: "King Bed",
+};
+
 const propertySchema = z.object({
   name: z.string().min(1, "Property name is required").max(100),
   address: z.string().min(1, "Address is required").max(255),
@@ -36,6 +50,8 @@ const propertySchema = z.object({
   monthly_rent: z.coerce.number().min(0, "Rent must be positive"),
   image_url: z.string().url().optional().or(z.literal("")),
   listing_type: z.enum(["standard", "airbnb"]),
+  description: z.string().optional().or(z.literal("")),
+  amenities: z.array(z.string()).optional(),
 });
 
 type PropertyFormData = z.infer<typeof propertySchema>;
@@ -60,6 +76,8 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
       monthly_rent: property?.monthly_rent || 0,
       image_url: property?.image_url || "",
       listing_type: (property?.listing_type as "standard" | "airbnb") || "standard",
+      description: property?.description || "",
+      amenities: (property?.amenities as string[]) || [],
     },
   });
 
@@ -76,6 +94,8 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
           monthly_rent: data.monthly_rent,
           image_url: data.image_url || undefined,
           listing_type: data.listing_type,
+          description: data.description || undefined,
+          amenities: data.amenities || [],
         });
       } else {
         await createProperty.mutateAsync({
@@ -85,6 +105,8 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
           monthly_rent: data.monthly_rent,
           image_url: data.image_url || undefined,
           listing_type: data.listing_type,
+          description: data.description || undefined,
+          amenities: data.amenities || [],
         });
       }
       onOpenChange(false);
@@ -221,6 +243,62 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
               )}
             />
 
+            {/* Description */}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description (optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Describe the property, its features, and neighbourhood..."
+                      className="h-20"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Amenities */}
+            {listingType === "airbnb" && (
+              <FormField
+                control={form.control}
+                name="amenities"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amenities & Facilities</FormLabel>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {AVAILABLE_AMENITIES.map((amenity) => {
+                        const checked = (field.value || []).includes(amenity);
+                        return (
+                          <label
+                            key={amenity}
+                            className="flex items-center gap-2 rounded-md border border-border/50 p-2 cursor-pointer hover:bg-secondary transition-colors text-sm"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(c) => {
+                                const current = field.value || [];
+                                field.onChange(
+                                  c
+                                    ? [...current, amenity]
+                                    : current.filter((a: string) => a !== amenity)
+                                );
+                              }}
+                            />
+                            {AMENITY_LABELS[amenity] || amenity}
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel

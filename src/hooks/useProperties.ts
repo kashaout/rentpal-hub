@@ -18,6 +18,8 @@ export interface Property {
   region: string;
   property_type: string;
   listing_type: string;
+  description: string | null;
+  amenities: string[];
   acquisition_cost: number | null;
   current_value: number | null;
   annual_expenses: number | null;
@@ -34,6 +36,8 @@ export interface CreatePropertyData {
   monthly_rent: number;
   image_url?: string;
   listing_type?: string;
+  description?: string;
+  amenities?: string[];
 }
 
 export interface UpdatePropertyData extends Partial<CreatePropertyData> {
@@ -63,8 +67,10 @@ export function useProperties() {
 
           return {
             ...property,
+            amenities: (property.amenities as unknown as string[]) || [],
+            description: property.description as string | null,
             occupied_units: count || 0,
-          };
+          } as PropertyWithStats;
         })
       );
 
@@ -87,7 +93,12 @@ export function useProperty(id: string) {
         .maybeSingle();
 
       if (error) throw error;
-      return data as Property | null;
+      if (!data) return null;
+      return {
+        ...data,
+        amenities: (data.amenities as unknown as string[]) || [],
+        description: data.description as string | null,
+      } as Property;
     },
     enabled: !!user && !!id,
   });
