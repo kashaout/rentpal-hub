@@ -13,7 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMyTenantRequests, useCreateTenantRequest } from "@/hooks/useTenantRequests";
 import { useMaintenanceRequests, useCreateMaintenanceRequest } from "@/hooks/useMaintenanceRequests";
 import { useTenantLease } from "@/hooks/useTenantPortal";
-import { useProperties } from "@/hooks/useProperties";
+import { useTenantProperties } from "@/hooks/useTenantProperties";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,7 @@ const categoryIcons: Record<string, any> = {
 
 function NewRequestDialog({ defaultPropertyId }: { defaultPropertyId?: string }) {
   const { user } = useAuth();
-  const { data: properties } = useProperties();
+  const { data: properties } = useTenantProperties();
   const createRequest = useCreateTenantRequest();
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState("");
@@ -137,7 +137,7 @@ function NewRequestDialog({ defaultPropertyId }: { defaultPropertyId?: string })
 
 function NewMaintenanceDialog({ defaultPropertyId, defaultTenantId }: { defaultPropertyId?: string; defaultTenantId?: string }) {
   const { user } = useAuth();
-  const { data: properties } = useProperties();
+  const { data: properties } = useTenantProperties();
   const createMaintenanceRequest = useCreateMaintenanceRequest();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
