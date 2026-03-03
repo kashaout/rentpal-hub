@@ -220,11 +220,27 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
           lease_start: format(selectedRange.from, "yyyy-MM-dd"),
           lease_end: format(selectedRange.to, "yyyy-MM-dd"),
           rent_amount: Number(property.monthly_rent),
-          tenant_type: "long_stay",
+          tenant_type: isAirbnb ? "short_stay" : "long_stay",
           payment_status: "pending",
         });
       } catch (e) {
         console.error("Failed to create tenant record:", e);
+      }
+
+      // For airbnb properties, also create a booking record
+      if (isAirbnb) {
+        try {
+          await createBooking.mutateAsync({
+            property_id: property.id,
+            check_in: format(selectedRange.from, "yyyy-MM-dd"),
+            check_out: format(selectedRange.to, "yyyy-MM-dd"),
+            total_price: totalPrice,
+            guest_count: guestCount,
+            notes: notes || undefined,
+          });
+        } catch (e) {
+          console.error("Failed to create booking record:", e);
+        }
       }
 
       // Store lease agreement as a document for the landlord's document section
@@ -315,42 +331,25 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
 
   const amenities = (property.amenities as string[]) || [];
 
-  // Render the standard rental wizard sidebar
-  const renderStandardSidebar = () => {
-    if (rentalStep === "browse") {
-      return (
-        <>
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CalendarIcon className="h-4 w-4" />
-              Annual rent: {formatCurrency(Number(property.monthly_rent) * 12, currency)}
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Users className="h-4 w-4" />
-              {property.units} unit{property.units > 1 ? "s" : ""} available
-            </div>
-          </div>
-          <Button
-            className="w-full bg-gradient-warm text-accent-foreground hover:opacity-90 h-12 text-base gap-2"
-            onClick={() => setRentalStep("dates")}
-          >
-            Rent <ArrowRight className="h-4 w-4" />
-          </Button>
-        </>
-      );
-    }
+  const durationLabel = isAirbnb
+    ? `${nightCount} night${nightCount > 1 ? "s" : ""}`
+    : `${monthCount} month${monthCount > 1 ? "s" : ""}`;
 
-    // Step indicator
+  // Shared wizard steps for details → contract → payment (used by both standard and airbnb)
+  const renderWizardSteps = () => {
     const currentStepIndex = STEPS.findIndex((s) => s.key === rentalStep);
+    // For airbnb, skip the "dates" step since dates are selected on the main calendar
+    const visibleSteps = isAirbnb ? STEPS.filter(s => s.key !== "dates") : STEPS;
+    const visibleStepIndex = visibleSteps.findIndex((s) => s.key === rentalStep);
 
     return (
       <div className="space-y-4">
         {/* Step Progress */}
         <div className="flex items-center justify-between mb-2">
-          {STEPS.map((step, i) => {
+          {visibleSteps.map((step, i) => {
             const Icon = step.icon;
-            const isActive = i === currentStepIndex;
-            const isDone = i < currentStepIndex;
+            const isActive = i === visibleStepIndex;
+            const isDone = i < visibleStepIndex;
             return (
               <div key={step.key} className="flex flex-col items-center gap-1 flex-1">
                 <div className={cn(
@@ -367,54 +366,9 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
 
         <Separator />
 
-        {rentalStep === "dates" && (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Select your lease start and end dates:</p>
-            <Calendar
-              mode="range"
-              selected={selectedRange as any}
-              onSelect={(range: any) => setSelectedRange(range || {})}
-              disabled={(date) => isBefore(date, startOfDay(new Date()))}
-              numberOfMonths={1}
-              className="rounded-lg border p-3 pointer-events-auto"
-            />
-            {selectedRange.from && selectedRange.to && (
-              <div className="rounded-lg bg-secondary p-3 text-sm space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Start</span>
-                  <span className="font-medium text-foreground">{format(selectedRange.from, "MMM d, yyyy")}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">End</span>
-                  <span className="font-medium text-foreground">{format(selectedRange.to, "MMM d, yyyy")}</span>
-                </div>
-                <Separator className="my-1" />
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Duration</span>
-                  <span className="font-medium text-foreground">{monthCount} month{monthCount > 1 ? "s" : ""}</span>
-                </div>
-                <div className="flex justify-between font-semibold">
-                  <span>Total</span>
-                  <span className="text-foreground">{formatCurrency(standardTotal, currency)}</span>
-                </div>
-              </div>
-            )}
-            <Button
-              onClick={() => setRentalStep("details")}
-              disabled={!selectedRange.from || !selectedRange.to}
-              className="w-full gap-2"
-            >
-              Continue <ArrowRight className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setRentalStep("browse")} className="w-full">
-              Cancel
-            </Button>
-          </div>
-        )}
-
         {rentalStep === "details" && (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Provide your rental details:</p>
+            <p className="text-sm text-muted-foreground">Provide your {isAirbnb ? "booking" : "rental"} details:</p>
 
             <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Personal Information</p>
             <div>
@@ -491,7 +445,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button variant="outline" onClick={() => setRentalStep("dates")} className="flex-1">Back</Button>
+              <Button variant="outline" onClick={() => setRentalStep(isAirbnb ? "browse" : "dates")} className="flex-1">Back</Button>
               <Button
                 onClick={() => setRentalStep("contract")}
                 disabled={!fullName.trim() || !email.trim() || !phone.trim() || !dateOfBirth}
@@ -505,12 +459,12 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
 
         {rentalStep === "contract" && (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Review and sign the lease agreement:</p>
+            <p className="text-sm text-muted-foreground">Review and sign the {isAirbnb ? "booking" : "lease"} agreement:</p>
             <div className="rounded-lg border bg-secondary p-4 text-xs text-muted-foreground space-y-2 max-h-64 overflow-y-auto">
-              <p className="font-semibold text-foreground text-sm">LEASE AGREEMENT</p>
-              <p>This Lease Agreement is entered into between the Landlord and <span className="font-medium text-foreground">{fullName}</span> for the property "<span className="font-medium text-foreground">{property.name}</span>" located at {property.address}, Unit {unitNumber}.</p>
+              <p className="font-semibold text-foreground text-sm">{isAirbnb ? "BOOKING AGREEMENT" : "LEASE AGREEMENT"}</p>
+              <p>This Agreement is entered into between the {isAirbnb ? "Host" : "Landlord"} and <span className="font-medium text-foreground">{fullName}</span> for the property "<span className="font-medium text-foreground">{property.name}</span>" located at {property.address}, Unit {unitNumber}.</p>
 
-              <p className="font-semibold text-foreground text-xs uppercase tracking-wide pt-1">Tenant Details</p>
+              <p className="font-semibold text-foreground text-xs uppercase tracking-wide pt-1">Guest / Tenant Details</p>
               <div className="grid grid-cols-2 gap-x-3 gap-y-1">
                 <span>Full Name:</span><span className="font-medium text-foreground">{fullName}</span>
                 <span>Email:</span><span className="font-medium text-foreground">{email}</span>
@@ -522,15 +476,15 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
                 <span>Profile Photo:</span><span className="font-medium text-foreground">{profilePhotoFile ? "✓ Uploaded" : "Not provided"}</span>
               </div>
 
-              <p className="font-semibold text-foreground text-xs uppercase tracking-wide pt-1">Lease Terms</p>
-              <p><strong>1. TERM:</strong> {selectedRange.from && format(selectedRange.from, "MMMM d, yyyy")} to {selectedRange.to && format(selectedRange.to, "MMMM d, yyyy")} ({monthCount} month{monthCount > 1 ? "s" : ""})</p>
-              <p><strong>2. RENT:</strong> {formatCurrency(Number(property.monthly_rent), currency)} per month. Total: {formatCurrency(standardTotal, currency)}</p>
+              <p className="font-semibold text-foreground text-xs uppercase tracking-wide pt-1">{isAirbnb ? "Booking" : "Lease"} Terms</p>
+              <p><strong>1. TERM:</strong> {selectedRange.from && format(selectedRange.from, "MMMM d, yyyy")} to {selectedRange.to && format(selectedRange.to, "MMMM d, yyyy")} ({durationLabel})</p>
+              <p><strong>2. {isAirbnb ? "RATE" : "RENT"}:</strong> {formatCurrency(Number(property.monthly_rent), currency)} per {isAirbnb ? "night" : "month"}. Total: {formatCurrency(totalPrice, currency)}</p>
               <p><strong>3. OCCUPANTS:</strong> {guestCount} guest{guestCount > 1 ? "s" : ""}</p>
               <p><strong>4. UNIT:</strong> {unitNumber}</p>
-              <p><strong>5. SECURITY DEPOSIT:</strong> A security deposit equivalent to one month's rent may be required.</p>
-              <p><strong>6. MAINTENANCE:</strong> Tenant shall report any maintenance issues promptly through the portal.</p>
-              <p><strong>7. TERMINATION:</strong> Either party may terminate with 30 days written notice.</p>
-              <p><strong>8. GOVERNING LAW:</strong> This agreement is governed by the laws of the property's jurisdiction.</p>
+              {!isAirbnb && <p><strong>5. SECURITY DEPOSIT:</strong> A security deposit equivalent to one month's rent may be required.</p>}
+              <p><strong>{isAirbnb ? "5" : "6"}. MAINTENANCE:</strong> {isAirbnb ? "Guest" : "Tenant"} shall report any issues promptly.</p>
+              <p><strong>{isAirbnb ? "6" : "7"}. {isAirbnb ? "CANCELLATION" : "TERMINATION"}:</strong> {isAirbnb ? "Cancellation policy applies as per platform terms." : "Either party may terminate with 30 days written notice."}</p>
+              <p><strong>{isAirbnb ? "7" : "8"}. GOVERNING LAW:</strong> This agreement is governed by the laws of the property's jurisdiction.</p>
 
               {(specialRequests || billingAddress) && (
                 <>
@@ -543,7 +497,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
 
             <div className="rounded-lg bg-warning/10 border border-warning/20 p-3 flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
-              <p className="text-xs text-warning">By signing, you agree to all terms above. The landlord will also need to sign before the lease is finalized.</p>
+              <p className="text-xs text-warning">By signing, you agree to all terms above. {isAirbnb ? "Payment must be completed within 24 hours." : "The landlord will also need to sign before the lease is finalized."}</p>
             </div>
 
             <div className="flex gap-2">
@@ -582,12 +536,12 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Duration</span>
-                <span className="font-medium text-foreground">{monthCount} month{monthCount > 1 ? "s" : ""}</span>
+                <span className="font-medium text-foreground">{durationLabel}</span>
               </div>
               <Separator />
               <div className="flex justify-between font-semibold text-foreground">
                 <span>Total Due</span>
-                <span>{formatCurrency(standardTotal, currency)}</span>
+                <span>{formatCurrency(totalPrice, currency)}</span>
               </div>
             </div>
 
@@ -601,7 +555,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
               ) : (
                 <CreditCard className="h-4 w-4" />
               )}
-              Pay {formatCurrency(standardTotal, currency)}
+              Pay {formatCurrency(totalPrice, currency)}
             </Button>
 
             <p className="text-center text-xs text-muted-foreground">
@@ -611,6 +565,40 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
         )}
       </div>
     );
+  };
+
+  // Render the standard rental wizard sidebar
+  const renderStandardSidebar = () => {
+    if (rentalStep === "browse") {
+      return (
+        <>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <CalendarIcon className="h-4 w-4" />
+              Annual rent: {formatCurrency(Number(property.monthly_rent) * 12, currency)}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              {property.units} unit{property.units > 1 ? "s" : ""} available
+            </div>
+          </div>
+          <Button
+            className="w-full bg-gradient-warm text-accent-foreground hover:opacity-90 h-12 text-base gap-2"
+            onClick={() => setRentalStep("dates")}
+          >
+            Rent <ArrowRight className="h-4 w-4" />
+          </Button>
+        </>
+      );
+    }
+
+    // For dates step, show calendar; for details/contract/payment, use shared wizard
+    if (rentalStep === "dates") {
+      return renderWizardSteps();
+    }
+
+    // For details, contract, payment — delegate to shared wizard
+    return renderWizardSteps();
   };
 
   return (
@@ -738,6 +726,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
             </CardHeader>
             <CardContent className="space-y-4">
               {isAirbnb ? (
+                rentalStep !== "browse" ? renderWizardSteps() : (
                 <>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-lg border p-3">
@@ -777,17 +766,18 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
                     </div>
                   )}
                   <Button
-                    onClick={handleBook}
-                    disabled={!selectedRange.from || !selectedRange.to || nightCount < 1 || createBooking.isPending}
+                    onClick={() => setRentalStep("details")}
+                    disabled={!selectedRange.from || !selectedRange.to || nightCount < 1}
                     className="w-full bg-gradient-warm text-accent-foreground hover:opacity-90 h-12 text-base"
                   >
-                    {createBooking.isPending ? "Booking..." : "Reserve"}
+                    Reserve
                   </Button>
                   <div className="flex items-start gap-2 rounded-lg bg-warning/10 border border-warning/20 p-3">
                     <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
                     <p className="text-xs text-warning">Payment must be completed within 24 hours or the booking will be automatically released.</p>
                   </div>
                 </>
+                )
               ) : (
                 renderStandardSidebar()
               )}
