@@ -187,7 +187,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
       const agreement = await createAgreement.mutateAsync({
         property_id: property.id,
         tenant_user_id: user.id,
-        landlord_user_id: property.landlord_id || user.id,
+        landlord_user_id: property.landlord_id || "",
         tenant_name: fullName || profile?.full_name || user.email || "Tenant",
         landlord_name: "Landlord",
         unit_number: unitNumber,
