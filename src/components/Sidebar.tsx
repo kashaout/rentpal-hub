@@ -69,6 +69,9 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isAdmin || isConsultant || isLandlord },
     { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant },
+    { icon: Building2, label: "Browse Properties", id: "browse-properties", show: isTenant },
+    { icon: FileText, label: "Agreements", id: "agreements", show: isTenant || isLandlord },
+    { icon: Users, label: "Inbox", id: "tenant-inbox", show: isTenant },
     { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isMaintenance },
     { icon: Wallet, label: "Finance", id: "finance", show: isAdmin || isConsultant || isLandlord },
     { icon: Building2, label: "Properties", id: "properties", show: isAdmin || isConsultant || isLandlord },

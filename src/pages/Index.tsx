@@ -4,6 +4,9 @@ import { Header } from "@/components/Header";
 import { Dashboard } from "@/components/Dashboard";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 import { TenantPortal } from "@/components/tenant/TenantPortal";
+import { TenantBrowseProperties } from "@/components/tenant/TenantBrowseProperties";
+import { LeaseAgreementView } from "@/components/tenant/LeaseAgreementView";
+import { TenantRequestsInbox } from "@/components/tenant/TenantRequestsInbox";
 import { MaintenancePortal } from "@/components/maintenance/MaintenancePortal";
 import { PaymentsPage } from "@/components/PaymentsPage";
 import { PropertiesPage } from "@/components/PropertiesPage";
@@ -22,6 +25,9 @@ import { useAuth } from "@/hooks/useAuth";
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Welcome back! Here's your overview." },
   "tenant-portal": { title: "My Portal", subtitle: "View your lease, payments, and submit requests." },
+  "browse-properties": { title: "Browse Properties", subtitle: "Find available properties to rent or book." },
+  "agreements": { title: "Lease Agreements", subtitle: "Review and sign your lease agreements." },
+  "tenant-inbox": { title: "Inbox", subtitle: "All your requests and communication in one place." },
   "maintenance-portal": { title: "Maintenance", subtitle: "Manage repair requests and track work orders." },
   finance: { title: "Financial Intelligence", subtitle: "P&L, cashflow, ROI analytics and AI insights." },
   properties: { title: "Properties", subtitle: "Manage your rental properties." },
@@ -68,6 +74,12 @@ const Index = () => {
         return <SubscriptionPlans />;
       case "tenant-portal":
         return <TenantPortal />;
+      case "browse-properties":
+        return <TenantBrowseProperties />;
+      case "agreements":
+        return <LeaseAgreementView />;
+      case "tenant-inbox":
+        return <TenantRequestsInbox />;
       case "maintenance-portal":
         return <MaintenancePortal />;
       case "finance":
