@@ -18,8 +18,53 @@ interface SecurityAlertRequest {
   details?: Record<string, unknown>;
 }
 
+// Rate limiting: max 20 requests per hour per user
+const RATE_LIMIT_MAX = 20;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+async function checkRateLimit(supabaseService: any, userId: string): Promise<boolean> {
+  const identifier = `send-security-alert:${userId}`;
+  const now = new Date();
+  const windowStart = new Date(now.getTime() - RATE_LIMIT_WINDOW_MS);
+
+  const { data: existing } = await supabaseService
+    .from("rate_limits")
+    .select("*")
+    .eq("identifier", identifier)
+    .maybeSingle();
+
+  if (!existing) {
+    await supabaseService.from("rate_limits").insert({
+      identifier,
+      attempts: 1,
+      first_attempt: now.toISOString(),
+    });
+    return true;
+  }
+
+  const firstAttempt = new Date(existing.first_attempt);
+
+  if (firstAttempt < windowStart) {
+    await supabaseService
+      .from("rate_limits")
+      .update({ attempts: 1, first_attempt: now.toISOString() })
+      .eq("id", existing.id);
+    return true;
+  }
+
+  if (existing.attempts >= RATE_LIMIT_MAX) {
+    return false;
+  }
+
+  await supabaseService
+    .from("rate_limits")
+    .update({ attempts: existing.attempts + 1 })
+    .eq("id", existing.id);
+
+  return true;
+}
+
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -38,12 +83,10 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Create a client with the user's token to verify their identity
     const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
 
-    // Verify the user's token
     const { data: userData, error: userError } = await userSupabase.auth.getUser();
 
     if (userError || !userData?.user) {
@@ -55,10 +98,28 @@ const handler = async (req: Request): Promise<Response> => {
 
     const authenticatedUserId = userData.user.id;
 
-    // Parse request body
+    // Rate limit check
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false },
+    });
+
+    const allowed = await checkRateLimit(supabase, authenticatedUserId);
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: "Rate limit exceeded. Max 20 alerts per hour." }),
+        {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            ...corsHeaders,
+            "Retry-After": "3600",
+          },
+        }
+      );
+    }
+
     const { event_type, affected_user_id, affected_user_email, actor_user_id, details }: SecurityAlertRequest = await req.json();
 
-    // Verify the actor_user_id matches the authenticated user
     if (actor_user_id !== authenticatedUserId) {
       return new Response(
         JSON.stringify({ error: "Unauthorized: actor_user_id does not match authenticated user" }),
@@ -66,11 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Create service role client for admin operations
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Verify the user has appropriate role for triggering security alerts
-    // Admin role changes should only be triggered by admins
+    // Verify admin role for admin-related events
     if (event_type === "admin_role_assigned" || event_type === "admin_role_removed") {
       const { data: userRoles, error: roleError } = await supabase
         .from("user_roles")
@@ -142,25 +199,13 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb;">
               <h2 style="color: #dc2626;">Admin Role Assigned</h2>
               <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Action By:</td>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${actorName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">User Affected:</td>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${affectedEmail}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Timestamp:</td>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${timestamp}</td>
-                </tr>
+                <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Action By:</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${actorName}</td></tr>
+                <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">User Affected:</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${affectedEmail}</td></tr>
+                <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Timestamp:</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${timestamp}</td></tr>
               </table>
-              <p style="margin-top: 20px; color: #6b7280; font-size: 14px;">
-                If you did not authorize this action, please review immediately.
-              </p>
+              <p style="margin-top: 20px; color: #6b7280; font-size: 14px;">If you did not authorize this action, please review immediately.</p>
             </div>
-          </div>
-        `;
+          </div>`;
         break;
 
       case "admin_role_removed":
@@ -173,22 +218,12 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb;">
               <h2 style="color: #f59e0b;">Admin Role Removed</h2>
               <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Action By:</td>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${actorName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">User Affected:</td>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${affectedEmail}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Timestamp:</td>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${timestamp}</td>
-                </tr>
+                <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Action By:</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${actorName}</td></tr>
+                <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">User Affected:</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${affectedEmail}</td></tr>
+                <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Timestamp:</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${timestamp}</td></tr>
               </table>
             </div>
-          </div>
-        `;
+          </div>`;
         break;
 
       case "payment_modified":
@@ -203,22 +238,12 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb;">
               <h2 style="color: #3b82f6;">Payment ${paymentAction}</h2>
               <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Action By:</td>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${actorName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Amount:</td>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">$${amount}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Timestamp:</td>
-                  <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${timestamp}</td>
-                </tr>
+                <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Action By:</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${actorName}</td></tr>
+                <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Amount:</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">$${amount}</td></tr>
+                <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Timestamp:</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${timestamp}</td></tr>
               </table>
             </div>
-          </div>
-        `;
+          </div>`;
         break;
 
       default:
@@ -226,7 +251,6 @@ const handler = async (req: Request): Promise<Response> => {
         htmlContent = `<p>A security event occurred: ${event_type}</p>`;
     }
 
-    // Send to all admins
     const emailResponse = await resend.emails.send({
       from: "Security Alerts <onboarding@resend.dev>",
       to: adminEmails,
