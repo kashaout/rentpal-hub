@@ -349,7 +349,7 @@ export function DocumentsPage() {
           </p>
           <div className="rounded-lg border bg-card divide-y">
             {leaseAgreements.map((agreement) => {
-              const needsCounterSign = isLandlord && agreement.landlord_user_id === user?.id && agreement.tenant_signed && !agreement.landlord_signed;
+              const needsCounterSign = agreement.landlord_user_id === user?.id && agreement.tenant_signed && !agreement.landlord_signed;
               return (
                 <div
                   key={agreement.id}
@@ -475,7 +475,12 @@ export function DocumentsPage() {
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           {reviewAgreement && (() => {
             const isLandlordParty = reviewAgreement.landlord_user_id === user?.id;
-            const needsCounterSign = isLandlord && isLandlordParty && reviewAgreement.tenant_signed && !reviewAgreement.landlord_signed;
+            const isTenantParty = reviewAgreement.tenant_user_id === user?.id;
+            const needsCounterSign = isLandlordParty && reviewAgreement.tenant_signed && !reviewAgreement.landlord_signed;
+            const canSign =
+              (isTenantParty && !reviewAgreement.tenant_signed) ||
+              (isLandlordParty && !reviewAgreement.landlord_signed);
+            const signRole = isLandlordParty ? "landlord" as const : "tenant" as const;
             return (
               <>
                 <DialogHeader>
@@ -564,12 +569,17 @@ export function DocumentsPage() {
                   <Button variant="outline" onClick={() => setReviewAgreement(null)}>
                     Close
                   </Button>
-                  {needsCounterSign && (
+                  {canSign && (
                     <Button
-                      className="gap-2 bg-warning text-warning-foreground hover:bg-warning/90"
+                      className={cn(
+                        "gap-2",
+                        needsCounterSign
+                          ? "bg-warning text-warning-foreground hover:bg-warning/90"
+                          : "bg-primary text-primary-foreground hover:bg-primary/90"
+                      )}
                       disabled={signAgreement.isPending}
                       onClick={async () => {
-                        await signAgreement.mutateAsync({ agreementId: reviewAgreement.id, role: "landlord" });
+                        await signAgreement.mutateAsync({ agreementId: reviewAgreement.id, role: signRole });
                         setReviewAgreement(null);
                       }}
                     >
@@ -578,7 +588,7 @@ export function DocumentsPage() {
                       ) : (
                         <Pen className="h-4 w-4" />
                       )}
-                      Counter-Sign Agreement
+                      {needsCounterSign ? "Counter-Sign Agreement" : "Sign Agreement"}
                     </Button>
                   )}
                 </DialogFooter>
