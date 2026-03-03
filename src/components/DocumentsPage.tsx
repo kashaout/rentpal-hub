@@ -52,7 +52,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { format } from "date-fns";
 
-const categories = ["All", "Leases", "Reports", "Financial", "Insurance", "Maintenance", "Other"];
+const categories = ["All", "Lease Agreement", "Reports", "Financial", "Insurance", "Maintenance", "Other"];
 
 const typeIcons: Record<string, typeof FileText> = {
   pdf: FileText,
@@ -327,7 +327,7 @@ export function DocumentsPage() {
         <div className="rounded-lg border bg-card p-4 text-center">
           <File className="mx-auto h-6 w-6 text-blue-500" />
           <p className="mt-2 text-2xl font-semibold">
-            {documents.filter((d) => d.category === "Leases").length}
+            {documents.filter((d) => d.category === "Lease Agreement").length}
           </p>
           <p className="text-sm text-muted-foreground">Lease Docs</p>
         </div>
@@ -338,17 +338,17 @@ export function DocumentsPage() {
         </div>
       </div>
 
-      {/* Lease Agreements Section */}
-      {leaseAgreements.length > 0 && (
+      {/* Unsigned Lease Agreements Section - only show agreements needing action */}
+      {leaseAgreements.filter(a => !(a.tenant_signed && a.landlord_signed)).length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-foreground">Lease Agreements</h3>
+          <h3 className="text-lg font-semibold text-foreground">Pending Lease Agreements</h3>
           <p className="text-sm text-muted-foreground">
             {isLandlord
-              ? "Review and counter-sign tenant agreements below."
-              : "Your signed lease agreements are listed below."}
+              ? "Review and counter-sign tenant agreements below. Fully signed agreements appear in the documents list above under 'Lease Agreement'."
+              : "Your pending lease agreements are listed below. Fully signed agreements appear in the documents list above."}
           </p>
           <div className="rounded-lg border bg-card divide-y">
-            {leaseAgreements.map((agreement) => {
+            {leaseAgreements.filter(a => !(a.tenant_signed && a.landlord_signed)).map((agreement) => {
               const needsCounterSign = agreement.landlord_user_id === user?.id && agreement.tenant_signed && !agreement.landlord_signed;
               return (
                 <div
