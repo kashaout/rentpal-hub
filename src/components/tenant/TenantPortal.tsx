@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { format, differenceInDays } from "date-fns";
+import { useRentPayment } from "@/hooks/useStripeSubscription";
 import {
   Building2,
   Calendar,
@@ -60,6 +61,7 @@ const priorityStyles: Record<string, string> = {
 };
 
 export function TenantPortal() {
+  const { payRent, isLoading: rentPaymentLoading } = useRentPayment();
   const [requestDialogOpen, setRequestDialogOpen] = useState(false);
   const [ratingRequest, setRatingRequest] = useState<{ id: string; title: string } | null>(null);
 
@@ -129,6 +131,27 @@ export function TenantPortal() {
             >
               {lease.payment_status}
             </Badge>
+            <Button
+              size="sm"
+              className="mt-2 w-full gap-1"
+              disabled={rentPaymentLoading}
+              onClick={() =>
+                payRent({
+                  amount: lease.rent_amount,
+                  currency: "NGN",
+                  tenantId: lease.id,
+                  propertyName: lease.property_name,
+                  unitNumber: lease.unit_number,
+                })
+              }
+            >
+              {rentPaymentLoading ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <DollarSign className="h-3 w-3" />
+              )}
+              Pay Rent Online
+            </Button>
           </CardContent>
         </Card>
 
