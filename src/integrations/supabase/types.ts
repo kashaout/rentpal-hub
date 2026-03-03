@@ -148,6 +148,62 @@ export type Database = {
         }
         Relationships: []
       }
+      bookings: {
+        Row: {
+          check_in: string
+          check_out: string
+          created_at: string
+          expires_at: string
+          guest_count: number
+          id: string
+          notes: string | null
+          payment_status: string
+          property_id: string
+          status: string
+          total_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          check_in: string
+          check_out: string
+          created_at?: string
+          expires_at?: string
+          guest_count?: number
+          id?: string
+          notes?: string | null
+          payment_status?: string
+          property_id: string
+          status?: string
+          total_price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          check_in?: string
+          check_out?: string
+          created_at?: string
+          expires_at?: string
+          guest_count?: number
+          id?: string
+          notes?: string | null
+          payment_status?: string
+          property_id?: string
+          status?: string
+          total_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_alerts: {
         Row: {
           alert_type: string
@@ -597,10 +653,12 @@ export type Database = {
         Row: {
           acquisition_cost: number | null
           address: string
+          amenities: Json
           annual_expenses: number | null
           created_at: string
           currency: string
           current_value: number | null
+          description: string | null
           id: string
           image_url: string | null
           landlord_id: string | null
@@ -615,10 +673,12 @@ export type Database = {
         Insert: {
           acquisition_cost?: number | null
           address: string
+          amenities?: Json
           annual_expenses?: number | null
           created_at?: string
           currency?: string
           current_value?: number | null
+          description?: string | null
           id?: string
           image_url?: string | null
           landlord_id?: string | null
@@ -633,10 +693,12 @@ export type Database = {
         Update: {
           acquisition_cost?: number | null
           address?: string
+          amenities?: Json
           annual_expenses?: number | null
           created_at?: string
           currency?: string
           current_value?: number | null
+          description?: string | null
           id?: string
           image_url?: string | null
           landlord_id?: string | null
@@ -915,6 +977,7 @@ export type Database = {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
       }
+      release_expired_bookings: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "consultant" | "landlord" | "tenant" | "maintenance"

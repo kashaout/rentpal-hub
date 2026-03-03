@@ -27,6 +27,7 @@ import { usePropertyComplianceScore } from "@/hooks/useCompliance";
 interface PropertyCardProps {
   property: PropertyWithStats;
   onEdit: (property: PropertyWithStats) => void;
+  onClick?: (property: PropertyWithStats) => void;
   className?: string;
 }
 
@@ -42,7 +43,7 @@ function calculateProfitLoss(monthlyRent: number, annualExpenses: number): numbe
   return annualRent - (annualExpenses || 0);
 }
 
-export function PropertyCard({ property, onEdit, className }: PropertyCardProps) {
+export function PropertyCard({ property, onEdit, onClick, className }: PropertyCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const deleteProperty = useDeleteProperty();
   const { data: complianceScore } = usePropertyComplianceScore(property.id);
@@ -109,8 +110,10 @@ export function PropertyCard({ property, onEdit, className }: PropertyCardProps)
   return (
     <>
       <div
+        onClick={() => onClick?.(property)}
         className={cn(
           "group overflow-hidden rounded-lg border bg-card shadow-card transition-all duration-300 hover:shadow-card-hover animate-fade-in",
+          onClick && "cursor-pointer",
           className
         )}
       >
