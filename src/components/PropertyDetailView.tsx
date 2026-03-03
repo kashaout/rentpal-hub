@@ -195,7 +195,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
         currency: property.currency || "NGN",
         lease_start: format(selectedRange.from, "yyyy-MM-dd"),
         lease_end: format(selectedRange.to, "yyyy-MM-dd"),
-        terms: `LEASE AGREEMENT\n\nThis Lease Agreement is entered into between the Landlord and ${fullName || "Tenant"} for the property "${property.name}" located at ${property.address}, Unit ${unitNumber}.\n\n1. TERM: The lease shall commence on ${format(selectedRange.from, "MMMM d, yyyy")} and terminate on ${format(selectedRange.to, "MMMM d, yyyy")}.\n\n2. RENT: The monthly rent shall be ${formatCurrency(Number(property.monthly_rent), property.currency || "NGN")}. Total for the lease period: ${formatCurrency(totalPrice, property.currency || "NGN")}.\n\n3. SECURITY DEPOSIT: A security deposit equivalent to one month's rent may be required.\n\n4. MAINTENANCE: Tenant shall report any maintenance issues promptly through the portal.\n\n5. TERMINATION: Either party may terminate this agreement with 30 days written notice.\n\n6. GOVERNING LAW: This agreement shall be governed by the laws of the jurisdiction where the property is located.`,
+        terms: `LEASE AGREEMENT\n\nThis Lease Agreement is entered into between the Landlord and ${fullName || "Tenant"} for the property "${property.name}" located at ${property.address}, Unit ${unitNumber}.\n\nTENANT DETAILS:\nFull Name: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nDate of Birth: ${dateOfBirth ? format(new Date(dateOfBirth + "T00:00:00"), "MMMM d, yyyy") : "N/A"}\nID Type: ${idType.replace("_", " ")}\nOccupants: ${guestCount}\n\n1. TERM: The lease shall commence on ${format(selectedRange.from, "MMMM d, yyyy")} and terminate on ${format(selectedRange.to, "MMMM d, yyyy")}.\n\n2. RENT: The monthly rent shall be ${formatCurrency(Number(property.monthly_rent), property.currency || "NGN")}. Total for the lease period: ${formatCurrency(totalPrice, property.currency || "NGN")}.\n\n3. OCCUPANTS: ${guestCount} guest${guestCount > 1 ? "s" : ""}.\n\n4. SECURITY DEPOSIT: A security deposit equivalent to one month's rent may be required.\n\n5. MAINTENANCE: Tenant shall report any maintenance issues promptly through the portal.\n\n6. TERMINATION: Either party may terminate this agreement with 30 days written notice.\n\n7. GOVERNING LAW: This agreement shall be governed by the laws of the jurisdiction where the property is located.${specialRequests ? `\n\nSPECIAL REQUESTS: ${specialRequests}` : ""}${billingAddress ? `\n\nBILLING ADDRESS: ${billingAddress}` : ""}`,
       });
 
       setCreatedAgreementId(agreement.id);
@@ -452,15 +452,39 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
         {rentalStep === "contract" && (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">Review and sign the lease agreement:</p>
-            <div className="rounded-lg border bg-secondary p-4 text-xs text-muted-foreground space-y-2 max-h-52 overflow-y-auto">
+            <div className="rounded-lg border bg-secondary p-4 text-xs text-muted-foreground space-y-2 max-h-64 overflow-y-auto">
               <p className="font-semibold text-foreground text-sm">LEASE AGREEMENT</p>
               <p>This Lease Agreement is entered into between the Landlord and <span className="font-medium text-foreground">{fullName}</span> for the property "<span className="font-medium text-foreground">{property.name}</span>" located at {property.address}, Unit {unitNumber}.</p>
+
+              <p className="font-semibold text-foreground text-xs uppercase tracking-wide pt-1">Tenant Details</p>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                <span>Full Name:</span><span className="font-medium text-foreground">{fullName}</span>
+                <span>Email:</span><span className="font-medium text-foreground">{email}</span>
+                <span>Phone:</span><span className="font-medium text-foreground">{phone}</span>
+                <span>Date of Birth:</span><span className="font-medium text-foreground">{dateOfBirth ? format(new Date(dateOfBirth + "T00:00:00"), "MMMM d, yyyy") : "—"}</span>
+                <span>ID Type:</span><span className="font-medium text-foreground capitalize">{idType.replace("_", " ")}</span>
+                <span>ID Document:</span><span className="font-medium text-foreground">{idDocFile ? "✓ Uploaded" : "Not provided"}</span>
+                <span>Selfie:</span><span className="font-medium text-foreground">{selfieFile ? "✓ Uploaded" : "Not provided"}</span>
+                <span>Profile Photo:</span><span className="font-medium text-foreground">{profilePhotoFile ? "✓ Uploaded" : "Not provided"}</span>
+              </div>
+
+              <p className="font-semibold text-foreground text-xs uppercase tracking-wide pt-1">Lease Terms</p>
               <p><strong>1. TERM:</strong> {selectedRange.from && format(selectedRange.from, "MMMM d, yyyy")} to {selectedRange.to && format(selectedRange.to, "MMMM d, yyyy")} ({monthCount} month{monthCount > 1 ? "s" : ""})</p>
               <p><strong>2. RENT:</strong> {formatCurrency(Number(property.monthly_rent), currency)} per month. Total: {formatCurrency(standardTotal, currency)}</p>
-              <p><strong>3. SECURITY DEPOSIT:</strong> A security deposit equivalent to one month's rent may be required.</p>
-              <p><strong>4. MAINTENANCE:</strong> Tenant shall report any maintenance issues promptly through the portal.</p>
-              <p><strong>5. TERMINATION:</strong> Either party may terminate with 30 days written notice.</p>
-              <p><strong>6. GOVERNING LAW:</strong> This agreement is governed by the laws of the property's jurisdiction.</p>
+              <p><strong>3. OCCUPANTS:</strong> {guestCount} guest{guestCount > 1 ? "s" : ""}</p>
+              <p><strong>4. UNIT:</strong> {unitNumber}</p>
+              <p><strong>5. SECURITY DEPOSIT:</strong> A security deposit equivalent to one month's rent may be required.</p>
+              <p><strong>6. MAINTENANCE:</strong> Tenant shall report any maintenance issues promptly through the portal.</p>
+              <p><strong>7. TERMINATION:</strong> Either party may terminate with 30 days written notice.</p>
+              <p><strong>8. GOVERNING LAW:</strong> This agreement is governed by the laws of the property's jurisdiction.</p>
+
+              {(specialRequests || billingAddress) && (
+                <>
+                  <p className="font-semibold text-foreground text-xs uppercase tracking-wide pt-1">Additional Information</p>
+                  {specialRequests && <p><strong>Special Requests:</strong> {specialRequests}</p>}
+                  {billingAddress && <p><strong>Billing Address:</strong> {billingAddress}</p>}
+                </>
+              )}
             </div>
 
             <div className="rounded-lg bg-warning/10 border border-warning/20 p-3 flex items-start gap-2">
