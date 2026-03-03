@@ -134,6 +134,7 @@ export function useSignLeaseAgreement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["lease-agreements"] });
       queryClient.invalidateQueries({ queryKey: ["lease-agreement"] });
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
       toast.success("Agreement signed successfully!");
     },
     onError: (error: Error) => {
