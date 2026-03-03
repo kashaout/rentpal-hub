@@ -65,8 +65,13 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
   const [guestCount, setGuestCount] = useState(1);
   const [notes, setNotes] = useState("");
   const [fullName, setFullName] = useState(profile?.full_name || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState(profile?.phone || "");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [unitNumber, setUnitNumber] = useState("1");
+  const [specialRequests, setSpecialRequests] = useState("");
+  const [billingAddress, setBillingAddress] = useState("");
+  const [idType, setIdType] = useState("passport");
   const [createdAgreementId, setCreatedAgreementId] = useState<string | null>(null);
   const [agreementSigned, setAgreementSigned] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
@@ -297,33 +302,85 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
         )}
 
         {rentalStep === "details" && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <p className="text-sm text-muted-foreground">Provide your rental details:</p>
+
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Personal Information</p>
             <div>
-              <Label className="text-sm">Full Name</Label>
+              <Label className="text-sm">Full Name <span className="text-destructive">*</span></Label>
               <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" className="mt-1" />
             </div>
             <div>
-              <Label className="text-sm">Phone Number</Label>
+              <Label className="text-sm">Email Address <span className="text-destructive">*</span></Label>
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-sm">Phone Number <span className="text-destructive">*</span></Label>
               <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+234 ..." className="mt-1" />
             </div>
+            <div>
+              <Label className="text-sm">Date of Birth <span className="text-destructive">*</span></Label>
+              <Input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className="mt-1" />
+            </div>
+
+            <Separator />
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Identity Verification</p>
+            <div>
+              <Label className="text-sm">Government-Issued ID Type</Label>
+              <select
+                value={idType}
+                onChange={(e) => setIdType(e.target.value)}
+                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="passport">Passport</option>
+                <option value="drivers_license">Driver's License</option>
+                <option value="national_id">National ID</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-sm">Upload ID Document (optional)</Label>
+              <Input type="file" accept="image/*,.pdf" className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-sm">Selfie for Verification (optional)</Label>
+              <Input type="file" accept="image/*" capture="user" className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-sm">Profile Photo (optional)</Label>
+              <Input type="file" accept="image/*" className="mt-1" />
+            </div>
+
+            <Separator />
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Stay Details</p>
             <div>
               <Label className="text-sm">Preferred Unit</Label>
               <Input value={unitNumber} onChange={(e) => setUnitNumber(e.target.value)} placeholder="e.g. 1A" className="mt-1" />
             </div>
             <div>
-              <Label className="text-sm">Number of Occupants</Label>
+              <Label className="text-sm">Number of Guests / Occupants</Label>
               <Input type="number" min={1} value={guestCount} onChange={(e) => setGuestCount(Number(e.target.value))} className="mt-1" />
             </div>
             <div>
-              <Label className="text-sm">Additional Notes (optional)</Label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any special requirements..." className="mt-1 h-20" />
+              <Label className="text-sm">Special Requests / Messages to Host (optional)</Label>
+              <Textarea value={specialRequests} onChange={(e) => setSpecialRequests(e.target.value)} placeholder="Any special requirements or messages..." className="mt-1 h-20" />
             </div>
-            <div className="flex gap-2">
+
+            <Separator />
+            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Billing Information</p>
+            <div>
+              <Label className="text-sm">Billing Address</Label>
+              <Textarea value={billingAddress} onChange={(e) => setBillingAddress(e.target.value)} placeholder="Your billing address..." className="mt-1 h-16" />
+            </div>
+            <div>
+              <Label className="text-sm">Additional Notes (optional)</Label>
+              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Past rental history, references..." className="mt-1 h-16" />
+            </div>
+
+            <div className="flex gap-2 pt-2">
               <Button variant="outline" onClick={() => setRentalStep("dates")} className="flex-1">Back</Button>
               <Button
                 onClick={() => setRentalStep("contract")}
-                disabled={!fullName.trim()}
+                disabled={!fullName.trim() || !email.trim() || !phone.trim() || !dateOfBirth}
                 className="flex-1 gap-2"
               >
                 Continue <ArrowRight className="h-4 w-4" />
