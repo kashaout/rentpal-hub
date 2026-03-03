@@ -604,6 +604,7 @@ export type Database = {
           id: string
           image_url: string | null
           landlord_id: string | null
+          listing_type: string
           monthly_rent: number
           name: string
           property_type: string
@@ -621,6 +622,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           landlord_id?: string | null
+          listing_type?: string
           monthly_rent?: number
           name: string
           property_type?: string
@@ -638,6 +640,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           landlord_id?: string | null
+          listing_type?: string
           monthly_rent?: number
           name?: string
           property_type?: string
@@ -725,6 +728,7 @@ export type Database = {
           payment_status: string
           property_id: string
           rent_amount: number
+          tenant_type: string
           unit_number: string
           updated_at: string
           user_id: string | null
@@ -737,6 +741,7 @@ export type Database = {
           payment_status?: string
           property_id: string
           rent_amount: number
+          tenant_type?: string
           unit_number: string
           updated_at?: string
           user_id?: string | null
@@ -749,6 +754,7 @@ export type Database = {
           payment_status?: string
           property_id?: string
           rent_amount?: number
+          tenant_type?: string
           unit_number?: string
           updated_at?: string
           user_id?: string | null
