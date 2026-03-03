@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { format, eachDayOfInterval, parseISO, differenceInDays, isBefore, startOfDay, addMonths } from "date-fns";
 import {
   MapPin, Users, DollarSign, Star, Wifi, Car, Coffee, Utensils,
@@ -65,9 +65,16 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
   const [selectedRange, setSelectedRange] = useState<{ from?: Date; to?: Date }>({});
   const [guestCount, setGuestCount] = useState(1);
   const [notes, setNotes] = useState("");
-  const [fullName, setFullName] = useState(profile?.full_name || "");
-  const [email, setEmail] = useState(user?.email || "");
-  const [phone, setPhone] = useState(profile?.phone || "");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+
+  // Pre-fill from profile (including data saved from previous bookings)
+  useEffect(() => {
+    if (profile?.full_name && !fullName) setFullName(profile.full_name);
+    if (user?.email && !email) setEmail(user.email);
+    if (profile?.phone && !phone) setPhone(profile.phone);
+  }, [profile, user]);
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [unitNumber, setUnitNumber] = useState("1");
   const [specialRequests, setSpecialRequests] = useState("");
@@ -203,6 +210,53 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
       // Tenant auto-signs
       await signAgreement.mutateAsync({ agreementId: agreement.id, role: "tenant" });
       setAgreementSigned(true);
+
+      // Create tenant record so the tenant portal shows active lease
+      try {
+        await supabase.from("tenants").insert({
+          property_id: property.id,
+          user_id: user.id,
+          unit_number: unitNumber,
+          lease_start: format(selectedRange.from, "yyyy-MM-dd"),
+          lease_end: format(selectedRange.to, "yyyy-MM-dd"),
+          rent_amount: Number(property.monthly_rent),
+          tenant_type: "long_stay",
+          payment_status: "pending",
+        });
+      } catch (e) {
+        console.error("Failed to create tenant record:", e);
+      }
+
+      // Store lease agreement as a document for the landlord's document section
+      try {
+        const leaseDocContent = new Blob(
+          [agreement.terms || "Lease agreement terms"],
+          { type: "text/plain" }
+        );
+        const docFileName = `${user.id}/lease_${agreement.id}_${Date.now()}.txt`;
+        await supabase.storage.from("documents").upload(docFileName, leaseDocContent);
+        await supabase.from("documents").insert({
+          name: `Lease Agreement - ${property.name} - Unit ${unitNumber}`,
+          file_path: docFileName,
+          file_type: "txt",
+          file_size: leaseDocContent.size,
+          category: "Lease Agreement",
+          property_id: property.id,
+          uploaded_by: user.id,
+        });
+      } catch (e) {
+        console.error("Failed to store lease document:", e);
+      }
+
+      // Update profile with personal details for future bookings
+      try {
+        await supabase.from("profiles").update({
+          full_name: fullName,
+          phone: phone,
+        }).eq("user_id", user.id);
+      } catch (e) {
+        console.error("Failed to update profile:", e);
+      }
 
       // Notify the landlord to counter-sign
       const landlordId = property.landlord_id || user.id;
