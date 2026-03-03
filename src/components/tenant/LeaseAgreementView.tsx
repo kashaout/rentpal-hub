@@ -1,0 +1,148 @@
+import { format } from "date-fns";
+import { FileText, CheckCircle2, Clock, Pen, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { useMyLeaseAgreements, useSignLeaseAgreement, LeaseAgreement } from "@/hooks/useLeaseAgreements";
+import { useAuth } from "@/hooks/useAuth";
+import { formatCurrency } from "@/lib/formatCurrency";
+import { cn } from "@/lib/utils";
+
+const statusStyles: Record<string, string> = {
+  draft: "bg-muted text-muted-foreground",
+  pending_signature: "bg-warning/10 text-warning border-warning/20",
+  active: "bg-success/10 text-success border-success/20",
+  expired: "bg-destructive/10 text-destructive border-destructive/20",
+};
+
+function AgreementCard({ agreement }: { agreement: LeaseAgreement }) {
+  const { user, isTenant, isLandlord } = useAuth();
+  const signAgreement = useSignLeaseAgreement();
+
+  const canSign =
+    (isTenant && agreement.tenant_user_id === user?.id && !agreement.tenant_signed) ||
+    (isLandlord && agreement.landlord_user_id === user?.id && !agreement.landlord_signed);
+
+  const role = agreement.tenant_user_id === user?.id ? "tenant" : "landlord";
+
+  return (
+    <Card className="border">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle className="text-base font-semibold">
+              Lease Agreement — Unit {agreement.unit_number}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              {format(new Date(agreement.lease_start), "MMM d, yyyy")} – {format(new Date(agreement.lease_end), "MMM d, yyyy")}
+            </p>
+          </div>
+          <Badge variant="outline" className={cn("capitalize", statusStyles[agreement.status])}>
+            {agreement.status.replace("_", " ")}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <p className="text-muted-foreground">Tenant</p>
+            <p className="font-medium text-foreground">{agreement.tenant_name}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Landlord</p>
+            <p className="font-medium text-foreground">{agreement.landlord_name}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Rent Amount</p>
+            <p className="font-medium text-foreground">{formatCurrency(agreement.rent_amount, agreement.currency)}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Status</p>
+            <p className="font-medium text-foreground capitalize">{agreement.status.replace("_", " ")}</p>
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="rounded-lg bg-secondary p-4 text-sm">
+          <p className="font-medium text-foreground mb-2">Terms & Conditions</p>
+          <p className="text-muted-foreground whitespace-pre-line">{agreement.terms}</p>
+        </div>
+
+        <Separator />
+
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 text-sm">
+            {agreement.landlord_signed ? (
+              <CheckCircle2 className="h-4 w-4 text-success" />
+            ) : (
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            )}
+            <span className={agreement.landlord_signed ? "text-success" : "text-muted-foreground"}>
+              Landlord {agreement.landlord_signed ? "Signed" : "Pending"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            {agreement.tenant_signed ? (
+              <CheckCircle2 className="h-4 w-4 text-success" />
+            ) : (
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            )}
+            <span className={agreement.tenant_signed ? "text-success" : "text-muted-foreground"}>
+              Tenant {agreement.tenant_signed ? "Signed" : "Pending"}
+            </span>
+          </div>
+        </div>
+
+        {canSign && (
+          <Button
+            onClick={() => signAgreement.mutate({ agreementId: agreement.id, role })}
+            disabled={signAgreement.isPending}
+            className="w-full gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
+          >
+            {signAgreement.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Pen className="h-4 w-4" />
+            )}
+            Sign Agreement
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function LeaseAgreementView() {
+  const { data: agreements, isLoading } = useMyLeaseAgreements();
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[30vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
+  if (!agreements || agreements.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <FileText className="h-12 w-12 text-muted-foreground/50" />
+        <p className="mt-4 text-muted-foreground">No lease agreements yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 p-6">
+      <h2 className="font-display text-xl font-semibold text-foreground">Lease Agreements</h2>
+      <p className="text-sm text-muted-foreground">Review and sign your lease agreements before making payments.</p>
+      <div className="space-y-4">
+        {agreements.map((agreement) => (
+          <AgreementCard key={agreement.id} agreement={agreement} />
+        ))}
+      </div>
+    </div>
+  );
+}
