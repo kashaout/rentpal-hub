@@ -52,11 +52,11 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
 };
 
 const Index = () => {
-  const { profile, isTenant, isAdmin, isConsultant, isLandlord, isMaintenance } = useAuth();
+  const { profile, isTenant, isAdmin, isConsultant, isLandlord, isMaintenance, isVendor } = useAuth();
   
   // Default to appropriate portal based on role
-  const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance;
-  const isMaintenanceOnly = isMaintenance && !isAdmin && !isConsultant && !isLandlord && !isTenant;
+  const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
+  const isMaintenanceOnly = (isMaintenance || isVendor) && !isAdmin && !isConsultant && !isLandlord && !isTenant;
   const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : "dashboard";
   const [currentView, setCurrentView] = useState(defaultView);
   
