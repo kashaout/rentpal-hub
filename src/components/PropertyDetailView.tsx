@@ -1,10 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { format, eachDayOfInterval, parseISO, differenceInDays, isBefore, startOfDay, addMonths } from "date-fns";
 import {
   MapPin, Users, DollarSign, Star, Wifi, Car, Coffee, Utensils,
   Waves, Dumbbell, ShieldCheck, Wind, Tv, Bath, Bed, ArrowLeft,
   CalendarIcon, Home, Loader2, Clock, AlertTriangle, ArrowRight,
-  CheckCircle2, Pen, FileText, CreditCard
+  CheckCircle2, Pen, FileText, CreditCard, Upload, Camera, Image
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import { useCreateLeaseAgreement, useSignLeaseAgreement, useLeaseAgreementByProp
 import { formatCurrency } from "@/lib/formatCurrency";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { toast as sonnerToast } from "sonner";
 
 const AMENITY_ICONS: Record<string, any> = {
   wifi: Wifi, parking: Car, coffee: Coffee, kitchen: Utensils,
@@ -75,6 +76,35 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
   const [createdAgreementId, setCreatedAgreementId] = useState<string | null>(null);
   const [agreementSigned, setAgreementSigned] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [idDocFile, setIdDocFile] = useState<File | null>(null);
+  const [selfieFile, setSelfieFile] = useState<File | null>(null);
+  const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const uploadFileToStorage = async (file: File, folder: string): Promise<string | null> => {
+    if (!user) return null;
+    const ext = file.name.split('.').pop();
+    const filePath = `${user.id}/${folder}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("tenant-verification").upload(filePath, file);
+    if (error) {
+      sonnerToast.error(`Upload failed: ${error.message}`);
+      return null;
+    }
+    return filePath;
+  };
+
+  const notifyLandlord = async (agreementId: string, landlordId: string) => {
+    if (!user || !property) return;
+    await supabase.from("landlord_notifications" as any).insert({
+      landlord_user_id: landlordId,
+      tenant_user_id: user.id,
+      lease_agreement_id: agreementId,
+      property_id: property.id,
+      notification_type: "lease_signing",
+      title: "New Lease Agreement Awaiting Your Signature",
+      message: `${fullName || "A tenant"} has signed a lease agreement for ${property.name}, Unit ${unitNumber}. Please review and counter-sign.`,
+    } as any);
+  };
 
   // Get booked date ranges
   const bookedDates = useMemo(() => {
@@ -134,6 +164,13 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
     if (!property || !user || !selectedRange.from || !selectedRange.to) return;
 
     try {
+      setUploading(true);
+
+      // Upload verification files to cloud storage
+      if (idDocFile) await uploadFileToStorage(idDocFile, "id-document");
+      if (selfieFile) await uploadFileToStorage(selfieFile, "selfie");
+      if (profilePhotoFile) await uploadFileToStorage(profilePhotoFile, "profile-photo");
+
       const agreement = await createAgreement.mutateAsync({
         property_id: property.id,
         tenant_user_id: user.id,
@@ -153,9 +190,16 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
       // Tenant auto-signs
       await signAgreement.mutateAsync({ agreementId: agreement.id, role: "tenant" });
       setAgreementSigned(true);
+
+      // Notify the landlord to counter-sign
+      const landlordId = property.landlord_id || user.id;
+      await notifyLandlord(agreement.id, landlordId);
+
       setRentalStep("payment");
     } catch (error) {
       // Error toast already handled by hooks
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -339,15 +383,18 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
             </div>
             <div>
               <Label className="text-sm">Upload ID Document (optional)</Label>
-              <Input type="file" accept="image/*,.pdf" className="mt-1" />
+              <Input type="file" accept="image/*,.pdf" className="mt-1" onChange={(e) => setIdDocFile(e.target.files?.[0] || null)} />
+              {idDocFile && <p className="text-xs text-success mt-1 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{idDocFile.name}</p>}
             </div>
             <div>
               <Label className="text-sm">Selfie for Verification (optional)</Label>
-              <Input type="file" accept="image/*" capture="user" className="mt-1" />
+              <Input type="file" accept="image/*" capture="user" className="mt-1" onChange={(e) => setSelfieFile(e.target.files?.[0] || null)} />
+              {selfieFile && <p className="text-xs text-success mt-1 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{selfieFile.name}</p>}
             </div>
             <div>
               <Label className="text-sm">Profile Photo (optional)</Label>
-              <Input type="file" accept="image/*" className="mt-1" />
+              <Input type="file" accept="image/*" className="mt-1" onChange={(e) => setProfilePhotoFile(e.target.files?.[0] || null)} />
+              {profilePhotoFile && <p className="text-xs text-success mt-1 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{profilePhotoFile.name}</p>}
             </div>
 
             <Separator />
@@ -412,15 +459,15 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
               <Button variant="outline" onClick={() => setRentalStep("details")} className="flex-1">Back</Button>
               <Button
                 onClick={handleCreateAndSignContract}
-                disabled={createAgreement.isPending || signAgreement.isPending}
+                disabled={createAgreement.isPending || signAgreement.isPending || uploading}
                 className="flex-1 gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
               >
-                {(createAgreement.isPending || signAgreement.isPending) ? (
+                {(createAgreement.isPending || signAgreement.isPending || uploading) ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Pen className="h-4 w-4" />
                 )}
-                Sign & Continue
+                {uploading ? "Uploading..." : "Sign & Continue"}
               </Button>
             </div>
           </div>

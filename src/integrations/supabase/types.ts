@@ -462,6 +462,63 @@ export type Database = {
           },
         ]
       }
+      landlord_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          landlord_user_id: string
+          lease_agreement_id: string | null
+          message: string
+          notification_type: string
+          property_id: string | null
+          read_at: string | null
+          tenant_user_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          landlord_user_id: string
+          lease_agreement_id?: string | null
+          message: string
+          notification_type?: string
+          property_id?: string | null
+          read_at?: string | null
+          tenant_user_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          landlord_user_id?: string
+          lease_agreement_id?: string | null
+          message?: string
+          notification_type?: string
+          property_id?: string | null
+          read_at?: string | null
+          tenant_user_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "landlord_notifications_lease_agreement_id_fkey"
+            columns: ["lease_agreement_id"]
+            isOneToOne: false
+            referencedRelation: "lease_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "landlord_notifications_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lease_agreements: {
         Row: {
           created_at: string
