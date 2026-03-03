@@ -22,6 +22,7 @@ import { AutomationDashboard } from "@/components/automation/AutomationDashboard
 import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { WorkOrdersDashboard } from "@/components/workorders/WorkOrdersDashboard";
 import { EscrowDisputesDashboard } from "@/components/escrow/EscrowDisputesDashboard";
+import { ReviewsPage } from "@/components/reviews/ReviewsPage";
 import { useAuth } from "@/hooks/useAuth";
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
@@ -102,7 +103,7 @@ const Index = () => {
       case "payments":
         return <PaymentsPage />;
       case "reviews-page":
-        return <ReportsPage />; /* TODO: dedicated reviews page */
+        return <ReviewsPage />;
       case "properties":
         return <PropertiesPage />;
       case "tenants":

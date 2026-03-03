@@ -18,6 +18,11 @@ export interface Booking {
   created_at: string;
   updated_at: string;
   expires_at: string;
+  is_soft_lock: boolean;
+  soft_lock_expires_at: string | null;
+  payout_status: string | null;
+  payout_released_at: string | null;
+  cancellation_reason: string | null;
 }
 
 export interface CreateBookingData {
@@ -33,8 +38,9 @@ export function usePropertyBookings(propertyId: string) {
   return useQuery({
     queryKey: ["bookings", propertyId],
     queryFn: async () => {
-      // First release any expired bookings
+      // Release expired soft locks and bookings
       await supabase.rpc("release_expired_bookings" as any);
+      await supabase.rpc("release_soft_locks" as any);
 
       const { data, error } = await supabase
         .from("bookings")
@@ -66,6 +72,47 @@ export function useMyBookings() {
       return (data || []) as unknown as Booking[];
     },
     enabled: !!user,
+  });
+}
+
+/** Create a soft-lock booking (10-min hold on dates) */
+export function useSoftLockBooking() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (data: CreateBookingData) => {
+      const softLockExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+      const { data: booking, error } = await supabase
+        .from("bookings")
+        .insert({
+          ...data,
+          user_id: user!.id,
+          is_soft_lock: true,
+          soft_lock_expires_at: softLockExpires,
+          status: "pending",
+          payment_status: "unpaid",
+        } as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return booking as unknown as Booking;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["bookings", variables.property_id] });
+      queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+      toast({ title: "Dates reserved! Complete payment within 10 minutes." });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to reserve dates",
+        description: sanitizeErrorMessage(error),
+        variant: "destructive",
+      });
+    },
   });
 }
 

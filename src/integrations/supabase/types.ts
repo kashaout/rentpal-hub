@@ -1645,6 +1645,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_dispatch_work_order: {
+        Args: { _work_order_id: string }
+        Returns: string
+      }
+      calculate_compensation: {
+        Args: { _booking_id: string; _severity?: string }
+        Returns: {
+          impacted_nights: number
+          nightly_rate: number
+          refund_amount: number
+          severity_multiplier: number
+        }[]
+      }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       get_maintenance_users: {
         Args: never
@@ -1687,6 +1700,7 @@ export type Database = {
         Returns: boolean
       }
       release_expired_bookings: { Args: never; Returns: undefined }
+      release_soft_locks: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role:

@@ -26,3 +26,18 @@ verify_jwt = false
 
 [functions.notify-landlord-lease]
 verify_jwt = false
+
+[functions.escrow-capture]
+verify_jwt = false
+
+[functions.escrow-release-payout]
+verify_jwt = false
+
+[functions.escrow-refund]
+verify_jwt = false
+
+[functions.reconciliation-job]
+verify_jwt = false
+
+[functions.escalation-engine]
+verify_jwt = false
