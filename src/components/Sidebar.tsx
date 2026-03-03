@@ -1,27 +1,23 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard,
-  Building2,
-  Users,
-  Receipt,
-  FileText,
-  Settings,
-  LogOut,
-  Home,
-  UserCog,
-  Shield,
-  ShieldCheck,
-  BarChart3,
-  Wrench,
-  ClipboardList,
-  TrendingUp,
-  Wallet,
-  Zap,
-  Crown,
+  LayoutDashboard, Building2, Users, Receipt, FileText, Settings, LogOut,
+  Home, UserCog, Shield, ShieldCheck, BarChart3, Wrench, ClipboardList,
+  TrendingUp, Wallet, Zap, Crown, Plus, MessageSquare, ChevronDown, Loader2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadAlertCount } from "@/hooks/useAutomationWorkflows";
+import { useTenantLease } from "@/hooks/useTenantPortal";
+import { useCreateMaintenanceRequest } from "@/hooks/useMaintenanceRequests";
+import { useCreateTenantRequest } from "@/hooks/useTenantRequests";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface NavItemProps {
   icon: React.ElementType;
@@ -53,6 +49,130 @@ function NavItem({ icon: Icon, label, active, onClick, badge }: NavItemProps) {
         <div className="ml-auto h-1.5 w-1.5 rounded-full bg-sidebar-primary" />
       )}
     </button>
+  );
+}
+
+function QuickIssueButton({ onViewChange }: { onViewChange: (view: string) => void }) {
+  const { user, isTenant } = useAuth();
+  const { data: lease } = useTenantLease();
+  const createMaintenanceRequest = useCreateMaintenanceRequest();
+  const createTenantRequest = useCreateTenantRequest();
+  const [open, setOpen] = useState(false);
+  const [issueType, setIssueType] = useState<"maintenance" | "request" | null>(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState("medium");
+  const [category, setCategory] = useState("general");
+
+  if (!isTenant || !lease) return null;
+
+  const handleSubmit = async () => {
+    if (!title.trim() || !description.trim() || !user) return;
+
+    if (issueType === "maintenance") {
+      await createMaintenanceRequest.mutateAsync({
+        tenant_id: lease.id,
+        property_id: lease.property_id,
+        title: title.trim(),
+        description: description.trim(),
+        priority: priority as any,
+      });
+    } else {
+      await createTenantRequest.mutateAsync({
+        tenant_user_id: user.id,
+        property_id: lease.property_id,
+        category,
+        subject: title.trim(),
+        message: description.trim(),
+        priority,
+      });
+    }
+
+    setTitle("");
+    setDescription("");
+    setPriority("medium");
+    setCategory("general");
+    setIssueType(null);
+    setOpen(false);
+  };
+
+  const isPending = createMaintenanceRequest.isPending || createTenantRequest.isPending;
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 bg-accent/10 text-accent hover:bg-accent/20 border border-accent/20">
+            <Plus className="h-5 w-5" />
+            Raise Issue
+            <ChevronDown className="h-4 w-4 ml-auto" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-52">
+          <DropdownMenuItem onClick={() => { setIssueType("maintenance"); setOpen(true); }} className="gap-2">
+            <Wrench className="h-4 w-4" />
+            Maintenance Issue
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => { setIssueType("request"); setOpen(true); }} className="gap-2">
+            <MessageSquare className="h-4 w-4" />
+            General Request
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {issueType === "maintenance" ? <Wrench className="h-5 w-5" /> : <MessageSquare className="h-5 w-5" />}
+              {issueType === "maintenance" ? "Report Maintenance Issue" : "Submit Request"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            {issueType === "request" && (
+              <div>
+                <Label className="text-sm">Category</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="complaint">Complaint</SelectItem>
+                    <SelectItem value="lease_question">Lease Question</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div>
+              <Label className="text-sm">Priority</Label>
+              <Select value={priority} onValueChange={setPriority}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-sm">{issueType === "maintenance" ? "Issue Title" : "Subject"}</Label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={issueType === "maintenance" ? "e.g., Leaking faucet" : "Brief subject..."} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-sm">Description</Label>
+              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the issue in detail..." className="mt-1 h-28" />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" onClick={() => setOpen(false)} className="flex-1">Cancel</Button>
+              <Button onClick={handleSubmit} disabled={!title.trim() || !description.trim() || isPending} className="flex-1 gap-2">
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                Submit
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -137,6 +257,8 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-4">
+        <QuickIssueButton onViewChange={onViewChange} />
+
         {filteredNavItems.map((item) => (
           <NavItem
             key={item.id}
