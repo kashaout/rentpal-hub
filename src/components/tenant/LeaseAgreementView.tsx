@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { FileText, CheckCircle2, Clock, Pen, Loader2 } from "lucide-react";
+import { FileText, CheckCircle2, Clock, Pen, Loader2, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,14 +20,20 @@ function AgreementCard({ agreement }: { agreement: LeaseAgreement }) {
   const { user, isTenant, isLandlord } = useAuth();
   const signAgreement = useSignLeaseAgreement();
 
-  const canSign =
-    (isTenant && agreement.tenant_user_id === user?.id && !agreement.tenant_signed) ||
-    (isLandlord && agreement.landlord_user_id === user?.id && !agreement.landlord_signed);
+  const isTenantParty = agreement.tenant_user_id === user?.id;
+  const isLandlordParty = agreement.landlord_user_id === user?.id;
 
-  const role = agreement.tenant_user_id === user?.id ? "tenant" : "landlord";
+  const canSign =
+    (isTenant && isTenantParty && !agreement.tenant_signed) ||
+    (isLandlord && isLandlordParty && !agreement.landlord_signed);
+
+  const role = isTenantParty ? "tenant" : "landlord";
+
+  // Highlight for landlords when tenant has signed but they haven't
+  const needsCounterSign = isLandlord && isLandlordParty && agreement.tenant_signed && !agreement.landlord_signed;
 
   return (
-    <Card className="border">
+    <Card className={cn("border", needsCounterSign && "border-warning ring-1 ring-warning/20")}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div>
@@ -38,9 +44,16 @@ function AgreementCard({ agreement }: { agreement: LeaseAgreement }) {
               {format(new Date(agreement.lease_start), "MMM d, yyyy")} – {format(new Date(agreement.lease_end), "MMM d, yyyy")}
             </p>
           </div>
-          <Badge variant="outline" className={cn("capitalize", statusStyles[agreement.status])}>
-            {agreement.status.replace("_", " ")}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {needsCounterSign && (
+              <Badge className="bg-warning text-warning-foreground">
+                Action Required
+              </Badge>
+            )}
+            <Badge variant="outline" className={cn("capitalize", statusStyles[agreement.status])}>
+              {agreement.status.replace("_", " ")}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -95,18 +108,32 @@ function AgreementCard({ agreement }: { agreement: LeaseAgreement }) {
           </div>
         </div>
 
+        {needsCounterSign && (
+          <div className="rounded-lg bg-warning/10 border border-warning/20 p-3 flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+            <p className="text-xs text-warning">
+              The tenant ({agreement.tenant_name}) has signed this agreement. Please review the terms and counter-sign to activate the lease.
+            </p>
+          </div>
+        )}
+
         {canSign && (
           <Button
             onClick={() => signAgreement.mutate({ agreementId: agreement.id, role })}
             disabled={signAgreement.isPending}
-            className="w-full gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
+            className={cn(
+              "w-full gap-2",
+              needsCounterSign
+                ? "bg-warning text-warning-foreground hover:bg-warning/90"
+                : "bg-gradient-warm text-accent-foreground hover:opacity-90"
+            )}
           >
             {signAgreement.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Pen className="h-4 w-4" />
             )}
-            Sign Agreement
+            {needsCounterSign ? "Counter-Sign Agreement" : "Sign Agreement"}
           </Button>
         )}
       </CardContent>
