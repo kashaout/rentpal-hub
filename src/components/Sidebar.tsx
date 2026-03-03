@@ -4,6 +4,7 @@ import {
   LayoutDashboard, Building2, Users, Receipt, FileText, Settings, LogOut,
   Home, UserCog, Shield, ShieldCheck, BarChart3, Wrench, ClipboardList,
   TrendingUp, Wallet, Zap, Crown, Plus, MessageSquare, ChevronDown, Loader2,
+  Clipboard, Scale, Star,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadAlertCount } from "@/hooks/useAutomationWorkflows";
@@ -193,13 +194,16 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     { icon: FileText, label: "Agreements", id: "agreements", show: isTenant || isLandlord },
     { icon: Users, label: "Inbox", id: "tenant-inbox", show: isTenant },
     { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isMaintenance },
+    { icon: Clipboard, label: "Work Orders", id: "work-orders", show: isAdmin || isConsultant || isLandlord || isMaintenance },
     { icon: Wallet, label: "Finance", id: "finance", show: isAdmin || isConsultant || isLandlord },
+    { icon: Scale, label: "Escrow & Disputes", id: "escrow", show: isAdmin || isLandlord },
     { icon: Building2, label: "Properties", id: "properties", show: isAdmin || isConsultant || isLandlord },
     { icon: Users, label: "Tenants", id: "tenants", show: isAdmin || isConsultant || isLandlord },
     { icon: ClipboardList, label: "Issue Reports", id: "issue-reports", show: isAdmin || isConsultant || isLandlord },
     { icon: ShieldCheck, label: "Compliance", id: "compliance", show: isAdmin || isConsultant || isLandlord },
     { icon: Zap, label: "Automation", id: "automation", show: isAdmin || isConsultant || isLandlord, badge: unreadAlerts },
     { icon: Receipt, label: "Payments", id: "payments", show: isAdmin || isConsultant || isLandlord },
+    { icon: Star, label: "Reviews", id: "reviews-page", show: isAdmin || isLandlord },
     { icon: BarChart3, label: "Reports", id: "reports", show: isAdmin || isConsultant || isLandlord },
     { icon: FileText, label: "Documents", id: "documents", show: true },
   ];
