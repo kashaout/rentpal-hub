@@ -12,15 +12,20 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
+  const supabaseAnon = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+  );
+
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
   );
 
   try {
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
+    const { data } = await supabaseAnon.auth.getUser(token);
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated");
 
@@ -38,7 +43,6 @@ serve(async (req) => {
     }
 
     const validCurrency = (currency || "ngn").toLowerCase();
-    // Stripe expects amount in minor units (kobo for NGN)
     const amountInMinorUnits = Math.round(amount * 100);
 
     const origin = req.headers.get("origin") || "https://id-preview--171329c0-0821-4377-b783-24da77ae62c5.lovable.app";
@@ -60,13 +64,31 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/?rent_payment=success&tenant_id=${tenantId}`,
+      success_url: `${origin}/?rent_payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?rent_payment=canceled`,
       metadata: {
         tenant_id: tenantId,
         type: "rent_payment",
       },
     });
+
+    // Insert a pending payment record using service role (bypasses RLS)
+    const today = new Date().toISOString().split("T")[0];
+    const { error: insertError } = await supabaseAdmin
+      .from("payments")
+      .insert({
+        tenant_id: tenantId,
+        amount: amount,
+        payment_date: today,
+        due_date: today,
+        status: "pending",
+        payment_method: "card",
+        notes: `Stripe session: ${session.id}`,
+      });
+
+    if (insertError) {
+      console.error("Failed to insert pending payment:", insertError);
+    }
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
