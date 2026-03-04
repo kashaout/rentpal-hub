@@ -76,7 +76,7 @@ export function PaymentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [propertyFilter, setPropertyFilter] = useState<string>("all");
-  const [dateRange, setDateRange] = useState<DateRange>("this-month");
+  const [dateRange, setDateRange] = useState<DateRange>("all");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -200,7 +200,7 @@ export function PaymentsPage() {
   };
 
   const hasActiveFilters =
-    searchQuery || statusFilter !== "all" || propertyFilter !== "all" || dateRange !== "this-month";
+    searchQuery || statusFilter !== "all" || propertyFilter !== "all" || dateRange !== "all";
 
   if (isLoading) {
     return (
