@@ -98,6 +98,7 @@ export function TenantPortal() {
 
   const daysUntilLeaseEnd = differenceInDays(new Date(lease.lease_end), new Date());
   const totalPaid = payments?.filter((p) => p.status === "completed").reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+  const isRentPaid = lease.payment_status === "paid";
 
   return (
     <div className="space-y-6 p-6">
@@ -131,27 +132,34 @@ export function TenantPortal() {
             >
               {lease.payment_status}
             </Badge>
-            <Button
-              size="sm"
-              className="mt-2 w-full gap-1"
-              disabled={rentPaymentLoading}
-              onClick={() =>
-                payRent({
-                  amount: lease.rent_amount,
-                  currency: "NGN",
-                  tenantId: lease.id,
-                  propertyName: lease.property_name,
-                  unitNumber: lease.unit_number,
-                })
-              }
-            >
-              {rentPaymentLoading ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <DollarSign className="h-3 w-3" />
-              )}
-              Pay Rent Online
-            </Button>
+            {isRentPaid ? (
+              <Badge variant="outline" className="mt-2 w-full justify-center gap-1 bg-success/10 text-success border-success/20">
+                <CheckCircle2 className="h-3 w-3" />
+                Rent Paid for This Period
+              </Badge>
+            ) : (
+              <Button
+                size="sm"
+                className="mt-2 w-full gap-1"
+                disabled={rentPaymentLoading}
+                onClick={() =>
+                  payRent({
+                    amount: lease.rent_amount,
+                    currency: "NGN",
+                    tenantId: lease.id,
+                    propertyName: lease.property_name,
+                    unitNumber: lease.unit_number,
+                  })
+                }
+              >
+                {rentPaymentLoading ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <DollarSign className="h-3 w-3" />
+                )}
+                Pay Rent Online
+              </Button>
+            )}
           </CardContent>
         </Card>
 
