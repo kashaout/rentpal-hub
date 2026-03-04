@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, Mail, Lock, User, ArrowRight, ShieldAlert } from "lucide-react";
+import { Home, Mail, Lock, User, ArrowRight, ShieldAlert, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { differenceInYears } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -26,6 +27,8 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<PublicAppRole>("landlord");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [dobError, setDobError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
   const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
@@ -66,12 +69,33 @@ export default function Auth() {
       return;
     }
 
+    // Age verification for signup
+    if (!isLogin) {
+      if (!dateOfBirth) {
+        setDobError("Date of birth is required.");
+        setIsLoading(false);
+        return;
+      }
+      const age = differenceInYears(new Date(), new Date(dateOfBirth));
+      if (age < 18) {
+        setDobError("You must be at least 18 years old to use this platform.");
+        toast({
+          title: "Age restriction",
+          description: "You must be at least 18 years old to create an account.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      setDobError(null);
+    }
+
     setIsLoading(true);
 
     try {
       // Record the attempt before making the request
       recordAttempt();
-      
+
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
@@ -224,6 +248,28 @@ export default function Auth() {
                 />
               </div>
             </div>
+
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="dob">Date of Birth</Label>
+                <div className="relative">
+                  <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="dob"
+                    type="date"
+                    value={dateOfBirth}
+                    onChange={(e) => { setDateOfBirth(e.target.value); setDobError(null); }}
+                    className="pl-10"
+                    required
+                    max={new Date().toISOString().split("T")[0]}
+                  />
+                </div>
+                {dobError && (
+                  <p className="text-xs text-destructive">{dobError}</p>
+                )}
+                <p className="text-xs text-muted-foreground">You must be at least 18 years old to use this platform.</p>
+              </div>
+            )}
 
             {!isLogin && (
               <div className="space-y-2">
