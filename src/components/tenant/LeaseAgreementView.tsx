@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { format } from "date-fns";
-import { FileText, CheckCircle2, Clock, Pen, Loader2, AlertTriangle } from "lucide-react";
+import { FileText, CheckCircle2, Clock, Pen, Loader2, AlertTriangle, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { useMyLeaseAgreements, useSignLeaseAgreement, LeaseAgreement } from "@/h
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { cn } from "@/lib/utils";
+import { LeaseTemplateViewer } from "./LeaseTemplateViewer";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -16,7 +18,7 @@ const statusStyles: Record<string, string> = {
   expired: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
-function AgreementCard({ agreement }: { agreement: LeaseAgreement }) {
+function AgreementCard({ agreement, onViewContract }: { agreement: LeaseAgreement; onViewContract: () => void }) {
   const { user, isTenant, isLandlord } = useAuth();
   const signAgreement = useSignLeaseAgreement();
 
@@ -29,7 +31,6 @@ function AgreementCard({ agreement }: { agreement: LeaseAgreement }) {
 
   const role = isTenantParty ? "tenant" : "landlord";
 
-  // Highlight for landlords when tenant has signed but they haven't
   const needsCounterSign = isLandlord && isLandlordParty && agreement.tenant_signed && !agreement.landlord_signed;
 
   return (
@@ -38,7 +39,7 @@ function AgreementCard({ agreement }: { agreement: LeaseAgreement }) {
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="text-base font-semibold">
-              Lease Agreement — Unit {agreement.unit_number}
+              Tenancy Agreement — Unit {agreement.unit_number}
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               {format(new Date(agreement.lease_start), "MMM d, yyyy")} – {format(new Date(agreement.lease_end), "MMM d, yyyy")}
@@ -78,12 +79,15 @@ function AgreementCard({ agreement }: { agreement: LeaseAgreement }) {
 
         <Separator />
 
-        <div className="rounded-lg bg-secondary p-4 text-sm">
-          <p className="font-medium text-foreground mb-2">Terms & Conditions</p>
-          <p className="text-muted-foreground whitespace-pre-line">{agreement.terms}</p>
-        </div>
-
-        <Separator />
+        {/* View Contract Link */}
+        <Button
+          variant="outline"
+          onClick={onViewContract}
+          className="w-full gap-2 border-accent/30 text-accent hover:bg-accent/10"
+        >
+          <Eye className="h-4 w-4" />
+          View Full Contract & Sign
+        </Button>
 
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 text-sm">
@@ -112,7 +116,7 @@ function AgreementCard({ agreement }: { agreement: LeaseAgreement }) {
           <div className="rounded-lg bg-warning/10 border border-warning/20 p-3 flex items-start gap-2">
             <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
             <p className="text-xs text-warning">
-              The tenant ({agreement.tenant_name}) has signed this agreement. Please review the terms and counter-sign to activate the lease.
+              The tenant ({agreement.tenant_name}) has signed this agreement. Please review the contract and counter-sign to activate the lease.
             </p>
           </div>
         )}
@@ -143,6 +147,16 @@ function AgreementCard({ agreement }: { agreement: LeaseAgreement }) {
 
 export function LeaseAgreementView() {
   const { data: agreements, isLoading } = useMyLeaseAgreements();
+  const [viewingAgreement, setViewingAgreement] = useState<LeaseAgreement | null>(null);
+
+  if (viewingAgreement) {
+    return (
+      <LeaseTemplateViewer
+        agreement={viewingAgreement}
+        onBack={() => setViewingAgreement(null)}
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -163,11 +177,15 @@ export function LeaseAgreementView() {
 
   return (
     <div className="space-y-4 p-6">
-      <h2 className="font-display text-xl font-semibold text-foreground">Lease Agreements</h2>
-      <p className="text-sm text-muted-foreground">Review and sign your lease agreements before making payments.</p>
+      <h2 className="font-display text-xl font-semibold text-foreground">Tenancy Agreements</h2>
+      <p className="text-sm text-muted-foreground">Review, view the full contract, and sign your tenancy agreements.</p>
       <div className="space-y-4">
         {agreements.map((agreement) => (
-          <AgreementCard key={agreement.id} agreement={agreement} />
+          <AgreementCard
+            key={agreement.id}
+            agreement={agreement}
+            onViewContract={() => setViewingAgreement(agreement)}
+          />
         ))}
       </div>
     </div>
