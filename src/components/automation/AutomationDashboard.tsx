@@ -24,14 +24,12 @@ import {
   WORKFLOW_TEMPLATES,
   WorkflowType,
 } from "@/hooks/useAutomationWorkflows";
-import { useHasFeature } from "@/hooks/useSubscription";
 import { WorkflowFormDialog } from "./WorkflowFormDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
 export function AutomationDashboard() {
-  const { hasFeature, plan } = useHasFeature("automation_workflows");
   const { data: workflows = [], isLoading } = useAutomationWorkflows();
   const { data: alerts = [] } = useWorkflowAlerts();
   const updateWorkflow = useUpdateWorkflow();
@@ -41,23 +39,6 @@ export function AutomationDashboard() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingWorkflow, setEditingWorkflow] = useState<string | null>(null);
 
-  if (!hasFeature) {
-    return (
-      <div className="p-6">
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Zap className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Automation Workflows</h3>
-            <p className="text-muted-foreground text-center max-w-md mb-4">
-              Automate notifications for overdue rent, expiring leases, and more. 
-              Upgrade to Pro or Business plan to unlock this feature.
-            </p>
-            <Badge variant="secondary">Current plan: {plan}</Badge>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   const handleToggleWorkflow = (id: string, enabled: boolean) => {
     updateWorkflow.mutate({ id, is_enabled: enabled });
