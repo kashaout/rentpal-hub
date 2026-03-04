@@ -30,7 +30,7 @@ export function usePropertyReviews(propertyId: string) {
     queryKey: ["reviews", propertyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("reviews" as any)
+        .from("reviews")
         .select("*")
         .eq("property_id", propertyId)
         .eq("is_public", true)
@@ -50,7 +50,7 @@ export function useMyReviews() {
     queryKey: ["my-reviews", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("reviews" as any)
+        .from("reviews")
         .select("*")
         .or(`reviewer_id.eq.${user!.id},reviewee_id.eq.${user!.id}`)
         .order("created_at", { ascending: false });
@@ -83,14 +83,14 @@ export function useCreateReview() {
       if (!user) throw new Error("Not authenticated");
 
       const { data, error } = await supabase
-        .from("reviews" as any)
+        .from("reviews")
         .insert({
           ...input,
           reviewer_id: user.id,
           review_window_closes_at: new Date(
             Date.now() + 14 * 24 * 60 * 60 * 1000
           ).toISOString(),
-        } as any)
+        })
         .select()
         .single();
 
