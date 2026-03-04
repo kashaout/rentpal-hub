@@ -32,8 +32,8 @@ export function usePayments(tenantId?: string) {
           *,
           tenants!inner (
             unit_number,
-            properties!inner (name),
-            profiles (full_name)
+            user_id,
+            properties!inner (name)
           )
         `)
         .order("payment_date", { ascending: false });
@@ -46,9 +46,24 @@ export function usePayments(tenantId?: string) {
 
       if (error) throw error;
 
-      return data.map((p: any) => ({
+      // Fetch profile names for all unique tenant user_ids
+      const userIds = [...new Set((data || []).map((p: any) => p.tenants?.user_id).filter(Boolean))];
+      let profileMap: Record<string, string> = {};
+      
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", userIds);
+        
+        if (profiles) {
+          profileMap = Object.fromEntries(profiles.map(p => [p.user_id, p.full_name || "Unknown"]));
+        }
+      }
+
+      return (data || []).map((p: any) => ({
         ...p,
-        tenant_name: p.tenants?.profiles?.full_name || "Unknown",
+        tenant_name: profileMap[p.tenants?.user_id] || "Unknown",
         property_name: p.tenants?.properties?.name || "Unknown",
         unit_number: p.tenants?.unit_number || "",
       })) as PaymentWithTenant[];
