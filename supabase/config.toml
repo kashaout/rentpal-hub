@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.escalation-engine]
 verify_jwt = false
+
+[functions.verify-rent-payment]
+verify_jwt = false

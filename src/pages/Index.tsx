@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { Dashboard } from "@/components/Dashboard";
@@ -24,12 +24,15 @@ import { WorkOrdersDashboard } from "@/components/workorders/WorkOrdersDashboard
 import { EscrowDisputesDashboard } from "@/components/escrow/EscrowDisputesDashboard";
 import { ReviewsPage } from "@/components/reviews/ReviewsPage";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Welcome back! Here's your overview." },
   "tenant-portal": { title: "My Portal", subtitle: "View your lease, payments, and submit requests." },
   "browse-properties": { title: "Browse Properties", subtitle: "Find available properties to rent or book." },
-  "agreements": { title: "Lease Agreements", subtitle: "Review and sign your lease agreements." },
+  agreements: { title: "Lease Agreements", subtitle: "Review and sign your lease agreements." },
   "tenant-inbox": { title: "Inbox", subtitle: "All your requests and communication in one place." },
   "maintenance-portal": { title: "Maintenance", subtitle: "Manage repair requests and track work orders." },
   "work-orders": { title: "Work Orders", subtitle: "9-stage work order lifecycle with SLA tracking." },
@@ -53,12 +56,60 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
 
 const Index = () => {
   const { profile, isTenant, isAdmin, isConsultant, isLandlord, isMaintenance, isVendor } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const verifiedRef = useRef(false);
   
   // Default to appropriate portal based on role
   const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
   const isMaintenanceOnly = (isMaintenance || isVendor) && !isAdmin && !isConsultant && !isLandlord && !isTenant;
   const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : "dashboard";
   const [currentView, setCurrentView] = useState(defaultView);
+
+  // Auto-verify rent payment on success redirect
+  useEffect(() => {
+    if (verifiedRef.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const rentPayment = params.get("rent_payment");
+    const sessionId = params.get("session_id");
+
+    if (rentPayment === "success" && sessionId) {
+      verifiedRef.current = true;
+      // Clean URL
+      window.history.replaceState({}, "", window.location.pathname);
+
+      supabase.functions
+        .invoke("verify-rent-payment", { body: { sessionId } })
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("Payment verification error:", error);
+            toast({
+              title: "Payment verification issue",
+              description: "Your payment was processed but verification encountered an issue. It will be confirmed shortly.",
+              variant: "destructive",
+            });
+          } else if (data?.verified) {
+            toast({
+              title: "Rent payment confirmed! ✅",
+              description: "Your payment has been recorded and is now visible in your payment history.",
+            });
+            queryClient.invalidateQueries({ queryKey: ["payments"] });
+            queryClient.invalidateQueries({ queryKey: ["tenant-lease"] });
+          } else {
+            toast({
+              title: "Payment pending",
+              description: "Your payment is still being processed. Please check back shortly.",
+            });
+          }
+        });
+    } else if (rentPayment === "canceled") {
+      window.history.replaceState({}, "", window.location.pathname);
+      toast({
+        title: "Payment cancelled",
+        description: "Your rent payment was not completed.",
+      });
+    }
+  }, [toast, queryClient]);
   
   const viewInfo = viewTitles[currentView] || viewTitles.dashboard;
 
