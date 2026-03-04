@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { format, differenceInDays } from "date-fns";
 import { useRentPayment } from "@/hooks/useStripeSubscription";
+import { useMyReviews, useCreateReview } from "@/hooks/useReviews";
 import {
   Building2,
   Calendar,
@@ -19,6 +20,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
   Table,
   TableBody,
   TableCell,
@@ -29,6 +35,7 @@ import {
 import { useTenantLease } from "@/hooks/useTenantPortal";
 import { usePaymentsByTenant } from "@/hooks/usePayments";
 import { useMaintenanceRequests } from "@/hooks/useMaintenanceRequests";
+import { useAuth } from "@/hooks/useAuth";
 import { MaintenanceRequestDialog } from "./MaintenanceRequestDialog";
 import { RateMaintenanceDialog } from "./RateMaintenanceDialog";
 import { cn } from "@/lib/utils";
@@ -61,13 +68,19 @@ const priorityStyles: Record<string, string> = {
 };
 
 export function TenantPortal() {
+  const { user } = useAuth();
   const { payRent, isLoading: rentPaymentLoading } = useRentPayment();
   const [requestDialogOpen, setRequestDialogOpen] = useState(false);
   const [ratingRequest, setRatingRequest] = useState<{ id: string; title: string } | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const createReview = useCreateReview();
 
   const { data: lease, isLoading: leaseLoading } = useTenantLease();
   const { data: payments, isLoading: paymentsLoading } = usePaymentsByTenant(lease?.id || "");
   const { data: requests, isLoading: requestsLoading } = useMaintenanceRequests(lease?.id);
+  const { data: myReviews = [] } = useMyReviews();
 
   const isLoading = leaseLoading || paymentsLoading || requestsLoading;
 
@@ -97,11 +110,45 @@ export function TenantPortal() {
   }
 
   const daysUntilLeaseEnd = differenceInDays(new Date(lease.lease_end), new Date());
+  const isLeaseExpired = daysUntilLeaseEnd <= 0;
   const totalPaid = payments?.filter((p) => p.status === "completed").reduce((sum, p) => sum + Number(p.amount), 0) || 0;
   const isRentPaid = lease.payment_status === "paid";
+  const hasReviewedProperty = myReviews.some((r) => r.property_id === lease.property_id);
+  const showReviewPrompt = isLeaseExpired && !hasReviewedProperty;
+  const handleSubmitReview = async () => {
+    if (reviewRating === 0) return;
+    await createReview.mutateAsync({
+      property_id: lease.property_id,
+      review_type: "property",
+      overall_rating: reviewRating,
+      comment: reviewComment || undefined,
+    });
+    setReviewOpen(false);
+    setReviewRating(0);
+    setReviewComment("");
+  };
 
   return (
     <div className="space-y-6 p-6">
+      {/* Lease Expiry Review Prompt */}
+      {showReviewPrompt && (
+        <Card className="border-warning/30 bg-warning/5">
+          <CardContent className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <Star className="h-6 w-6 text-warning" />
+              <div>
+                <p className="font-medium">Your tenancy has ended</p>
+                <p className="text-sm text-muted-foreground">Share your experience by leaving a review for {lease.property_name}</p>
+              </div>
+            </div>
+            <Button onClick={() => setReviewOpen(true)} className="gap-2">
+              <Star className="h-4 w-4" />
+              Leave Review
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Lease Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -359,6 +406,61 @@ export function TenantPortal() {
           requestTitle={ratingRequest.title}
         />
       )}
+
+      {/* Leave Review Dialog */}
+      <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-warning" />
+              Review {lease.property_name}
+            </DialogTitle>
+            <DialogDescription>
+              How was your experience at this property?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label className="mb-2 block">Overall Rating</Label>
+              <div className="flex justify-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setReviewRating(star)}
+                    className="p-1 transition-transform hover:scale-110"
+                  >
+                    <Star
+                      className={cn(
+                        "h-9 w-9 transition-colors",
+                        reviewRating >= star
+                          ? "fill-warning text-warning"
+                          : "text-muted-foreground/30"
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label>Comment (optional)</Label>
+              <Textarea
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                placeholder="Share your experience..."
+                className="mt-1 h-24"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewOpen(false)}>Cancel</Button>
+            <Button onClick={handleSubmitReview} disabled={reviewRating === 0 || createReview.isPending}>
+              {createReview.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Submit Review
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

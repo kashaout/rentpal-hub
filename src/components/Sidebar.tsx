@@ -192,22 +192,34 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   // Tenant: portal, browse, agreements, inbox
   // Maintenance/Vendor: maintenance portal, work orders, assigned issues
   const navItems = [
+    // --- Landlord/Admin/Consultant: Overview & Portfolio ---
     { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isAdmin || isConsultant || isLandlord },
-    { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant },
-    { icon: Building2, label: "Browse Properties", id: "browse-properties", show: isTenant },
-    { icon: FileText, label: "Agreements", id: "agreements", show: isTenant || isLandlord || isAdmin },
-    { icon: Users, label: "Inbox", id: "tenant-inbox", show: isTenant },
-    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isMaintenance || isVendor },
-    { icon: Clipboard, label: "Work Orders", id: "work-orders", show: isAdmin || isConsultant || isLandlord || isMaintenance || isVendor },
-    { icon: Wallet, label: "Finance", id: "finance", show: isAdmin || isConsultant || isLandlord },
-    { icon: Scale, label: "Escrow & Disputes", id: "escrow", show: isAdmin || isLandlord },
     { icon: Building2, label: "Properties", id: "properties", show: isAdmin || isConsultant || isLandlord },
     { icon: Users, label: "Tenants", id: "tenants", show: isAdmin || isConsultant || isLandlord },
+    { icon: FileText, label: "Agreements", id: "agreements", show: isLandlord || isAdmin },
+
+    // --- Tenant: Portal & Browsing ---
+    { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant },
+    { icon: Building2, label: "Browse Properties", id: "browse-properties", show: isTenant },
+    { icon: FileText, label: "My Agreements", id: "agreements", show: isTenant },
+    { icon: Users, label: "Inbox", id: "tenant-inbox", show: isTenant },
+
+    // --- Maintenance & Operations ---
+    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isMaintenance || isVendor },
     { icon: ClipboardList, label: "Issue Reports", id: "issue-reports", show: isAdmin || isConsultant || isLandlord },
+    { icon: Clipboard, label: "Work Orders", id: "work-orders", show: isAdmin || isConsultant || isLandlord || isMaintenance || isVendor },
+
+    // --- Financial ---
+    { icon: Receipt, label: "Payments", id: "payments", show: isAdmin || isConsultant || isLandlord || isTenant },
+    { icon: Wallet, label: "Finance", id: "finance", show: isAdmin || isConsultant || isLandlord },
+    { icon: Scale, label: "Escrow & Disputes", id: "escrow", show: isAdmin || isLandlord },
+
+    // --- Compliance & Automation ---
     { icon: ShieldCheck, label: "Compliance", id: "compliance", show: isAdmin || isConsultant || isLandlord },
     { icon: Zap, label: "Automation", id: "automation", show: isAdmin || isConsultant || isLandlord, badge: unreadAlerts },
-    { icon: Receipt, label: "Payments", id: "payments", show: isAdmin || isConsultant || isLandlord || isTenant },
-    { icon: Star, label: "Reviews", id: "reviews-page", show: isAdmin || isLandlord },
+
+    // --- Reviews, Reports, Documents ---
+    { icon: Star, label: "Reviews", id: "reviews-page", show: isAdmin || isLandlord || isTenant },
     { icon: BarChart3, label: "Reports", id: "reports", show: isAdmin || isConsultant || isLandlord },
     { icon: FileText, label: "Documents", id: "documents", show: isAdmin || isConsultant || isLandlord || isTenant },
   ];
