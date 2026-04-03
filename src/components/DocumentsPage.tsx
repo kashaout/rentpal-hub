@@ -82,7 +82,8 @@ export function DocumentsPage() {
   const [reviewAgreement, setReviewAgreement] = useState<LeaseAgreement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { user, isLandlord } = useAuth();
+  const { user, isLandlord, isAdmin, isConsultant, isTenant } = useAuth();
+  const canManage = isLandlord || isAdmin || isConsultant;
   const { documents, isLoading, uploading, uploadDocument, deleteDocument, downloadDocument } =
     useDocuments();
   const { data: properties = [] } = useProperties();
@@ -177,18 +178,20 @@ export function DocumentsPage() {
             className="pl-10"
           />
         </div>
-        <Button
-          className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Upload className="h-4 w-4" />
-          )}
-          Upload Document
-        </Button>
+        {canManage && (
+          <Button
+            className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+            Upload Document
+          </Button>
+        )}
       </div>
 
       {/* Categories */}
@@ -268,14 +271,18 @@ export function DocumentsPage() {
                           <Download className="mr-2 h-4 w-4" />
                           Download
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => handleDelete(doc)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
+                        {canManage && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => handleDelete(doc)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

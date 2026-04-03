@@ -15,10 +15,11 @@ interface HeaderProps {
   subtitle?: string;
   onToggleNav?: () => void;
   navOpen?: boolean;
+  onNavigate?: (view: string) => void;
 }
 
-export function Header({ title, subtitle, onToggleNav, navOpen }: HeaderProps) {
-  const { profile, isLandlord, signOut } = useAuth();
+export function Header({ title, subtitle, onToggleNav, navOpen, onNavigate }: HeaderProps) {
+  const { profile, isLandlord, isTenant, signOut } = useAuth();
   const unreadAlerts = useUnreadAlertCount();
   const unreadLandlordCount = useUnreadLandlordNotificationCount();
   const { data: landlordNotifications } = useLandlordNotifications();
@@ -181,6 +182,21 @@ export function Header({ title, subtitle, onToggleNav, navOpen }: HeaderProps) {
                   <p className="text-sm font-semibold truncate">{profile?.full_name || "User"}</p>
                   <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
                 </div>
+                <button
+                  onClick={() => { setShowUserMenu(false); onNavigate?.("settings"); }}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors"
+                >
+                  Settings
+                </button>
+                {isTenant && (
+                  <button
+                    onClick={() => { setShowUserMenu(false); onNavigate?.("tenant-portal"); }}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors"
+                  >
+                    My Portal
+                  </button>
+                )}
+                <div className="border-t my-1" />
                 <button
                   onClick={() => { setShowUserMenu(false); signOut(); }}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors text-destructive"
