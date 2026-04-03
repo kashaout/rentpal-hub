@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { Dashboard } from "@/components/Dashboard";
 import { AdminPanel } from "@/components/admin/AdminPanel";
+import { LandlordUserManagement } from "@/components/admin/LandlordUserManagement";
 import { TenantPortal } from "@/components/tenant/TenantPortal";
 import { TenantBrowseProperties } from "@/components/tenant/TenantBrowseProperties";
 import { LeaseAgreementView } from "@/components/tenant/LeaseAgreementView";
