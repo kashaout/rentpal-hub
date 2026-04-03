@@ -220,7 +220,7 @@ export function EscrowDisputesDashboard() {
                       t.transaction_type === "release" ? "bg-success/10" :
                       "bg-warning/10"
                     )}>
-                      <DollarSign className={cn("h-4 w-4",
+                      <Banknote className={cn("h-4 w-4",
                         t.transaction_type === "capture" ? "text-primary" :
                         t.transaction_type === "release" ? "text-success" :
                         "text-warning"
