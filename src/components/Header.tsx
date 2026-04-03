@@ -18,8 +18,8 @@ interface HeaderProps {
   onNavigate?: (view: string) => void;
 }
 
-export function Header({ title, subtitle, onToggleNav, navOpen }: HeaderProps) {
-  const { profile, isLandlord, signOut } = useAuth();
+export function Header({ title, subtitle, onToggleNav, navOpen, onNavigate }: HeaderProps) {
+  const { profile, isLandlord, isTenant, signOut } = useAuth();
   const unreadAlerts = useUnreadAlertCount();
   const unreadLandlordCount = useUnreadLandlordNotificationCount();
   const { data: landlordNotifications } = useLandlordNotifications();
