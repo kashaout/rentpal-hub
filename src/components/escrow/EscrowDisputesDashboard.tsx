@@ -2,7 +2,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import {
   Scale, AlertTriangle, CheckCircle2, Clock, Loader2,
-  FileText, Shield, DollarSign, Eye,
+  FileText, Shield, Banknote, Eye,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -115,7 +115,7 @@ export function EscrowDisputesDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Escrow Held</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary absolute right-4 top-4" />
+            <Banknote className="h-4 w-4 text-primary absolute right-4 top-4" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{formatCurrency(balance?.held || 0, balance?.currency)}</p>
@@ -205,7 +205,7 @@ export function EscrowDisputesDashboard() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
+            <Banknote className="h-5 w-5" />
             Escrow Transactions
           </CardTitle>
         </CardHeader>
@@ -220,7 +220,7 @@ export function EscrowDisputesDashboard() {
                       t.transaction_type === "release" ? "bg-success/10" :
                       "bg-warning/10"
                     )}>
-                      <DollarSign className={cn("h-4 w-4",
+                      <Banknote className={cn("h-4 w-4",
                         t.transaction_type === "capture" ? "text-primary" :
                         t.transaction_type === "release" ? "text-success" :
                         "text-warning"
@@ -246,7 +246,7 @@ export function EscrowDisputesDashboard() {
             </div>
           ) : (
             <div className="py-8 text-center text-muted-foreground">
-              <DollarSign className="mx-auto h-10 w-10 text-muted-foreground/30" />
+              <Banknote className="mx-auto h-10 w-10 text-muted-foreground/30" />
               <p className="mt-2">No escrow transactions yet.</p>
             </div>
           )}

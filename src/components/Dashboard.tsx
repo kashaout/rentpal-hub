@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, Users, DollarSign, AlertTriangle, Plus, Loader2 } from "lucide-react";
+import { Building2, Users, Banknote, AlertTriangle, Plus, Loader2 } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { PropertyCard } from "@/components/PropertyCard";
 import { TenantCard } from "@/components/TenantCard";
@@ -88,8 +88,8 @@ export function Dashboard() {
         />
         <StatCard
           title="Monthly Revenue"
-          value={`$${monthlyRevenue.toLocaleString()}`}
-          icon={DollarSign}
+          value={`₦${monthlyRevenue.toLocaleString()}`}
+          icon={Banknote}
           variant="success"
         />
         <StatCard

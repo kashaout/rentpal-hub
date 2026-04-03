@@ -5,7 +5,7 @@ import { useMyReviews, useCreateReview } from "@/hooks/useReviews";
 import {
   Building2,
   Calendar,
-  DollarSign,
+  Banknote,
   Wrench,
   Receipt,
   Plus,
@@ -169,10 +169,10 @@ export function TenantPortal() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Monthly Rent
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">${lease.rent_amount.toLocaleString()}</p>
+            <p className="text-2xl font-bold">₦{lease.rent_amount.toLocaleString()}</p>
             <Badge
               variant="outline"
               className={cn("mt-1", paymentStatusStyles[lease.payment_status])}
@@ -202,7 +202,7 @@ export function TenantPortal() {
                 {rentPaymentLoading ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
                 ) : (
-                  <DollarSign className="h-3 w-3" />
+                  <Banknote className="h-3 w-3" />
                 )}
                 Pay Rent Online
               </Button>
@@ -238,7 +238,7 @@ export function TenantPortal() {
             <Receipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-success">${totalPaid.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-success">₦{totalPaid.toLocaleString()}</p>
             <p className="text-sm text-muted-foreground">
               {payments?.length || 0} payments
             </p>
@@ -275,7 +275,7 @@ export function TenantPortal() {
                           {format(new Date(payment.payment_date), "MMM d, yyyy")}
                         </TableCell>
                         <TableCell className="font-medium">
-                          ${Number(payment.amount).toLocaleString()}
+                          ₦{Number(payment.amount).toLocaleString()}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="capitalize gap-1">

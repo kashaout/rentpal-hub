@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Building2, MapPin, DollarSign, Hash, ImageIcon, Home } from "lucide-react";
+import { Building2, MapPin, Banknote, Hash, ImageIcon, Home } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -216,7 +216,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
                     <FormLabel>{listingType === "airbnb" ? "Nightly Rate (₦)" : "Monthly Rent (₦)"}</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Banknote className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input type="number" min={0} step={0.01} className="pl-10" {...field} />
                       </div>
                     </FormControl>

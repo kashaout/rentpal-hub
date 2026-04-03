@@ -3,7 +3,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import {
   Wrench, Clock, CheckCircle2, AlertCircle, AlertTriangle,
   Loader2, Building2, User, ArrowRight, Timer, Shield,
-  ChevronRight, DollarSign, Star,
+  ChevronRight, Banknote, Star,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -93,7 +93,7 @@ function WorkOrderCard({ wo, onUpdate }: { wo: WorkOrder; onUpdate: (wo: WorkOrd
             <SLAIndicator deadline={wo.sla_response_deadline} met={wo.sla_response_met} />
             {wo.actual_cost > 0 && (
               <span className="flex items-center gap-1">
-                <DollarSign className="h-3 w-3" />
+                <Banknote className="h-3 w-3" />
                 {formatCurrency(wo.actual_cost)}
               </span>
             )}

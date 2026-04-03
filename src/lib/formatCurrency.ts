@@ -1,9 +1,7 @@
-export type Currency = "NGN" | "GBP" | "USD";
+export type Currency = "NGN";
 
 const currencyFormats: Record<Currency, { symbol: string; locale: string }> = {
   NGN: { symbol: "₦", locale: "en-NG" },
-  GBP: { symbol: "£", locale: "en-GB" },
-  USD: { symbol: "$", locale: "en-US" },
 };
 
 export function formatCurrency(
@@ -11,7 +9,7 @@ export function formatCurrency(
   currency: Currency | string = "NGN",
   compact: boolean = false
 ): string {
-  const validCurrency = (["NGN", "GBP", "USD"].includes(currency) ? currency : "NGN") as Currency;
+  const validCurrency = "NGN" as Currency;
   const format = currencyFormats[validCurrency] || currencyFormats.NGN;
 
   if (compact && Math.abs(amount) >= 1000000) {

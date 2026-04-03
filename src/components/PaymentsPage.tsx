@@ -4,7 +4,7 @@ import {
   Loader2,
   Search,
   Filter,
-  DollarSign,
+  Banknote,
   TrendingUp,
   Clock,
   CheckCircle2,
@@ -219,10 +219,10 @@ export function PaymentsPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Payments
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">${stats.total.toLocaleString()}</p>
+            <p className="text-2xl font-bold">₦{stats.total.toLocaleString()}</p>
             <p className="text-sm text-muted-foreground">{stats.count} payments</p>
           </CardContent>
         </Card>
@@ -236,7 +236,7 @@ export function PaymentsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-success">
-              ${stats.completed.toLocaleString()}
+              ₦{stats.completed.toLocaleString()}
             </p>
             <p className="text-sm text-muted-foreground">Received</p>
           </CardContent>
@@ -251,7 +251,7 @@ export function PaymentsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-warning">
-              ${stats.pending.toLocaleString()}
+              ₦{stats.pending.toLocaleString()}
             </p>
             <p className="text-sm text-muted-foreground">Awaiting</p>
           </CardContent>
@@ -396,7 +396,7 @@ export function PaymentsPage() {
                       {payment.property_name}
                     </TableCell>
                     <TableCell className="font-medium">
-                      ${Number(payment.amount).toLocaleString()}
+                      ₦{Number(payment.amount).toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -440,7 +440,7 @@ export function PaymentsPage() {
         </div>
       ) : (
         <div className="rounded-lg border border-dashed bg-muted/50 p-8 text-center">
-          <DollarSign className="mx-auto h-10 w-10 text-muted-foreground/50" />
+          <Banknote className="mx-auto h-10 w-10 text-muted-foreground/50" />
           <h3 className="mt-4 font-medium text-foreground">No payments found</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             {hasActiveFilters

@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { format, eachDayOfInterval, parseISO, differenceInDays, isBefore, startOfDay, addMonths } from "date-fns";
 import {
-  MapPin, Users, DollarSign, Star, Wifi, Car, Coffee, Utensils,
+  MapPin, Users, Banknote, Star, Wifi, Car, Coffee, Utensils,
   Waves, Dumbbell, ShieldCheck, Wind, Tv, Bath, Bed, ArrowLeft,
   CalendarIcon, Home, Loader2, Clock, AlertTriangle, ArrowRight,
   CheckCircle2, Pen, FileText, CreditCard, Upload, Camera, Image
@@ -653,7 +653,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
               <p className="text-lg font-bold text-foreground">{property.units}</p>
             </div>
             <div className="rounded-lg bg-secondary p-4 text-center">
-              <DollarSign className="mx-auto h-5 w-5 text-muted-foreground" />
+              <Banknote className="mx-auto h-5 w-5 text-muted-foreground" />
               <p className="mt-2 text-sm text-muted-foreground">{isAirbnb ? "Per Night" : "Monthly"}</p>
               <p className="text-lg font-bold text-foreground">{formatCurrency(Number(property.monthly_rent), currency, true)}</p>
             </div>

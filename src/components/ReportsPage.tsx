@@ -18,7 +18,7 @@ import {
   Legend,
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Building2, Users, DollarSign, Loader2 } from "lucide-react";
+import { TrendingUp, Building2, Users, Banknote, Loader2 } from "lucide-react";
 import { format, subMonths, startOfMonth, endOfMonth, parseISO, isWithinInterval } from "date-fns";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--success))", "hsl(var(--warning))"];
@@ -155,10 +155,10 @@ export function ReportsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">₦{stats.totalRevenue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">All time</p>
           </CardContent>
         </Card>
@@ -169,7 +169,7 @@ export function ReportsPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.currentMonthRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">₦{stats.currentMonthRevenue.toLocaleString()}</div>
             <p className={`text-xs ${stats.revenueGrowth >= 0 ? "text-success" : "text-destructive"}`}>
               {stats.revenueGrowth >= 0 ? "+" : ""}
               {stats.revenueGrowth}% from last month
@@ -220,14 +220,14 @@ export function ReportsPage() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="month" className="text-xs" />
-                  <YAxis className="text-xs" tickFormatter={(value) => `$${value}`} />
+                  <YAxis className="text-xs" tickFormatter={(value) => `₦${value}`} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "hsl(var(--card))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "8px",
                     }}
-                    formatter={(value: number) => [`$${value.toLocaleString()}`, "Revenue"]}
+                    formatter={(value: number) => [`₦${value.toLocaleString()}`, "Revenue"]}
                   />
                   <Area
                     type="monotone"
@@ -254,7 +254,7 @@ export function ReportsPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={revenueByProperty} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis type="number" className="text-xs" tickFormatter={(value) => `$${value}`} />
+                    <XAxis type="number" className="text-xs" tickFormatter={(value) => `₦${value}`} />
                     <YAxis type="category" dataKey="name" className="text-xs" width={100} />
                     <Tooltip
                       contentStyle={{
@@ -262,7 +262,7 @@ export function ReportsPage() {
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "8px",
                       }}
-                      formatter={(value: number) => [`$${value.toLocaleString()}`, "Revenue"]}
+                      formatter={(value: number) => [`₦${value.toLocaleString()}`, "Revenue"]}
                     />
                     <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                   </BarChart>

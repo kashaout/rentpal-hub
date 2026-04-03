@@ -1,4 +1,4 @@
-import { MapPin, Users, DollarSign, MoreHorizontal, Pencil, Trash2, TrendingUp, TrendingDown, AlertTriangle, Wrench, Clock, ShieldCheck, Home } from "lucide-react";
+import { MapPin, Users, Banknote, MoreHorizontal, Pencil, Trash2, TrendingUp, TrendingDown, AlertTriangle, Wrench, Clock, ShieldCheck, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -248,7 +248,7 @@ export function PropertyCard({ property, onEdit, onClick, className }: PropertyC
             </div>
             <div className="rounded-md bg-secondary p-2.5 text-center">
               <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
-                <DollarSign className="h-3 w-3" />
+                <Banknote className="h-3 w-3" />
                 Rent
               </div>
               <p className="mt-1 text-sm font-semibold text-secondary-foreground">
