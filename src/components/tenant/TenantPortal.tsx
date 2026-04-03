@@ -5,7 +5,7 @@ import { useMyReviews, useCreateReview } from "@/hooks/useReviews";
 import {
   Building2,
   Calendar,
-  DollarSign,
+  Banknote,
   Wrench,
   Receipt,
   Plus,
