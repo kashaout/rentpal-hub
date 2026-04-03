@@ -3,7 +3,7 @@ import { format, formatDistanceToNow } from "date-fns";
 import {
   Wrench, Clock, CheckCircle2, AlertCircle, AlertTriangle,
   Loader2, Building2, User, ArrowRight, Timer, Shield,
-  ChevronRight, DollarSign, Star,
+  ChevronRight, Banknote, Star,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
