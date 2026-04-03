@@ -82,7 +82,8 @@ export function DocumentsPage() {
   const [reviewAgreement, setReviewAgreement] = useState<LeaseAgreement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { user, isLandlord } = useAuth();
+  const { user, isLandlord, isAdmin, isConsultant, isTenant } = useAuth();
+  const canManage = isLandlord || isAdmin || isConsultant;
   const { documents, isLoading, uploading, uploadDocument, deleteDocument, downloadDocument } =
     useDocuments();
   const { data: properties = [] } = useProperties();
