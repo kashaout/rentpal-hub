@@ -2,7 +2,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import {
   Scale, AlertTriangle, CheckCircle2, Clock, Loader2,
-  FileText, Shield, DollarSign, Eye,
+  FileText, Shield, Banknote, Eye,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
