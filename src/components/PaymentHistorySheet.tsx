@@ -114,7 +114,7 @@ export function PaymentHistorySheet({
                 {tenant.property_name} • Unit {tenant.unit_number}
               </p>
               <p className="mt-2 text-sm">
-                Monthly Rent: <span className="font-medium">${Number(tenant.rent_amount).toLocaleString()}</span>
+                Monthly Rent: <span className="font-medium">₦{Number(tenant.rent_amount).toLocaleString()}</span>
               </p>
               <p className="text-sm">
                 Total Paid: <span className="font-medium text-success">${totalPaid.toLocaleString()}</span>
