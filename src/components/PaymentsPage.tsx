@@ -219,10 +219,10 @@ export function PaymentsPage() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Payments
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">${stats.total.toLocaleString()}</p>
+            <p className="text-2xl font-bold">₦{stats.total.toLocaleString()}</p>
             <p className="text-sm text-muted-foreground">{stats.count} payments</p>
           </CardContent>
         </Card>
