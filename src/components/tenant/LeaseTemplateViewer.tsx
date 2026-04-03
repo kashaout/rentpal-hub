@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { ArrowLeft, Download, Pen, Loader2, FileText } from "lucide-react";
+import { ArrowLeft, Download, Pen, Loader2, FileText, KeyRound, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { LeaseAgreement, useSignLeaseAgreement } from "@/hooks/useLeaseAgreements";
