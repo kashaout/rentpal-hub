@@ -59,8 +59,8 @@ const Index = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const verifiedRef = useRef(false);
+  const [navOpen, setNavOpen] = useState(false);
   
-  // Default to appropriate portal based on role
   const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
   const isMaintenanceOnly = (isMaintenance || isVendor) && !isAdmin && !isConsultant && !isLandlord && !isTenant;
   const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : "dashboard";
@@ -75,7 +75,6 @@ const Index = () => {
 
     if (rentPayment === "success" && sessionId) {
       verifiedRef.current = true;
-      // Clean URL
       window.history.replaceState({}, "", window.location.pathname);
 
       supabase.functions
@@ -113,7 +112,6 @@ const Index = () => {
   
   const viewInfo = viewTitles[currentView] || viewTitles.dashboard;
 
-  // Personalize subtitle
   const subtitle = currentView === "dashboard" && profile?.full_name
     ? `Welcome back, ${profile.full_name.split(" ")[0]}! Here's your overview.`
     : currentView === "tenant-portal" && profile?.full_name
@@ -172,10 +170,20 @@ const Index = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-      <main className="flex-1 overflow-auto">
-        <Header title={viewInfo.title} subtitle={subtitle} />
+    <div className="min-h-screen bg-background">
+      <Sidebar
+        currentView={currentView}
+        onViewChange={setCurrentView}
+        open={navOpen}
+        onClose={() => setNavOpen(false)}
+      />
+      <Header
+        title={viewInfo.title}
+        subtitle={subtitle}
+        onToggleNav={() => setNavOpen(!navOpen)}
+        navOpen={navOpen}
+      />
+      <main className="max-w-[1760px] mx-auto px-4 md:px-6 py-6">
         {renderContent()}
       </main>
     </div>
