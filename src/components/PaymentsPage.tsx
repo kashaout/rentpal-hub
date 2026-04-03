@@ -251,7 +251,7 @@ export function PaymentsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-warning">
-              ${stats.pending.toLocaleString()}
+              ₦{stats.pending.toLocaleString()}
             </p>
             <p className="text-sm text-muted-foreground">Awaiting</p>
           </CardContent>
