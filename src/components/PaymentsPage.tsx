@@ -396,7 +396,7 @@ export function PaymentsPage() {
                       {payment.property_name}
                     </TableCell>
                     <TableCell className="font-medium">
-                      ${Number(payment.amount).toLocaleString()}
+                      ₦{Number(payment.amount).toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <Badge
