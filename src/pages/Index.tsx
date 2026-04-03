@@ -182,6 +182,7 @@ const Index = () => {
         subtitle={subtitle}
         onToggleNav={() => setNavOpen(!navOpen)}
         navOpen={navOpen}
+        onNavigate={setCurrentView}
       />
       <main className="max-w-[1760px] mx-auto px-4 md:px-6 py-6">
         {renderContent()}
