@@ -169,10 +169,10 @@ export function TenantPortal() {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Monthly Rent
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">${lease.rent_amount.toLocaleString()}</p>
+            <p className="text-2xl font-bold">₦{lease.rent_amount.toLocaleString()}</p>
             <Badge
               variant="outline"
               className={cn("mt-1", paymentStatusStyles[lease.payment_status])}
