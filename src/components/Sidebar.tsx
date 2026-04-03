@@ -210,6 +210,7 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     { icon: Star, label: "Reviews", id: "reviews-page", show: isAdmin || isLandlord || isTenant },
     { icon: BarChart3, label: "Reports", id: "reports", show: isAdmin || isConsultant || isLandlord },
     { icon: FileText, label: "Documents", id: "documents", show: isAdmin || isConsultant || isLandlord || isTenant },
+    { icon: UserCog, label: "Manage Users", id: "manage-users", show: isLandlord && !isAdmin },
   ];
 
   const adminItems = [

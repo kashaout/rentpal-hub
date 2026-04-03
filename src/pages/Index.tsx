@@ -129,8 +129,9 @@ const Index = () => {
   const renderContent = () => {
     switch (currentView) {
       case "manage-users":
+        return isAdmin ? <AdminPanel defaultTab="users" /> : <LandlordUserManagement />;
       case "roles":
-        return <AdminPanel defaultTab={currentView === "roles" ? "assignments" : "users"} />;
+        return <AdminPanel defaultTab="assignments" />;
       case "worker-performance":
         return <MaintenancePerformanceDashboard />;
       case "subscription":
