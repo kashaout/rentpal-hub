@@ -165,7 +165,7 @@ const Index = () => {
         return <SettingsPage />;
       case "dashboard":
       default:
-        return <Dashboard />;
+        return <Dashboard onNavigate={setCurrentView} />;
     }
   };
 
