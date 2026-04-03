@@ -238,7 +238,7 @@ export function TenantPortal() {
             <Receipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-success">${totalPaid.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-success">₦{totalPaid.toLocaleString()}</p>
             <p className="text-sm text-muted-foreground">
               {payments?.length || 0} payments
             </p>
