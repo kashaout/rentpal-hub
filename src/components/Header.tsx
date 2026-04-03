@@ -183,6 +183,21 @@ export function Header({ title, subtitle, onToggleNav, navOpen, onNavigate }: He
                   <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
                 </div>
                 <button
+                  onClick={() => { setShowUserMenu(false); onNavigate?.("settings"); }}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors"
+                >
+                  Settings
+                </button>
+                {isTenant && (
+                  <button
+                    onClick={() => { setShowUserMenu(false); onNavigate?.("tenant-portal"); }}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors"
+                  >
+                    My Portal
+                  </button>
+                )}
+                <div className="border-t my-1" />
+                <button
                   onClick={() => { setShowUserMenu(false); signOut(); }}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors text-destructive"
                 >
