@@ -66,6 +66,13 @@ const Index = () => {
   const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : "dashboard";
   const [currentView, setCurrentView] = useState(defaultView);
 
+  // Redirect tenant-only users away from landlord dashboard
+  useEffect(() => {
+    if (isTenantOnly && currentView === "dashboard") {
+      setCurrentView("tenant-portal");
+    }
+  }, [isTenantOnly, currentView]);
+
   // Auto-verify rent payment on success redirect
   useEffect(() => {
     if (verifiedRef.current) return;
