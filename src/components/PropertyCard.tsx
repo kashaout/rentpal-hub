@@ -1,4 +1,4 @@
-import { MapPin, Users, DollarSign, MoreHorizontal, Pencil, Trash2, TrendingUp, TrendingDown, AlertTriangle, Wrench, Clock, ShieldCheck, Home } from "lucide-react";
+import { MapPin, Users, Banknote, MoreHorizontal, Pencil, Trash2, TrendingUp, TrendingDown, AlertTriangle, Wrench, Clock, ShieldCheck, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
