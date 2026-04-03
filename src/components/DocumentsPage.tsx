@@ -178,18 +178,20 @@ export function DocumentsPage() {
             className="pl-10"
           />
         </div>
-        <Button
-          className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Upload className="h-4 w-4" />
-          )}
-          Upload Document
-        </Button>
+        {canManage && (
+          <Button
+            className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+            Upload Document
+          </Button>
+        )}
       </div>
 
       {/* Categories */}
