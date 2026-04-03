@@ -653,7 +653,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
               <p className="text-lg font-bold text-foreground">{property.units}</p>
             </div>
             <div className="rounded-lg bg-secondary p-4 text-center">
-              <DollarSign className="mx-auto h-5 w-5 text-muted-foreground" />
+              <Banknote className="mx-auto h-5 w-5 text-muted-foreground" />
               <p className="mt-2 text-sm text-muted-foreground">{isAirbnb ? "Per Night" : "Monthly"}</p>
               <p className="text-lg font-bold text-foreground">{formatCurrency(Number(property.monthly_rent), currency, true)}</p>
             </div>

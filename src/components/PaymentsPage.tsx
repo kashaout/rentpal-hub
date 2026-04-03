@@ -440,7 +440,7 @@ export function PaymentsPage() {
         </div>
       ) : (
         <div className="rounded-lg border border-dashed bg-muted/50 p-8 text-center">
-          <DollarSign className="mx-auto h-10 w-10 text-muted-foreground/50" />
+          <Banknote className="mx-auto h-10 w-10 text-muted-foreground/50" />
           <h3 className="mt-4 font-medium text-foreground">No payments found</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             {hasActiveFilters

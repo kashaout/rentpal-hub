@@ -246,7 +246,7 @@ export function EscrowDisputesDashboard() {
             </div>
           ) : (
             <div className="py-8 text-center text-muted-foreground">
-              <DollarSign className="mx-auto h-10 w-10 text-muted-foreground/30" />
+              <Banknote className="mx-auto h-10 w-10 text-muted-foreground/30" />
               <p className="mt-2">No escrow transactions yet.</p>
             </div>
           )}

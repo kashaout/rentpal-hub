@@ -275,7 +275,7 @@ export function TenantPortal() {
                           {format(new Date(payment.payment_date), "MMM d, yyyy")}
                         </TableCell>
                         <TableCell className="font-medium">
-                          ${Number(payment.amount).toLocaleString()}
+                          ₦{Number(payment.amount).toLocaleString()}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="capitalize gap-1">

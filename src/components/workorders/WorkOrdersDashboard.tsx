@@ -93,7 +93,7 @@ function WorkOrderCard({ wo, onUpdate }: { wo: WorkOrder; onUpdate: (wo: WorkOrd
             <SLAIndicator deadline={wo.sla_response_deadline} met={wo.sla_response_met} />
             {wo.actual_cost > 0 && (
               <span className="flex items-center gap-1">
-                <DollarSign className="h-3 w-3" />
+                <Banknote className="h-3 w-3" />
                 {formatCurrency(wo.actual_cost)}
               </span>
             )}

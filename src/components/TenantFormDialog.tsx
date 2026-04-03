@@ -283,10 +283,10 @@ export function TenantFormDialog({ open, onOpenChange, tenant, defaultPropertyId
               name="rent_amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Monthly Rent ($)</FormLabel>
+                  <FormLabel>Monthly Rent (₦)</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Banknote className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input type="number" min={0} step={0.01} className="pl-10" {...field} />
                     </div>
                   </FormControl>

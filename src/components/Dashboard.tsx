@@ -88,8 +88,8 @@ export function Dashboard() {
         />
         <StatCard
           title="Monthly Revenue"
-          value={`$${monthlyRevenue.toLocaleString()}`}
-          icon={DollarSign}
+          value={`₦${monthlyRevenue.toLocaleString()}`}
+          icon={Banknote}
           variant="success"
         />
         <StatCard
