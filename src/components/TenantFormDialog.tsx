@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Home, Calendar, DollarSign, UserCheck, AlertCircle } from "lucide-react";
+import { Home, Calendar, Banknote, UserCheck, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
