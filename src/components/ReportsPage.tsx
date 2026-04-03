@@ -18,7 +18,7 @@ import {
   Legend,
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Building2, Users, DollarSign, Loader2 } from "lucide-react";
+import { TrendingUp, Building2, Users, Banknote, Loader2 } from "lucide-react";
 import { format, subMonths, startOfMonth, endOfMonth, parseISO, isWithinInterval } from "date-fns";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--success))", "hsl(var(--warning))"];
