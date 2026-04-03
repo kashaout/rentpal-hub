@@ -115,7 +115,7 @@ export function EscrowDisputesDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Escrow Held</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary absolute right-4 top-4" />
+            <Banknote className="h-4 w-4 text-primary absolute right-4 top-4" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{formatCurrency(balance?.held || 0, balance?.currency)}</p>
