@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Building2, MapPin, Banknote, Hash, ImageIcon, Home } from "lucide-react";
+import { Building2, MapPin, Banknote, Hash, ImageIcon, Home, Upload, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -30,6 +30,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateProperty, useUpdateProperty, Property } from "@/hooks/useProperties";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const AVAILABLE_AMENITIES = [
   "wifi", "parking", "coffee", "kitchen", "pool",
@@ -48,7 +50,7 @@ const propertySchema = z.object({
   address: z.string().min(1, "Address is required").max(255),
   units: z.coerce.number().min(1, "Must have at least 1 unit"),
   monthly_rent: z.coerce.number().min(0, "Rent must be positive"),
-  image_url: z.string().url().optional().or(z.literal("")),
+  image_url: z.string().optional().or(z.literal("")),
   listing_type: z.enum(["standard", "airbnb"]),
   description: z.string().optional().or(z.literal("")),
   amenities: z.array(z.string()).optional(),
@@ -66,6 +68,10 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
   const isEditing = !!property;
   const createProperty = useCreateProperty();
   const updateProperty = useUpdateProperty();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>(property?.image_url || "");
+  const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
 
   const form = useForm<PropertyFormData>({
     resolver: zodResolver(propertySchema),
@@ -82,6 +88,55 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
   });
 
   const listingType = form.watch("listing_type");
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please upload a valid image (JPEG, PNG, WebP, or GIF)");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("property-images")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("property-images")
+        .getPublicUrl(fileName);
+
+      form.setValue("image_url", publicUrl);
+      setPreviewUrl(publicUrl);
+      toast.success("Image uploaded successfully");
+    } catch (error: any) {
+      toast.error("Upload failed: " + (error.message || "Unknown error"));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const clearImage = () => {
+    form.setValue("image_url", "");
+    setPreviewUrl("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const onSubmit = async (data: PropertyFormData) => {
     try {
@@ -111,6 +166,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
       }
       onOpenChange(false);
       form.reset();
+      setPreviewUrl("");
     } catch (error) {
       // Error handled by mutation
     }
@@ -120,7 +176,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display">
             {isEditing ? "Edit Property" : "Add New Property"}
@@ -226,18 +282,107 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
               />
             </div>
 
+            {/* Image Upload Section */}
             <FormField
               control={form.control}
               name="image_url"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image URL (optional)</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <ImageIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input placeholder="https://..." className="pl-10" {...field} />
+                  <FormLabel>Property Image (optional)</FormLabel>
+                  <div className="space-y-3">
+                    {/* Toggle between upload and URL */}
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={uploadMode === "file" ? "default" : "outline"}
+                        onClick={() => setUploadMode("file")}
+                        className={uploadMode === "file" ? "bg-gradient-warm text-accent-foreground" : ""}
+                      >
+                        <Upload className="h-3.5 w-3.5 mr-1.5" />
+                        Upload File
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={uploadMode === "url" ? "default" : "outline"}
+                        onClick={() => setUploadMode("url")}
+                        className={uploadMode === "url" ? "bg-gradient-warm text-accent-foreground" : ""}
+                      >
+                        <ImageIcon className="h-3.5 w-3.5 mr-1.5" />
+                        Paste URL
+                      </Button>
                     </div>
-                  </FormControl>
+
+                    {uploadMode === "file" ? (
+                      <div>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                        <div
+                          onClick={() => !uploading && fileInputRef.current?.click()}
+                          className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-secondary/30 transition-colors"
+                        >
+                          {uploading ? (
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                              <p className="text-sm text-muted-foreground">Uploading...</p>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center gap-2">
+                              <Upload className="h-8 w-8 text-muted-foreground" />
+                              <p className="text-sm text-muted-foreground">
+                                Click to upload from your computer
+                              </p>
+                              <p className="text-xs text-muted-foreground/70">
+                                JPEG, PNG, WebP or GIF • Max 5MB
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <FormControl>
+                        <div className="relative">
+                          <ImageIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            placeholder="https://..."
+                            className="pl-10"
+                            value={field.value || ""}
+                            onChange={(e) => {
+                              field.onChange(e.target.value);
+                              setPreviewUrl(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </FormControl>
+                    )}
+
+                    {/* Image Preview */}
+                    {previewUrl && (
+                      <div className="relative rounded-lg overflow-hidden border border-border">
+                        <img
+                          src={previewUrl}
+                          alt="Property preview"
+                          className="w-full h-32 object-cover"
+                          onError={() => setPreviewUrl("")}
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="destructive"
+                          className="absolute top-2 right-2 h-6 w-6"
+                          onClick={clearImage}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -306,7 +451,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
               <Button
                 type="submit"
                 className="bg-gradient-warm text-accent-foreground hover:opacity-90"
-                disabled={isLoading}
+                disabled={isLoading || uploading}
               >
                 {isLoading ? "Saving..." : isEditing ? "Save Changes" : "Add Property"}
               </Button>
