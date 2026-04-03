@@ -695,10 +695,13 @@ export type Database = {
       }
       lease_agreements: {
         Row: {
+          check_in_time: string | null
           created_at: string
+          credentials_sent_at: string | null
           currency: string
           document_id: string | null
           id: string
+          keybox_password: string | null
           landlord_name: string
           landlord_signed: boolean
           landlord_signed_at: string | null
@@ -715,12 +718,16 @@ export type Database = {
           terms: string
           unit_number: string
           updated_at: string
+          wifi_password: string | null
         }
         Insert: {
+          check_in_time?: string | null
           created_at?: string
+          credentials_sent_at?: string | null
           currency?: string
           document_id?: string | null
           id?: string
+          keybox_password?: string | null
           landlord_name: string
           landlord_signed?: boolean
           landlord_signed_at?: string | null
@@ -737,12 +744,16 @@ export type Database = {
           terms?: string
           unit_number: string
           updated_at?: string
+          wifi_password?: string | null
         }
         Update: {
+          check_in_time?: string | null
           created_at?: string
+          credentials_sent_at?: string | null
           currency?: string
           document_id?: string | null
           id?: string
+          keybox_password?: string | null
           landlord_name?: string
           landlord_signed?: boolean
           landlord_signed_at?: string | null
@@ -759,6 +770,7 @@ export type Database = {
           terms?: string
           unit_number?: string
           updated_at?: string
+          wifi_password?: string | null
         }
         Relationships: [
           {
