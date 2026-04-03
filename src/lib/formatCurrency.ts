@@ -1,9 +1,7 @@
-export type Currency = "NGN" | "GBP" | "USD";
+export type Currency = "NGN";
 
 const currencyFormats: Record<Currency, { symbol: string; locale: string }> = {
   NGN: { symbol: "₦", locale: "en-NG" },
-  GBP: { symbol: "£", locale: "en-GB" },
-  USD: { symbol: "$", locale: "en-US" },
 };
 
 export function formatCurrency(
