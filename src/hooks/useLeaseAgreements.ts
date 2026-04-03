@@ -22,6 +22,10 @@ export interface LeaseAgreement {
   landlord_signed_at: string | null;
   document_id: string | null;
   status: string;
+  wifi_password: string | null;
+  keybox_password: string | null;
+  credentials_sent_at: string | null;
+  check_in_time: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -70,7 +74,7 @@ export function useCreateLeaseAgreement() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: Omit<LeaseAgreement, "id" | "created_at" | "updated_at" | "tenant_signed" | "landlord_signed" | "tenant_signed_at" | "landlord_signed_at" | "document_id" | "status">) => {
+    mutationFn: async (data: Omit<LeaseAgreement, "id" | "created_at" | "updated_at" | "tenant_signed" | "landlord_signed" | "tenant_signed_at" | "landlord_signed_at" | "document_id" | "status" | "wifi_password" | "keybox_password" | "credentials_sent_at" | "check_in_time">) => {
       const { data: result, error } = await supabase
         .from("lease_agreements" as any)
         .insert(data as any)

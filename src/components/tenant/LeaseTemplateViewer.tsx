@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { ArrowLeft, Download, Pen, Loader2, FileText } from "lucide-react";
+import { ArrowLeft, Download, Pen, Loader2, FileText, KeyRound, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { LeaseAgreement, useSignLeaseAgreement } from "@/hooks/useLeaseAgreements";
@@ -326,6 +326,45 @@ export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerPr
             </div>
           </div>
         </div>
+
+        {/* Access Credentials Section */}
+        {agreement.credentials_sent_at && agreement.wifi_password && agreement.keybox_password && (
+          <div className="mt-8">
+            <Separator className="my-6" />
+            <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <KeyRound className="h-5 w-5 text-primary" />
+                <h2 className="font-bold text-foreground text-lg">Access Credentials</h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                These credentials were automatically generated and sent 12 hours before your check-in.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-lg bg-card border p-4 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Wifi className="h-4 w-4 text-primary" />
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">WiFi Password</p>
+                  </div>
+                  <p className="font-mono text-lg font-bold text-foreground tracking-wider select-all">
+                    {agreement.wifi_password}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-card border p-4 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <KeyRound className="h-4 w-4 text-primary" />
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Key Box Code</p>
+                  </div>
+                  <p className="font-mono text-lg font-bold text-foreground tracking-wider select-all">
+                    {agreement.keybox_password}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Sent on: {format(new Date(agreement.credentials_sent_at), "MMMM d, yyyy 'at' h:mm a")}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Sign button */}
