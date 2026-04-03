@@ -236,7 +236,7 @@ export function PaymentsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-success">
-              ${stats.completed.toLocaleString()}
+              ₦{stats.completed.toLocaleString()}
             </p>
             <p className="text-sm text-muted-foreground">Received</p>
           </CardContent>
