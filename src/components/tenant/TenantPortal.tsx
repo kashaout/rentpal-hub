@@ -202,7 +202,7 @@ export function TenantPortal() {
                 {rentPaymentLoading ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
                 ) : (
-                  <DollarSign className="h-3 w-3" />
+                  <Banknote className="h-3 w-3" />
                 )}
                 Pay Rent Online
               </Button>
