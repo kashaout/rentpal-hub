@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { Dashboard } from "@/components/Dashboard";
 import { AdminPanel } from "@/components/admin/AdminPanel";
+import { LandlordUserManagement } from "@/components/admin/LandlordUserManagement";
 import { TenantPortal } from "@/components/tenant/TenantPortal";
 import { TenantBrowseProperties } from "@/components/tenant/TenantBrowseProperties";
 import { LeaseAgreementView } from "@/components/tenant/LeaseAgreementView";
@@ -128,8 +129,9 @@ const Index = () => {
   const renderContent = () => {
     switch (currentView) {
       case "manage-users":
+        return isAdmin ? <AdminPanel defaultTab="users" /> : <LandlordUserManagement />;
       case "roles":
-        return <AdminPanel defaultTab={currentView === "roles" ? "assignments" : "users"} />;
+        return <AdminPanel defaultTab="assignments" />;
       case "worker-performance":
         return <MaintenancePerformanceDashboard />;
       case "subscription":
