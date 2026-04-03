@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { format, eachDayOfInterval, parseISO, differenceInDays, isBefore, startOfDay, addMonths } from "date-fns";
 import {
-  MapPin, Users, DollarSign, Star, Wifi, Car, Coffee, Utensils,
+  MapPin, Users, Banknote, Star, Wifi, Car, Coffee, Utensils,
   Waves, Dumbbell, ShieldCheck, Wind, Tv, Bath, Bed, ArrowLeft,
   CalendarIcon, Home, Loader2, Clock, AlertTriangle, ArrowRight,
   CheckCircle2, Pen, FileText, CreditCard, Upload, Camera, Image
