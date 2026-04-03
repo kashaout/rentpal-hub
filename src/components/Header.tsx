@@ -15,6 +15,7 @@ interface HeaderProps {
   subtitle?: string;
   onToggleNav?: () => void;
   navOpen?: boolean;
+  onNavigate?: (view: string) => void;
 }
 
 export function Header({ title, subtitle, onToggleNav, navOpen }: HeaderProps) {
