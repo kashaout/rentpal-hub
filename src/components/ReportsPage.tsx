@@ -254,7 +254,7 @@ export function ReportsPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={revenueByProperty} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis type="number" className="text-xs" tickFormatter={(value) => `$${value}`} />
+                    <XAxis type="number" className="text-xs" tickFormatter={(value) => `₦${value}`} />
                     <YAxis type="category" dataKey="name" className="text-xs" width={100} />
                     <Tooltip
                       contentStyle={{
