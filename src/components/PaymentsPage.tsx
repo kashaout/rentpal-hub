@@ -4,7 +4,7 @@ import {
   Loader2,
   Search,
   Filter,
-  DollarSign,
+  Banknote,
   TrendingUp,
   Clock,
   CheckCircle2,
