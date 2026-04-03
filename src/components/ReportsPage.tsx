@@ -220,7 +220,7 @@ export function ReportsPage() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="month" className="text-xs" />
-                  <YAxis className="text-xs" tickFormatter={(value) => `$${value}`} />
+                  <YAxis className="text-xs" tickFormatter={(value) => `₦${value}`} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "hsl(var(--card))",
