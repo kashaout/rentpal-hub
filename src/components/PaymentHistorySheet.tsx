@@ -117,7 +117,7 @@ export function PaymentHistorySheet({
                 Monthly Rent: <span className="font-medium">₦{Number(tenant.rent_amount).toLocaleString()}</span>
               </p>
               <p className="text-sm">
-                Total Paid: <span className="font-medium text-success">${totalPaid.toLocaleString()}</span>
+                Total Paid: <span className="font-medium text-success">₦{totalPaid.toLocaleString()}</span>
               </p>
             </div>
 
