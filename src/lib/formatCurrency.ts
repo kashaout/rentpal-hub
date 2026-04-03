@@ -9,7 +9,7 @@ export function formatCurrency(
   currency: Currency | string = "NGN",
   compact: boolean = false
 ): string {
-  const validCurrency = (["NGN", "GBP", "USD"].includes(currency) ? currency : "NGN") as Currency;
+  const validCurrency = "NGN" as Currency;
   const format = currencyFormats[validCurrency] || currencyFormats.NGN;
 
   if (compact && Math.abs(amount) >= 1000000) {
