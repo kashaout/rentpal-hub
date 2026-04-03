@@ -205,7 +205,7 @@ export function EscrowDisputesDashboard() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
+            <Banknote className="h-5 w-5" />
             Escrow Transactions
           </CardTitle>
         </CardHeader>
