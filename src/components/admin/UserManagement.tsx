@@ -40,7 +40,7 @@ const roleColors: Record<string, string> = {
 };
 
 const allRoles: Array<AppRole> = [
-  "admin", "consultant", "landlord", "tenant", "maintenance", "vendor",
+  "admin", "consultant", "landlord", "tenant", "maintenance",
 ];
 
 function useUserAction() {
