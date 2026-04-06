@@ -16,6 +16,7 @@ import { ReportsPage } from "@/components/ReportsPage";
 import { MaintenancePerformanceDashboard } from "@/components/admin/MaintenancePerformanceDashboard";
 import { FinanceDashboard } from "@/components/finance/FinanceDashboard";
 import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
+import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -40,17 +41,25 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
 };
 
 const Index = () => {
-  const { profile, isTenant, isAdmin, isConsultant, isLandlord, isMaintenance, isVendor } = useAuth();
+  const { profile, isTenant, isAdmin, isConsultant, isLandlord, isMaintenance, isVendor, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const verifiedRef = useRef(false);
   const [navOpen, setNavOpen] = useState(false);
   const viewHistoryRef = useRef<string[]>([]);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   
   const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
   const isMaintenanceOnly = (isMaintenance || isVendor) && !isAdmin && !isConsultant && !isLandlord && !isTenant;
   const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : "dashboard";
   const [currentView, setCurrentView] = useState(defaultView);
+
+  // Check onboarding status
+  useEffect(() => {
+    if (profile && !(profile as any).onboarding_completed && (isLandlord || isAdmin)) {
+      setShowOnboarding(true);
+    }
+  }, [profile, isLandlord, isAdmin]);
 
   const navigateTo = useCallback((view: string) => {
     setCurrentView(prev => {
@@ -169,6 +178,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {showOnboarding && (
+        <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
+      )}
       <Sidebar
         currentView={currentView}
         onViewChange={navigateTo}

@@ -2,9 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, MapPin, Banknote, Users, Home } from "lucide-react";
 import { formatCurrency } from "@/lib/formatCurrency";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Property } from "@/hooks/useProperties";
+import { NotesSection } from "@/components/NotesSection";
 
 interface Props {
   property: Property;
@@ -119,6 +120,13 @@ export function PropertyOverviewTab({ property }: Props) {
           )}
         </CardContent>
       </Card>
+
+      <NotesSection
+        notes={(property as any).notes || null}
+        onSave={async (notes) => {
+          await supabase.from("properties").update({ notes } as any).eq("id", property.id);
+        }}
+      />
     </div>
   );
 }

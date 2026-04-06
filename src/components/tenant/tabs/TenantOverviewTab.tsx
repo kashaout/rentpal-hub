@@ -5,6 +5,8 @@ import { Building2, Calendar, Banknote, Clock } from "lucide-react";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { TenantLeaseInfo } from "@/hooks/useTenantPortal";
 import { usePaymentsByTenant } from "@/hooks/usePayments";
+import { NotesSection } from "@/components/NotesSection";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   lease: TenantLeaseInfo;
@@ -96,6 +98,13 @@ export function TenantOverviewTab({ lease }: Props) {
           </div>
         </CardContent>
       </Card>
+
+      <NotesSection
+        notes={(lease as any).notes || null}
+        onSave={async (notes) => {
+          await supabase.from("tenants").update({ notes } as any).eq("id", lease.id);
+        }}
+      />
     </div>
   );
 }

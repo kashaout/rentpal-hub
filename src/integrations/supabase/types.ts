@@ -1044,6 +1044,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          onboarding_completed: boolean
           phone: string | null
           sla_compliance_rate: number | null
           technician_performance_score: number | null
@@ -1058,6 +1059,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id?: string
+          onboarding_completed?: boolean
           phone?: string | null
           sla_compliance_rate?: number | null
           technician_performance_score?: number | null
@@ -1072,6 +1074,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          onboarding_completed?: boolean
           phone?: string | null
           sla_compliance_rate?: number | null
           technician_performance_score?: number | null
@@ -1098,11 +1101,13 @@ export type Database = {
           house_rules: string | null
           id: string
           image_url: string | null
+          is_archived: boolean
           is_paused: boolean | null
           landlord_id: string | null
           listing_type: string
           monthly_rent: number
           name: string
+          notes: string | null
           property_type: string
           region: string
           safety_features: Json | null
@@ -1124,11 +1129,13 @@ export type Database = {
           house_rules?: string | null
           id?: string
           image_url?: string | null
+          is_archived?: boolean
           is_paused?: boolean | null
           landlord_id?: string | null
           listing_type?: string
           monthly_rent?: number
           name: string
+          notes?: string | null
           property_type?: string
           region?: string
           safety_features?: Json | null
@@ -1150,11 +1157,13 @@ export type Database = {
           house_rules?: string | null
           id?: string
           image_url?: string | null
+          is_archived?: boolean
           is_paused?: boolean | null
           landlord_id?: string | null
           listing_type?: string
           monthly_rent?: number
           name?: string
+          notes?: string | null
           property_type?: string
           region?: string
           safety_features?: Json | null
@@ -1448,8 +1457,10 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_archived: boolean
           lease_end: string
           lease_start: string
+          notes: string | null
           payment_status: string
           property_id: string
           rent_amount: number
@@ -1461,8 +1472,10 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_archived?: boolean
           lease_end: string
           lease_start: string
+          notes?: string | null
           payment_status?: string
           property_id: string
           rent_amount: number
@@ -1474,8 +1487,10 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_archived?: boolean
           lease_end?: string
           lease_start?: string
+          notes?: string | null
           payment_status?: string
           property_id?: string
           rent_amount?: number
