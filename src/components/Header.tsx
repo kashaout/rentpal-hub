@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Bell, Search, FileText, Check, Menu, X, Home, ArrowLeft } from "lucide-react";
+import { GlobalSearch } from "@/components/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
