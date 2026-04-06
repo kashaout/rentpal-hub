@@ -6,12 +6,15 @@ import { TenantCard } from "@/components/TenantCard";
 import { PropertyFormDialog } from "@/components/PropertyFormDialog";
 import { TenantFormDialog } from "@/components/TenantFormDialog";
 import { PaymentHistorySheet } from "@/components/PaymentHistorySheet";
+import { SubscriptionBanner } from "@/components/subscription/SubscriptionBanner";
+import { UpgradeModal } from "@/components/subscription/UpgradeModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useProperties, PropertyWithStats } from "@/hooks/useProperties";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
 import { useMaintenanceRequests } from "@/hooks/useMaintenanceRequests";
 import { useMyLeaseAgreements } from "@/hooks/useLeaseAgreements";
 import { cn } from "@/lib/utils";
@@ -22,9 +25,11 @@ interface DashboardProps {
 
 export function Dashboard({ onNavigate }: DashboardProps) {
   const { isAdmin, isLandlord } = useAuth();
+  const { canAddProperty, isReadOnly } = useSubscriptionContext();
   const [propertyDialogOpen, setPropertyDialogOpen] = useState(false);
   const [tenantDialogOpen, setTenantDialogOpen] = useState(false);
   const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<PropertyWithStats | undefined>();
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | undefined>();
   const [paymentTenant, setPaymentTenant] = useState<TenantWithDetails | null>(null);
@@ -87,6 +92,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   return (
     <div className="space-y-8 p-6">
+      {/* Subscription Banner */}
+      <SubscriptionBanner onNavigateToPlans={() => onNavigate?.("subscription")} />
       {/* Stats Grid — clickable */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <button className="text-left" onClick={() => onNavigate?.("properties")}>
