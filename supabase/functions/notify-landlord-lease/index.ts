@@ -82,7 +82,7 @@ serve(async (req) => {
             <tr><td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Lease Period:</td><td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lease_start} to ${lease_end}</td></tr>
           </table>
           <p>Please log in to your dashboard to review and counter-sign the agreement.</p>
-          <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">This is an automated notification from PropManage.</p>
+          <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">This is an automated notification from RentPal.</p>
         </div>
       </div>`;
 
