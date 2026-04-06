@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Loader2, Building2, Users, FileText, CreditCard, AlertTriangle, Wrench, FolderOpen, ShieldCheck, Activity } from "lucide-react";
+import { ArrowLeft, Loader2, Building2, Users, FileText, CreditCard, AlertTriangle, Wrench, FolderOpen, ShieldCheck, Activity, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProperty } from "@/hooks/useProperties";
@@ -12,6 +12,7 @@ import { PropertyWorkOrdersTab } from "./tabs/PropertyWorkOrdersTab";
 import { PropertyDocumentsTab } from "./tabs/PropertyDocumentsTab";
 import { PropertyComplianceTab } from "./tabs/PropertyComplianceTab";
 import { PropertyActivityTab } from "./tabs/PropertyActivityTab";
+import { PropertyReviewsTab } from "./tabs/PropertyReviewsTab";
 
 interface PropertyCommandCenterProps {
   propertyId: string;
@@ -27,6 +28,7 @@ const TABS = [
   { key: "work-orders", label: "Work Orders", icon: Wrench },
   { key: "documents", label: "Documents", icon: FolderOpen },
   { key: "compliance", label: "Compliance", icon: ShieldCheck },
+  { key: "reviews", label: "Reviews", icon: Star },
   { key: "activity", label: "Activity", icon: Activity },
 ];
 
@@ -105,6 +107,9 @@ export function PropertyCommandCenter({ propertyId, onBack }: PropertyCommandCen
         </TabsContent>
         <TabsContent value="compliance">
           <PropertyComplianceTab propertyId={propertyId} />
+        </TabsContent>
+        <TabsContent value="reviews">
+          <PropertyReviewsTab propertyId={propertyId} />
         </TabsContent>
         <TabsContent value="activity">
           <PropertyActivityTab propertyId={propertyId} />
