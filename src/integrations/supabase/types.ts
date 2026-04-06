@@ -456,8 +456,11 @@ export type Database = {
           file_size: number
           file_type: string
           id: string
+          lease_id: string | null
+          maintenance_request_id: string | null
           name: string
           property_id: string | null
+          tenant_id: string | null
           updated_at: string
           uploaded_by: string
         }
@@ -468,8 +471,11 @@ export type Database = {
           file_size: number
           file_type: string
           id?: string
+          lease_id?: string | null
+          maintenance_request_id?: string | null
           name: string
           property_id?: string | null
+          tenant_id?: string | null
           updated_at?: string
           uploaded_by: string
         }
@@ -480,17 +486,41 @@ export type Database = {
           file_size?: number
           file_type?: string
           id?: string
+          lease_id?: string | null
+          maintenance_request_id?: string | null
           name?: string
           property_id?: string | null
+          tenant_id?: string | null
           updated_at?: string
           uploaded_by?: string
         }
         Relationships: [
           {
+            foreignKeyName: "documents_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "lease_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "documents_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
