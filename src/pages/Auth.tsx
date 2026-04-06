@@ -93,7 +93,7 @@ export default function Auth() {
         } else {
           resetRateLimit();
           toast({ title: "Welcome back!" });
-          navigate("/");
+          navigate("/dashboard");
         }
       } else {
         const { error } = await signUp(email, password, fullName, role);
@@ -102,7 +102,7 @@ export default function Auth() {
         } else {
           resetRateLimit();
           toast({ title: "Account created successfully!" });
-          navigate("/");
+          navigate("/dashboard");
         }
       }
     } finally {
@@ -120,7 +120,7 @@ export default function Auth() {
               <Home className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="font-display text-2xl font-bold text-foreground">
-              PropManage
+              RentPal
             </span>
           </div>
         </div>
@@ -228,7 +228,7 @@ export default function Auth() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          © 2026 PropManage. All rights reserved.
+          © 2026 RentPal. All rights reserved.
         </p>
       </div>
     </div>
