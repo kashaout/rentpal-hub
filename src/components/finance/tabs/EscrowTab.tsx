@@ -29,6 +29,7 @@ export function EscrowTab() {
 
   return (
     <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">Escrow holds money securely between tenant payment and landlord payout — used for bookings, deposits, and dispute resolution.</p>
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">

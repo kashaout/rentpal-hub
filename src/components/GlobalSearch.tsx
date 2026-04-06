@@ -93,22 +93,28 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
 
       {open && results.length > 0 && (
         <div className="absolute top-full mt-2 w-full rounded-xl border bg-card shadow-elevated z-50 max-h-80 overflow-y-auto">
-          {results.map((r) => (
-            <button
-              key={`${r.type}-${r.id}`}
-              className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-secondary/50 transition-colors border-b last:border-0"
-              onClick={() => { onNavigate?.(r.view); setOpen(false); setQuery(""); }}
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted shrink-0">
-                <r.icon className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{r.title}</p>
-                <p className="text-xs text-muted-foreground truncate">{r.subtitle}</p>
-              </div>
-              {r.status && <StatusBadge status={r.status} />}
-            </button>
-          ))}
+          {results.map((r) => {
+            const typeLabel = r.type === "property" ? "Property" : r.type === "tenant" ? "Tenant" : r.type === "issue" ? "Issue" : "Payment";
+            return (
+              <button
+                key={`${r.type}-${r.id}`}
+                className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-secondary/50 transition-colors border-b last:border-0"
+                onClick={() => { onNavigate?.(r.view); setOpen(false); setQuery(""); }}
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted shrink-0">
+                  <r.icon className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium truncate">{r.title}</p>
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">{typeLabel}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{r.subtitle}</p>
+                </div>
+                {r.status && <StatusBadge status={r.status} />}
+              </button>
+            );
+          })}
         </div>
       )}
 

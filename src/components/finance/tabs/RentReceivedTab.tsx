@@ -30,6 +30,7 @@ export function RentReceivedTab() {
 
   return (
     <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">Rent payments recorded against tenants. These are direct tenant-to-landlord payments tracked in the Payments module.</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
