@@ -191,14 +191,14 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
   const isManagerRole = isAdmin || isConsultant || isLandlord;
 
   const navItems = [
-    // Landlord / Admin / Consultant
+    // Landlord / Admin / Consultant - always visible
     { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isManagerRole, locked: false },
     { icon: Building2, label: "Properties", id: "properties", show: isManagerRole, locked: false },
     { icon: Users, label: "Tenants", id: "tenants", show: isManagerRole, locked: false },
+    // Plan-gated
     { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isManagerRole || isMaintenance || isVendor, locked: isManagerRole && !isAdmin && !hasFeature("maintenance") },
     { icon: Wallet, label: "Financials", id: "finance", show: isManagerRole, locked: !isAdmin && !hasFeature("financials") },
     { icon: BarChart3, label: "Reports", id: "reports", show: isManagerRole, locked: !isAdmin && !hasFeature("reports") },
-    { icon: Shield, label: "Consultants", id: "manage-users", show: isManagerRole && (isAdmin || hasFeature("consultants")), locked: false },
 
     // Tenant
     { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant, locked: false },
