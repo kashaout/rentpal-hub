@@ -905,9 +905,11 @@ export type Database = {
           created_at: string
           due_date: string | null
           id: string
+          lease_id: string | null
           notes: string | null
           payment_date: string
           payment_method: string | null
+          property_id: string | null
           status: string
           tenant_id: string
           updated_at: string
@@ -917,9 +919,11 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           id?: string
+          lease_id?: string | null
           notes?: string | null
           payment_date?: string
           payment_method?: string | null
+          property_id?: string | null
           status?: string
           tenant_id: string
           updated_at?: string
@@ -929,14 +933,30 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           id?: string
+          lease_id?: string | null
           notes?: string | null
           payment_date?: string
           payment_method?: string | null
+          property_id?: string | null
           status?: string
           tenant_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "lease_agreements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_tenant_id_fkey"
             columns: ["tenant_id"]
