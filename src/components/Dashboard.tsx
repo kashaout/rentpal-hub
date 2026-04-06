@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, Users, Banknote, AlertTriangle, Plus, Loader2, ArrowRight, Wrench, TrendingUp, Crown } from "lucide-react";
+import { Building2, Users, Banknote, AlertTriangle, Plus, Loader2, ArrowRight, Wrench, TrendingUp, Crown, BookOpen } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { PropertyCard } from "@/components/PropertyCard";
 import { TenantCard } from "@/components/TenantCard";
@@ -24,7 +24,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
-  const { isAdmin, isLandlord } = useAuth();
+  const { isAdmin, isLandlord, profile } = useAuth();
   const { canAddProperty, isReadOnly, plan, hasFeature } = useSubscriptionContext();
   const [propertyDialogOpen, setPropertyDialogOpen] = useState(false);
   const [tenantDialogOpen, setTenantDialogOpen] = useState(false);
@@ -75,9 +75,32 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   const currentHint = planHints[plan] || planHints.free;
 
+  const showQuickGuide = (profile as any)?.onboarding_completed && totalProperties === 0;
+
   return (
     <div className="space-y-8">
       <SubscriptionBanner onNavigateToPlans={() => onNavigate?.("subscription")} />
+
+      {/* Post-onboarding quick guide */}
+      {showQuickGuide && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <BookOpen className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-sm">Quick Start Guide</p>
+              <p className="text-xs text-muted-foreground">Add a property → Add a tenant → Record your first payment. That's all you need to get going!</p>
+            </div>
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => {
+              if (!canAddProperty) { setUpgradeOpen(true); return; }
+              setPropertyDialogOpen(true);
+            }}>
+              <Plus className="h-3.5 w-3.5" /> Add Property
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Plan-based hint */}
       {plan !== "business" && (
