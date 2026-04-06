@@ -36,22 +36,12 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   "tenant-portal": { title: "My Portal", subtitle: "View your lease, payments, and submit requests." },
   "tenant-command-center": { title: "My Tenancy", subtitle: "Your complete tenancy dashboard." },
   "browse-properties": { title: "Browse Properties", subtitle: "Find available properties to rent or book." },
-  agreements: { title: "Lease Agreements", subtitle: "Review and sign your lease agreements." },
   "tenant-inbox": { title: "Inbox", subtitle: "All your requests and communication in one place." },
   "maintenance-portal": { title: "Maintenance", subtitle: "Manage repair requests and track work orders." },
-  "work-orders": { title: "Work Orders", subtitle: "9-stage work order lifecycle with SLA tracking." },
-  "maintenance-kanban": { title: "Maintenance Board", subtitle: "Visual Kanban view of all maintenance tasks." },
   finance: { title: "Financial Intelligence", subtitle: "P&L, cashflow, ROI analytics and AI insights." },
-  escrow: { title: "Escrow & Disputes", subtitle: "Manage escrow payments, payouts, and dispute resolution." },
   properties: { title: "Properties", subtitle: "Manage your rental properties." },
   tenants: { title: "Tenants", subtitle: "View and manage your tenants." },
-  "issue-reports": { title: "Issue Reports", subtitle: "Track all maintenance issues and assignments." },
-  compliance: { title: "Compliance Tracker", subtitle: "Monitor certifications, inspections, and legal requirements." },
-  automation: { title: "Automation", subtitle: "Configure workflows for alerts and notifications." },
-  payments: { title: "Payments", subtitle: "Track rent and payment history." },
-  "reviews-page": { title: "Reviews", subtitle: "Property and service reviews from guests and hosts." },
   reports: { title: "Reports", subtitle: "Analytics and performance metrics." },
-  documents: { title: "Documents", subtitle: "Leases, contracts, and more." },
   "manage-users": { title: "Manage Users", subtitle: "Add and manage user accounts." },
   roles: { title: "Roles & Permissions", subtitle: "Configure access levels." },
   "worker-performance": { title: "Worker Performance", subtitle: "Track maintenance team metrics and ratings." },
@@ -146,36 +136,16 @@ const Index = () => {
         return <TenantCommandCenter />;
       case "browse-properties":
         return <TenantBrowseProperties />;
-      case "agreements":
-        return <LeaseAgreementView />;
       case "tenant-inbox":
         return <TenantRequestsInbox />;
       case "maintenance-portal":
         return <MaintenancePortal />;
-      case "work-orders":
-        return <WorkOrdersDashboard />;
-      case "maintenance-kanban":
-        return <MaintenanceKanbanBoard />;
       case "finance":
         return <FinanceDashboard />;
-      case "escrow":
-        return <EscrowDisputesDashboard />;
-      case "issue-reports":
-        return <IssueReportingPage />;
-      case "compliance":
-        return <ComplianceDashboard />;
-      case "automation":
-        return <AutomationDashboard />;
-      case "payments":
-        return <PaymentsPage />;
-      case "reviews-page":
-        return <ReviewsPage />;
       case "properties":
         return <PropertiesPage />;
       case "tenants":
         return <TenantsPage />;
-      case "documents":
-        return <DocumentsPage />;
       case "reports":
         return <ReportsPage />;
       case "settings":
