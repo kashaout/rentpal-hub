@@ -33,6 +33,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Welcome back! Here's your overview." },
   "tenant-portal": { title: "My Portal", subtitle: "View your lease, payments, and submit requests." },
+  "tenant-command-center": { title: "My Tenancy", subtitle: "Your complete tenancy dashboard." },
   "browse-properties": { title: "Browse Properties", subtitle: "Find available properties to rent or book." },
   agreements: { title: "Lease Agreements", subtitle: "Review and sign your lease agreements." },
   "tenant-inbox": { title: "Inbox", subtitle: "All your requests and communication in one place." },
