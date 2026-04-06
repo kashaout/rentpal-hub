@@ -1,12 +1,13 @@
 import { format, differenceInDays } from "date-fns";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Calendar, Banknote, Clock } from "lucide-react";
+import { Building2, Calendar, Banknote, Clock, Star } from "lucide-react";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { TenantLeaseInfo } from "@/hooks/useTenantPortal";
 import { usePaymentsByTenant } from "@/hooks/usePayments";
 import { NotesSection } from "@/components/NotesSection";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 interface Props {
   lease: TenantLeaseInfo;
@@ -105,6 +106,54 @@ export function TenantOverviewTab({ lease }: Props) {
           await supabase.from("tenants").update({ notes } as any).eq("id", lease.id);
         }}
       />
+
+      {/* Tenant Reviews */}
+      <TenantReviewsSection propertyId={lease.property_id} />
     </div>
+  );
+}
+
+function TenantReviewsSection({ propertyId }: { propertyId: string }) {
+  const { data: reviews } = useQuery({
+    queryKey: ["tenant-property-reviews", propertyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("*")
+        .eq("property_id", propertyId)
+        .eq("is_public", true)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!propertyId,
+  });
+
+  if (!reviews?.length) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Star className="h-4 w-4 text-warning" /> Recent Reviews
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {reviews.map((review: any) => (
+          <div key={review.id} className="flex items-start gap-3 border-b last:border-0 pb-3 last:pb-0">
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Star key={i} className={`h-3 w-3 ${i <= review.overall_rating ? "text-warning fill-warning" : "text-muted-foreground/30"}`} />
+              ))}
+            </div>
+            <div className="flex-1 min-w-0">
+              {review.comment && <p className="text-sm text-muted-foreground line-clamp-2">{review.comment}</p>}
+              <p className="text-xs text-muted-foreground mt-1">{format(new Date(review.created_at), "MMM d, yyyy")}</p>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
