@@ -9,7 +9,7 @@ import {
   Home, Building2, Users, Wrench, FileText, BarChart3, Shield, DollarSign,
   CheckCircle2, ArrowRight, Menu, X, ChevronRight, Star, Zap, Crown,
   Lock, Clock, AlertTriangle, Folder, ClipboardCheck, Phone, Mail, MapPin,
-  Facebook, Twitter, Linkedin, Instagram, Check, XIcon
+  Facebook, Twitter, Linkedin, Instagram, Check, XIcon, Play
 } from "lucide-react";
 import heroImg from "@/assets/hero-property.jpg";
 import dashboardImg from "@/assets/dashboard-preview.jpg";
@@ -146,11 +146,11 @@ export default function Landing() {
                   Get Started <ArrowRight className="h-4 w-4" />
                 </Button>
               </a>
-              <a href="#features">
-                <Button variant="outline" size="lg" className="text-base h-12 px-8">
-                  See Features
+              <Link to="/auth?demo=true">
+                <Button variant="outline" size="lg" className="gap-2 text-base h-12 px-8">
+                  <Play className="h-4 w-4" /> Try Demo
                 </Button>
-              </a>
+              </Link>
             </div>
             <div className="mt-8 flex items-center gap-6 text-sm text-muted-foreground">
               <span className="flex items-center gap-1"><CheckCircle2 className="h-4 w-4 text-primary" /> Free plan available</span>
