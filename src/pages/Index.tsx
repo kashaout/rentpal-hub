@@ -39,6 +39,7 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   "tenant-inbox": { title: "Inbox", subtitle: "All your requests and communication in one place." },
   "maintenance-portal": { title: "Maintenance", subtitle: "Manage repair requests and track work orders." },
   "work-orders": { title: "Work Orders", subtitle: "9-stage work order lifecycle with SLA tracking." },
+  "maintenance-kanban": { title: "Maintenance Board", subtitle: "Visual Kanban view of all maintenance tasks." },
   finance: { title: "Financial Intelligence", subtitle: "P&L, cashflow, ROI analytics and AI insights." },
   escrow: { title: "Escrow & Disputes", subtitle: "Manage escrow payments, payouts, and dispute resolution." },
   properties: { title: "Properties", subtitle: "Manage your rental properties." },
