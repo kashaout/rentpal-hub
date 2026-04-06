@@ -97,13 +97,7 @@ export function Header({ title, subtitle, onToggleNav, navOpen, onNavigate, onGo
 
         {/* Center: Search */}
         <div className="hidden md:flex flex-1 max-w-md mx-8">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search properties, tenants..."
-              className="w-full pl-9 rounded-full border bg-secondary/50 focus-visible:ring-primary"
-            />
-          </div>
+          <GlobalSearch onNavigate={onNavigate} />
         </div>
 
         {/* Right: Actions */}
