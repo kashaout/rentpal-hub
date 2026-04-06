@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Bell, Search, FileText, Check, Menu, X, Home } from "lucide-react";
+import { Bell, Search, FileText, Check, Menu, X, Home, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -54,8 +54,8 @@ export function Header({ title, subtitle, onToggleNav, navOpen, onNavigate }: He
   return (
     <header className="sticky top-0 z-50 bg-background border-b shadow-sm">
       <div className="flex h-16 items-center justify-between px-4 md:px-6 max-w-[1760px] mx-auto">
-        {/* Left: Hamburger + Logo */}
-        <div className="flex items-center gap-3">
+        {/* Left: Hamburger + Home + Back + Logo */}
+        <div className="flex items-center gap-1.5">
           <Button
             variant="ghost"
             size="icon"
@@ -64,12 +64,30 @@ export function Header({ title, subtitle, onToggleNav, navOpen, onNavigate }: He
           >
             {navOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
-          <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
+            onClick={() => onNavigate?.("dashboard")}
+            title="Home"
+          >
+            <Home className="h-4.5 w-4.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
+            onClick={() => window.history.back()}
+            title="Back"
+          >
+            <ArrowLeft className="h-4.5 w-4.5" />
+          </Button>
+          <div className="flex items-center gap-2 ml-1">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <Home className="h-4 w-4 text-primary-foreground" />
             </div>
             <span className="hidden sm:inline font-display text-lg font-bold text-foreground">
-              PropManage
+              RentPal
             </span>
           </div>
         </div>

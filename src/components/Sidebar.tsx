@@ -188,14 +188,17 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
   const { signOut, isAdmin, isConsultant, isLandlord, isTenant, isMaintenance, isVendor, profile } = useAuth();
   const { hasFeature, isReadOnly } = useSubscriptionContext();
 
+  const isManagerRole = isAdmin || isConsultant || isLandlord;
+
   const navItems = [
     // Landlord / Admin / Consultant
-    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isAdmin || isConsultant || isLandlord, locked: false },
-    { icon: Building2, label: "Properties", id: "properties", show: isAdmin || isConsultant || isLandlord, locked: false },
-    { icon: Users, label: "Tenants", id: "tenants", show: isAdmin || isConsultant || isLandlord, locked: false },
-    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isAdmin || isConsultant || isLandlord || isMaintenance || isVendor, locked: false },
-    { icon: Wallet, label: "Financials", id: "finance", show: isAdmin || isConsultant || isLandlord, locked: !hasFeature("advanced_reports") },
-    { icon: BarChart3, label: "Reports", id: "reports", show: isAdmin || isConsultant || isLandlord, locked: !hasFeature("advanced_reports") },
+    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isManagerRole, locked: false },
+    { icon: Building2, label: "Properties", id: "properties", show: isManagerRole, locked: false },
+    { icon: Users, label: "Tenants", id: "tenants", show: isManagerRole, locked: false },
+    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isManagerRole || isMaintenance || isVendor, locked: isManagerRole && !isAdmin && !hasFeature("maintenance") },
+    { icon: Wallet, label: "Financials", id: "finance", show: isManagerRole, locked: !isAdmin && !hasFeature("financials") },
+    { icon: BarChart3, label: "Reports", id: "reports", show: isManagerRole, locked: !isAdmin && !hasFeature("reports") },
+    { icon: Shield, label: "Consultants", id: "manage-users", show: isManagerRole && (isAdmin || hasFeature("consultants")), locked: false },
 
     // Tenant
     { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant, locked: false },
