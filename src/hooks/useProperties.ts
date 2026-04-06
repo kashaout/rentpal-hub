@@ -175,6 +175,28 @@ export function useDeleteProperty() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Check for active tenants before archiving
+      const { count: activeTenants } = await supabase
+        .from("tenants")
+        .select("*", { count: "exact", head: true })
+        .eq("property_id", id)
+        .eq("is_archived", false);
+
+      if (activeTenants && activeTenants > 0) {
+        throw new Error(`Cannot archive: this property has ${activeTenants} active tenant(s). Please archive or reassign them first.`);
+      }
+
+      // Check for open maintenance requests
+      const { count: openIssues } = await supabase
+        .from("maintenance_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("property_id", id)
+        .in("status", ["pending", "in_progress", "assigned"]);
+
+      if (openIssues && openIssues > 0) {
+        throw new Error(`Cannot archive: this property has ${openIssues} open maintenance issue(s). Please resolve them first.`);
+      }
+
       const { error } = await supabase.from("properties").update({ is_archived: true } as any).eq("id", id);
       if (error) throw error;
     },
@@ -184,8 +206,8 @@ export function useDeleteProperty() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to delete property",
-        description: sanitizeErrorMessage(error),
+        title: "Cannot archive property",
+        description: error.message,
         variant: "destructive",
       });
     },
