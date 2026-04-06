@@ -6,12 +6,15 @@ import { TenantCard } from "@/components/TenantCard";
 import { PropertyFormDialog } from "@/components/PropertyFormDialog";
 import { TenantFormDialog } from "@/components/TenantFormDialog";
 import { PaymentHistorySheet } from "@/components/PaymentHistorySheet";
+import { SubscriptionBanner } from "@/components/subscription/SubscriptionBanner";
+import { UpgradeModal } from "@/components/subscription/UpgradeModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useProperties, PropertyWithStats } from "@/hooks/useProperties";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
 import { useMaintenanceRequests } from "@/hooks/useMaintenanceRequests";
 import { useMyLeaseAgreements } from "@/hooks/useLeaseAgreements";
 import { cn } from "@/lib/utils";
@@ -22,9 +25,11 @@ interface DashboardProps {
 
 export function Dashboard({ onNavigate }: DashboardProps) {
   const { isAdmin, isLandlord } = useAuth();
+  const { canAddProperty, isReadOnly } = useSubscriptionContext();
   const [propertyDialogOpen, setPropertyDialogOpen] = useState(false);
   const [tenantDialogOpen, setTenantDialogOpen] = useState(false);
   const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<PropertyWithStats | undefined>();
   const [editingTenant, setEditingTenant] = useState<TenantWithDetails | undefined>();
   const [paymentTenant, setPaymentTenant] = useState<TenantWithDetails | null>(null);
@@ -87,6 +92,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   return (
     <div className="space-y-8 p-6">
+      {/* Subscription Banner */}
+      <SubscriptionBanner onNavigateToPlans={() => onNavigate?.("subscription")} />
       {/* Stats Grid — clickable */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <button className="text-left" onClick={() => onNavigate?.("properties")}>
@@ -162,7 +169,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               </button>
             )}
           </div>
-          <Button onClick={() => setPropertyDialogOpen(true)} className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90">
+          <Button
+            onClick={() => {
+              if (isReadOnly) return;
+              if (!canAddProperty) {
+                setUpgradeOpen(true);
+                return;
+              }
+              setPropertyDialogOpen(true);
+            }}
+            className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
+            disabled={isReadOnly}
+          >
             <Plus className="h-4 w-4" />
             Add Property
           </Button>
@@ -178,7 +196,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <Building2 className="mx-auto h-10 w-10 text-muted-foreground/50" />
             <h3 className="mt-4 font-medium text-foreground">No properties yet</h3>
             <p className="mt-1 text-sm text-muted-foreground">Add your first property to get started.</p>
-            <Button onClick={() => setPropertyDialogOpen(true)} className="mt-4 gap-2" variant="outline">
+            <Button
+              onClick={() => {
+                if (isReadOnly) return;
+                if (!canAddProperty) {
+                  setUpgradeOpen(true);
+                  return;
+                }
+                setPropertyDialogOpen(true);
+              }}
+              className="mt-4 gap-2" variant="outline"
+              disabled={isReadOnly}
+            >
               <Plus className="h-4 w-4" />
               Add Property
             </Button>
@@ -197,7 +226,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               </button>
             )}
           </div>
-          <Button onClick={() => setTenantDialogOpen(true)} variant="outline" className="gap-2" disabled={!properties || properties.length === 0}>
+          <Button onClick={() => !isReadOnly && setTenantDialogOpen(true)} variant="outline" className="gap-2" disabled={isReadOnly || !properties || properties.length === 0}>
             <Plus className="h-4 w-4" />
             Add Tenant
           </Button>
@@ -223,6 +252,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       <PropertyFormDialog open={propertyDialogOpen} onOpenChange={handlePropertyDialogClose} property={editingProperty} />
       <TenantFormDialog open={tenantDialogOpen} onOpenChange={handleTenantDialogClose} tenant={editingTenant} />
       <PaymentHistorySheet open={paymentSheetOpen} onOpenChange={handlePaymentSheetClose} tenant={paymentTenant} />
+      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} reason="property_limit" onNavigateToPlans={() => onNavigate?.("subscription")} />
     </div>
   );
 }

@@ -4,9 +4,10 @@ import {
   LayoutDashboard, Building2, Users, Settings, LogOut,
   Home, UserCog, Shield, BarChart3, Wrench,
   TrendingUp, Wallet, Crown, Plus, MessageSquare, ChevronDown, Loader2,
-  X,
+  X, Lock,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
 import { useTenantLease } from "@/hooks/useTenantPortal";
 import { useCreateMaintenanceRequest } from "@/hooks/useMaintenanceRequests";
 import { useCreateTenantRequest } from "@/hooks/useTenantRequests";
@@ -27,20 +28,23 @@ interface NavItemProps {
   badge?: number;
 }
 
-function NavItem({ icon: Icon, label, active, onClick, badge }: NavItemProps) {
+function NavItem({ icon: Icon, label, active, onClick, badge, locked }: NavItemProps & { locked?: boolean }) {
   return (
     <button
-      onClick={onClick}
+      onClick={locked ? undefined : onClick}
       className={cn(
         "flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200",
-        active
+        locked
+          ? "text-muted-foreground/40 cursor-not-allowed"
+          : active
           ? "bg-primary/10 text-primary"
           : "text-foreground/70 hover:bg-secondary hover:text-foreground"
       )}
     >
-      <Icon className={cn("h-5 w-5", active && "text-primary")} />
+      <Icon className={cn("h-5 w-5", active && "text-primary", locked && "text-muted-foreground/40")} />
       <span className="flex-1 text-left">{label}</span>
-      {badge !== undefined && badge > 0 && (
+      {locked && <Lock className="h-3.5 w-3.5 text-muted-foreground/40" />}
+      {!locked && badge !== undefined && badge > 0 && (
         <Badge variant="destructive" className="h-5 min-w-5 p-0 flex items-center justify-center text-xs">
           {badge > 99 ? "99+" : badge}
         </Badge>
@@ -182,21 +186,22 @@ interface SidebarProps {
 
 export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarProps) {
   const { signOut, isAdmin, isConsultant, isLandlord, isTenant, isMaintenance, isVendor, profile } = useAuth();
+  const { hasFeature, isReadOnly } = useSubscriptionContext();
 
   const navItems = [
     // Landlord / Admin / Consultant
-    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isAdmin || isConsultant || isLandlord },
-    { icon: Building2, label: "Properties", id: "properties", show: isAdmin || isConsultant || isLandlord },
-    { icon: Users, label: "Tenants", id: "tenants", show: isAdmin || isConsultant || isLandlord },
-    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isAdmin || isConsultant || isLandlord || isMaintenance || isVendor },
-    { icon: Wallet, label: "Financials", id: "finance", show: isAdmin || isConsultant || isLandlord },
-    { icon: BarChart3, label: "Reports", id: "reports", show: isAdmin || isConsultant || isLandlord },
+    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isAdmin || isConsultant || isLandlord, locked: false },
+    { icon: Building2, label: "Properties", id: "properties", show: isAdmin || isConsultant || isLandlord, locked: false },
+    { icon: Users, label: "Tenants", id: "tenants", show: isAdmin || isConsultant || isLandlord, locked: false },
+    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isAdmin || isConsultant || isLandlord || isMaintenance || isVendor, locked: false },
+    { icon: Wallet, label: "Financials", id: "finance", show: isAdmin || isConsultant || isLandlord, locked: !hasFeature("advanced_reports") },
+    { icon: BarChart3, label: "Reports", id: "reports", show: isAdmin || isConsultant || isLandlord, locked: !hasFeature("advanced_reports") },
 
     // Tenant
-    { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant },
-    { icon: LayoutDashboard, label: "My Tenancy", id: "tenant-command-center", show: isTenant },
-    { icon: Building2, label: "Browse Properties", id: "browse-properties", show: isTenant },
-    { icon: Users, label: "Inbox", id: "tenant-inbox", show: isTenant },
+    { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant, locked: false },
+    { icon: LayoutDashboard, label: "My Tenancy", id: "tenant-command-center", show: isTenant, locked: false },
+    { icon: Building2, label: "Browse Properties", id: "browse-properties", show: isTenant, locked: false },
+    { icon: Users, label: "Inbox", id: "tenant-inbox", show: isTenant, locked: false },
   ];
 
   const adminItems = [
@@ -286,7 +291,14 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
               icon={item.icon}
               label={item.label}
               active={currentView === item.id}
-              onClick={() => handleNavigate(item.id)}
+              onClick={() => {
+                if (item.locked) {
+                  handleNavigate("subscription");
+                } else {
+                  handleNavigate(item.id);
+                }
+              }}
+              locked={item.locked}
             />
           ))}
 
