@@ -258,7 +258,7 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <Home className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-display text-lg font-bold">PropManage</span>
+            <span className="font-display text-lg font-bold">RentPal</span>
           </div>
           <Button variant="ghost" size="icon" className="rounded-full" onClick={onClose}>
             <X className="h-5 w-5" />

@@ -21,14 +21,22 @@ const FEATURE_NAMES: Record<keyof SubscriptionFeatures, string> = {
   advanced_reports: "Advanced Reports",
   ai_insights: "AI Insights",
   multi_user: "Multi-User Access",
+  maintenance: "Maintenance",
+  financials: "Financials",
+  reports: "Reports",
+  consultants: "Consultants",
 };
 
 const FEATURE_MIN_PLANS: Record<keyof SubscriptionFeatures, SubscriptionPlan> = {
   compliance_tracker: "basic",
-  automation_workflows: "pro",
+  automation_workflows: "business",
   advanced_reports: "pro",
   ai_insights: "business",
   multi_user: "pro",
+  maintenance: "basic",
+  financials: "pro",
+  reports: "pro",
+  consultants: "business",
 };
 
 export function FeatureGate({
