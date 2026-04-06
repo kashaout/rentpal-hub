@@ -375,7 +375,7 @@ export default function Landing() {
               </Button>
             </a>
             <a href={APP_AUTH_URL}>
-              <Button size="lg" variant="outline" className="gap-2 text-base h-12 px-8 border-primary text-primary hover:bg-primary/10">
+              <Button size="lg" variant="outline" className="gap-2 text-base h-12 px-8 border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground/10">
                 Login
               </Button>
             </a>
