@@ -45,8 +45,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       isExpired,
       isReadOnly,
       propertyLimit: subscription?.property_limit || 3,
-      propertyCount: propertyData?.currentCount || 0,
-      canAddProperty: isExempt || (propertyData?.canAdd ?? true),
+      propertyCount: (propertyData && typeof propertyData === "object" && "currentCount" in propertyData) ? propertyData.currentCount : 0,
+      canAddProperty: isExempt || ((propertyData && typeof propertyData === "object" && "canAdd" in propertyData) ? propertyData.canAdd : true),
       features,
       hasFeature: (feature: keyof SubscriptionFeatures) => {
         if (isExempt) return true;
