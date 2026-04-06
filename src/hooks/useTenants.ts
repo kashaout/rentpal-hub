@@ -188,6 +188,28 @@ export function useDeleteTenant() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Check for pending payments before archiving
+      const { count: pendingPayments } = await supabase
+        .from("payments")
+        .select("*", { count: "exact", head: true })
+        .eq("tenant_id", id)
+        .eq("status", "pending");
+
+      if (pendingPayments && pendingPayments > 0) {
+        throw new Error(`Cannot archive: this tenant has ${pendingPayments} pending payment(s). Please resolve them first.`);
+      }
+
+      // Check for open maintenance requests
+      const { count: openIssues } = await supabase
+        .from("maintenance_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("tenant_id", id)
+        .in("status", ["pending", "in_progress", "assigned"]);
+
+      if (openIssues && openIssues > 0) {
+        throw new Error(`Cannot archive: this tenant has ${openIssues} open maintenance issue(s). Please resolve them first.`);
+      }
+
       const { error } = await supabase.from("tenants").update({ is_archived: true } as any).eq("id", id);
       if (error) throw error;
     },
@@ -198,8 +220,8 @@ export function useDeleteTenant() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to remove tenant",
-        description: sanitizeErrorMessage(error),
+        title: "Cannot archive tenant",
+        description: error.message,
         variant: "destructive",
       });
     },
