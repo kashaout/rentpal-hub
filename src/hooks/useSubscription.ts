@@ -50,7 +50,7 @@ export const PLAN_CONFIGS: Record<SubscriptionPlan, {
   },
   basic: {
     name: "Basic",
-    price: 2900,
+    price: 20000,
     property_limit: 10,
     features: {
       compliance_tracker: true,
@@ -63,7 +63,7 @@ export const PLAN_CONFIGS: Record<SubscriptionPlan, {
   },
   pro: {
     name: "Pro",
-    price: 7900,
+    price: 40000,
     property_limit: 50,
     features: {
       compliance_tracker: true,
@@ -76,7 +76,7 @@ export const PLAN_CONFIGS: Record<SubscriptionPlan, {
   },
   business: {
     name: "Business",
-    price: 19900,
+    price: 65000,
     property_limit: 999,
     features: {
       compliance_tracker: true,
