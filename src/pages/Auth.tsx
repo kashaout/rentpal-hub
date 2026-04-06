@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Home, Mail, Lock, User, ArrowRight, ShieldAlert, CalendarDays } from "lucide-react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { Home, Mail, Lock, User, ArrowRight, ShieldAlert, CalendarDays, ArrowLeft, Play, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,12 +28,24 @@ export default function Auth() {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [dobError, setDobError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
   const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
+  const [searchParams] = useSearchParams();
 
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
+
+  useEffect(() => {
+    if (user) navigate("/dashboard");
+  }, [user, navigate]);
+
+  useEffect(() => {
+    if (searchParams.get("demo") === "true") {
+      handleDemoLogin();
+    }
+  }, []);
 
   useEffect(() => {
     const checkLimit = () => {
@@ -49,6 +61,25 @@ export default function Auth() {
     const interval = setInterval(checkLimit, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleDemoLogin = async () => {
+    setIsDemoLoading(true);
+    const demoEmail = "demo@rentpal.app";
+    const demoPassword = "DemoUser2026!";
+
+    const { error } = await signIn(demoEmail, demoPassword);
+    if (error) {
+      toast({
+        title: "Demo unavailable",
+        description: "The demo account is not available right now. Please create an account to get started.",
+        variant: "destructive",
+      });
+    } else {
+      resetRateLimit();
+      navigate("/dashboard");
+    }
+    setIsDemoLoading(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
