@@ -17,7 +17,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { TrendingUp, Building2, Users, Banknote, Loader2, Wrench, Star, BarChart3 } from "lucide-react";
+import { TrendingUp, Building2, Users, Banknote, Loader2, Wrench, Star, BarChart3, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 import { format, subMonths, startOfMonth, endOfMonth, parseISO, isWithinInterval } from "date-fns";
 import { formatCurrency } from "@/lib/formatCurrency";
 
@@ -146,18 +148,47 @@ export function ReportsPage() {
         </Card>
       </div>
 
-      <Tabs defaultValue="financial" className="w-full">
-        <TabsList className="w-full flex flex-wrap h-auto gap-1">
-          <TabsTrigger value="financial" className="gap-2 flex-1 min-w-[120px]">
-            <BarChart3 className="h-4 w-4" /> Financial
-          </TabsTrigger>
-          <TabsTrigger value="maintenance" className="gap-2 flex-1 min-w-[120px]">
-            <Wrench className="h-4 w-4" /> Maintenance Performance
-          </TabsTrigger>
-          <TabsTrigger value="tenant-history" className="gap-2 flex-1 min-w-[120px]">
-            <Star className="h-4 w-4" /> Tenant Issues & Reviews
-          </TabsTrigger>
-        </TabsList>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <Tabs defaultValue="financial" className="w-full">
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+            <TabsList className="flex flex-wrap h-auto gap-1">
+              <TabsTrigger value="financial" className="gap-2 min-w-[120px]">
+                <BarChart3 className="h-4 w-4" /> Financial
+              </TabsTrigger>
+              <TabsTrigger value="maintenance" className="gap-2 min-w-[120px]">
+                <Wrench className="h-4 w-4" /> Maintenance Performance
+              </TabsTrigger>
+              <TabsTrigger value="tenant-history" className="gap-2 min-w-[120px]">
+                <Star className="h-4 w-4" /> Tenant Issues & Reviews
+              </TabsTrigger>
+            </TabsList>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+                const exportData = payments.map((p: any) => ({
+                  date: p.payment_date,
+                  tenant: p.tenants?.profiles?.full_name || "Unknown",
+                  amount: p.amount,
+                  status: p.status,
+                  method: p.payment_method || "N/A",
+                }));
+                exportToCSV(exportData, "financial-report", { date: "Date", tenant: "Tenant", amount: "Amount", status: "Status", method: "Method" });
+              }}>
+                <Download className="h-3.5 w-3.5" /> CSV
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+                const exportData = payments.map((p: any) => ({
+                  date: p.payment_date,
+                  tenant: p.tenants?.profiles?.full_name || "Unknown",
+                  amount: formatCurrency(p.amount),
+                  status: p.status,
+                  method: p.payment_method || "N/A",
+                }));
+                exportToPDF("Financial Report", exportData, { date: "Date", tenant: "Tenant", amount: "Amount", status: "Status", method: "Method" });
+              }}>
+                <Download className="h-3.5 w-3.5" /> PDF
+              </Button>
+            </div>
+          </div>
 
         <TabsContent value="financial">
           <FinancialReportsTab
