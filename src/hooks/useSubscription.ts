@@ -131,7 +131,7 @@ export function useSubscription() {
           id: "",
           user_id: user.id,
           plan: "free" as SubscriptionPlan,
-          property_limit: 3,
+          property_limit: 1,
           features: PLAN_CONFIGS.free.features,
           started_at: new Date().toISOString(),
           expires_at: null,
@@ -232,7 +232,7 @@ export function useCanAddProperty() {
       if (error) throw error;
 
       const propertyCount = count || 0;
-      const limit = subscription?.property_limit || 3;
+      const limit = subscription?.property_limit || 1;
 
       return {
         canAdd: propertyCount < limit,
