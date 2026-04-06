@@ -23,6 +23,7 @@ import { ComplianceDashboard } from "@/components/compliance/ComplianceDashboard
 import { AutomationDashboard } from "@/components/automation/AutomationDashboard";
 import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { WorkOrdersDashboard } from "@/components/workorders/WorkOrdersDashboard";
+import { MaintenanceKanbanBoard } from "@/components/maintenance/MaintenanceKanbanBoard";
 import { EscrowDisputesDashboard } from "@/components/escrow/EscrowDisputesDashboard";
 import { ReviewsPage } from "@/components/reviews/ReviewsPage";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,6 +40,7 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   "tenant-inbox": { title: "Inbox", subtitle: "All your requests and communication in one place." },
   "maintenance-portal": { title: "Maintenance", subtitle: "Manage repair requests and track work orders." },
   "work-orders": { title: "Work Orders", subtitle: "9-stage work order lifecycle with SLA tracking." },
+  "maintenance-kanban": { title: "Maintenance Board", subtitle: "Visual Kanban view of all maintenance tasks." },
   finance: { title: "Financial Intelligence", subtitle: "P&L, cashflow, ROI analytics and AI insights." },
   escrow: { title: "Escrow & Disputes", subtitle: "Manage escrow payments, payouts, and dispute resolution." },
   properties: { title: "Properties", subtitle: "Manage your rental properties." },
@@ -152,6 +154,8 @@ const Index = () => {
         return <MaintenancePortal />;
       case "work-orders":
         return <WorkOrdersDashboard />;
+      case "maintenance-kanban":
+        return <MaintenanceKanbanBoard />;
       case "finance":
         return <FinanceDashboard />;
       case "escrow":
