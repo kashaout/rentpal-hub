@@ -141,9 +141,28 @@ export default function Auth() {
     }
   };
 
+  if (isDemoLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+          <p className="text-lg font-medium">Loading demo experience...</p>
+          <p className="text-sm text-muted-foreground">Setting up your demo account</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
+        {/* Back to site */}
+        <div className="flex justify-center mb-4">
+          <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-4 w-4" /> Back to site
+          </Link>
+        </div>
+
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2">
@@ -254,6 +273,19 @@ export default function Auth() {
               <span className="font-semibold text-primary">
                 {isLogin ? "Sign up" : "Sign in"}
               </span>
+            </button>
+          </div>
+
+          {/* Demo button */}
+          <div className="mt-4 pt-4 border-t text-center">
+            <button
+              type="button"
+              onClick={handleDemoLogin}
+              disabled={isDemoLoading}
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Play className="h-3.5 w-3.5" />
+              Try the demo instead
             </button>
           </div>
         </div>
