@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, Users, Banknote, AlertTriangle, Plus, Loader2, ArrowRight, FileText, Wrench, TrendingUp, Calendar } from "lucide-react";
+import { Building2, Users, Banknote, AlertTriangle, Plus, Loader2, ArrowRight, Wrench, TrendingUp, Calendar } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { PropertyCard } from "@/components/PropertyCard";
 import { TenantCard } from "@/components/TenantCard";
@@ -94,6 +94,44 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     <div className="space-y-8 p-6">
       {/* Subscription Banner */}
       <SubscriptionBanner onNavigateToPlans={() => onNavigate?.("subscription")} />
+
+      {/* Smart Hints */}
+      {totalProperties === 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <Building2 className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-sm">Get started by adding your first property</p>
+              <p className="text-xs text-muted-foreground">Once you add a property, you can start managing tenants, payments, and maintenance.</p>
+            </div>
+            <Button size="sm" className="gap-1.5" onClick={() => {
+              if (!canAddProperty) { setUpgradeOpen(true); return; }
+              setPropertyDialogOpen(true);
+            }} disabled={isReadOnly}>
+              <Plus className="h-3.5 w-3.5" /> Add Property
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+      {totalProperties > 0 && totalTenants === 0 && (
+        <Card className="border-accent/30 bg-accent/5">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10">
+              <Users className="h-5 w-5 text-accent" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-sm">Add your first tenant</p>
+              <p className="text-xs text-muted-foreground">Link a tenant to one of your properties to start tracking payments and leases.</p>
+            </div>
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onNavigate?.("tenants")} disabled={isReadOnly}>
+              <Plus className="h-3.5 w-3.5" /> Add Tenant
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats Grid — clickable */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <button className="text-left" onClick={() => onNavigate?.("properties")}>
@@ -102,33 +140,19 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <button className="text-left" onClick={() => onNavigate?.("tenants")}>
           <StatCard title="Total Tenants" value={totalTenants} icon={Users} variant="accent" />
         </button>
-        <button className="text-left" onClick={() => onNavigate?.("payments")}>
+        <button className="text-left" onClick={() => onNavigate?.("finance")}>
           <StatCard title="Monthly Revenue" value={`₦${monthlyRevenue.toLocaleString()}`} icon={Banknote} variant="success" />
         </button>
-        <button className="text-left" onClick={() => onNavigate?.("payments")}>
+        <button className="text-left" onClick={() => onNavigate?.("finance")}>
           <StatCard title="Overdue Payments" value={overduePayments} icon={AlertTriangle} variant="default" />
         </button>
       </div>
 
       {/* Quick Actions & Alerts */}
-      {(pendingAgreements > 0 || pendingMaintenance > 0 || overduePayments > 0) && (
+      {(pendingMaintenance > 0 || overduePayments > 0) && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {pendingAgreements > 0 && (
-            <Card className="border-warning/30 bg-warning/5 cursor-pointer hover:shadow-card transition-shadow" onClick={() => onNavigate?.("agreements")}>
-              <CardContent className="flex items-center gap-3 py-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning/10">
-                  <FileText className="h-5 w-5 text-warning" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{pendingAgreements} Agreement{pendingAgreements > 1 ? "s" : ""} Awaiting Signature</p>
-                  <p className="text-xs text-muted-foreground">Review and counter-sign</p>
-                </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground" />
-              </CardContent>
-            </Card>
-          )}
           {pendingMaintenance > 0 && (
-            <Card className="border-accent/30 bg-accent/5 cursor-pointer hover:shadow-card transition-shadow" onClick={() => onNavigate?.("issue-reports")}>
+            <Card className="border-accent/30 bg-accent/5 cursor-pointer hover:shadow-card transition-shadow" onClick={() => onNavigate?.("maintenance-portal")}>
               <CardContent className="flex items-center gap-3 py-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10">
                   <Wrench className="h-5 w-5 text-accent" />
@@ -142,7 +166,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </Card>
           )}
           {overduePayments > 0 && (
-            <Card className="border-destructive/30 bg-destructive/5 cursor-pointer hover:shadow-card transition-shadow" onClick={() => onNavigate?.("payments")}>
+            <Card className="border-destructive/30 bg-destructive/5 cursor-pointer hover:shadow-card transition-shadow" onClick={() => onNavigate?.("finance")}>
               <CardContent className="flex items-center gap-3 py-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
                   <AlertTriangle className="h-5 w-5 text-destructive" />

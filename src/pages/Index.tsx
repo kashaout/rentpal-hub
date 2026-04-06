@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { SessionTimeoutDialog } from "@/components/SessionTimeoutDialog";
 import { Header } from "@/components/Header";
+import { FeedbackButton } from "@/components/FeedbackButton";
 import { Dashboard } from "@/components/Dashboard";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 import { LandlordUserManagement } from "@/components/admin/LandlordUserManagement";
@@ -29,16 +30,15 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   "tenant-command-center": { title: "My Tenancy", subtitle: "Your complete tenancy dashboard." },
   "browse-properties": { title: "Browse Properties", subtitle: "Find available properties to rent or book." },
   "tenant-inbox": { title: "Inbox", subtitle: "All your requests and communication in one place." },
-  "maintenance-portal": { title: "Maintenance", subtitle: "Manage repair requests and track work orders." },
-  finance: { title: "Financial Intelligence", subtitle: "P&L, cashflow, ROI analytics and AI insights." },
-  properties: { title: "Properties", subtitle: "Manage your rental properties." },
-  tenants: { title: "Tenants", subtitle: "View and manage your tenants." },
-  reports: { title: "Reports", subtitle: "Analytics and performance metrics." },
-  "manage-users": { title: "Manage Users", subtitle: "Add and manage user accounts." },
-  
+  "maintenance-portal": { title: "Maintenance", subtitle: "Maintenance jobs created from tenant issues and assigned to vendors." },
+  finance: { title: "Financial Intelligence", subtitle: "Financial intelligence across rent, expenses, and escrow." },
+  properties: { title: "Properties", subtitle: "All your properties and their current status in one place." },
+  tenants: { title: "Tenants", subtitle: "Tenants linked to each property and their lease/payment status." },
+  reports: { title: "Reports", subtitle: "Downloadable reports across finance, maintenance, and reviews." },
+  "manage-users": { title: "Manage Users", subtitle: "Add and manage landlords, tenants, maintenance, and consultants." },
   "worker-performance": { title: "Worker Performance", subtitle: "Track maintenance team metrics and ratings." },
   subscription: { title: "Subscription Plans", subtitle: "Manage your plan and unlock features." },
-  settings: { title: "Settings", subtitle: "Configure your preferences." },
+  settings: { title: "Settings", subtitle: "Your account, subscription, and preferences." },
 };
 
 const Index = () => {
@@ -200,6 +200,7 @@ const Index = () => {
       <main className="max-w-[1760px] mx-auto px-4 md:px-6 py-6">
         {renderContent()}
       </main>
+      <FeedbackButton />
       <SessionTimeoutDialog />
     </div>
   );
