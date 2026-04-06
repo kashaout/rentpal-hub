@@ -93,7 +93,7 @@ export default function Auth() {
         } else {
           resetRateLimit();
           toast({ title: "Welcome back!" });
-          navigate("/");
+          navigate("/dashboard");
         }
       } else {
         const { error } = await signUp(email, password, fullName, role);
@@ -102,7 +102,7 @@ export default function Auth() {
         } else {
           resetRateLimit();
           toast({ title: "Account created successfully!" });
-          navigate("/");
+          navigate("/dashboard");
         }
       }
     } finally {
