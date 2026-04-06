@@ -1,39 +1,91 @@
-import { useState } from "react";
-import { Building2, Users, Wrench, Check, ArrowRight, ArrowLeft } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Building2, Users, Wrench, BarChart3, Shield, Zap, Check, ArrowRight, ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription, PLAN_CONFIGS } from "@/hooks/useSubscription";
+import type { LucideIcon } from "lucide-react";
 
 interface OnboardingWizardProps {
   onComplete: () => void;
 }
 
-const steps = [
+interface OnboardingStep {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  tip: string;
+  requiredPlan?: string;
+}
+
+const allSteps: OnboardingStep[] = [
   {
     icon: Building2,
     title: "Add Your Properties",
-    description: "Start by adding your rental properties. You can add addresses, unit counts, rent amounts, and photos.",
+    description: "Start by adding your rental properties with addresses, unit counts, rent amounts, and photos.",
     tip: "Go to Properties → Add Property to get started.",
   },
   {
     icon: Users,
     title: "Add Your Tenants",
-    description: "Once properties are set up, add tenants with their lease details, unit assignments, and payment schedules.",
+    description: "Add tenants with their lease details, unit assignments, and payment schedules.",
     tip: "Go to Tenants → Add Tenant and link them to a property.",
   },
   {
+    icon: FileText,
+    title: "Manage Documents",
+    description: "Upload and organize lease agreements, ID documents, and property records in one place.",
+    tip: "Open any property or tenant to upload and manage documents.",
+  },
+  {
     icon: Wrench,
-    title: "Track Maintenance & Finances",
-    description: "Tenants can submit maintenance requests. You'll see them on the Maintenance board. Track rent payments and expenses in Financials.",
-    tip: "Upgrade your plan to unlock Maintenance, Financials, and Reports.",
+    title: "Track Maintenance",
+    description: "Tenants can submit maintenance requests. View and manage them on the Maintenance Kanban board.",
+    tip: "Go to Maintenance to see all requests organized by status.",
+    requiredPlan: "basic",
+  },
+  {
+    icon: BarChart3,
+    title: "Financial Intelligence",
+    description: "Track rent payments, expenses, and view P&L, cashflow, and ROI analytics with AI-powered insights.",
+    tip: "Go to Financials to see your financial dashboard and generate statements.",
+    requiredPlan: "pro",
+  },
+  {
+    icon: Shield,
+    title: "Reports & Analytics",
+    description: "Access detailed reports on occupancy, maintenance performance, revenue trends, and tenant reviews.",
+    tip: "Go to Reports for comprehensive analytics across your portfolio.",
+    requiredPlan: "pro",
+  },
+  {
+    icon: Zap,
+    title: "Automation & Consultants",
+    description: "Set up automated workflows for overdue rent, lease expiry, and compliance alerts. Assign consultants to properties.",
+    tip: "Go to Settings → Automation to create your first workflow.",
+    requiredPlan: "business",
   },
 ];
 
+const planOrder = ["free", "basic", "pro", "business"];
+
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const { user } = useAuth();
+  const { data: subscription } = useSubscription();
   const [step, setStep] = useState(0);
   const [completing, setCompleting] = useState(false);
+
+  const currentPlan = subscription?.plan || "free";
+
+  const steps = useMemo(() => {
+    const planIndex = planOrder.indexOf(currentPlan);
+    return allSteps.filter((s) => {
+      if (!s.requiredPlan) return true;
+      return planOrder.indexOf(s.requiredPlan) <= planIndex;
+    });
+  }, [currentPlan]);
 
   const handleComplete = async () => {
     setCompleting(true);
@@ -50,6 +102,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const current = steps[step];
   const Icon = current.icon;
   const isLast = step === steps.length - 1;
+  const planConfig = PLAN_CONFIGS[currentPlan];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm">
@@ -57,7 +110,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         <CardContent className="pt-8 pb-6 px-8 space-y-6">
           <div className="text-center space-y-2">
             <h2 className="text-2xl font-bold text-foreground">Welcome to RentPal! 🏠</h2>
-            <p className="text-sm text-muted-foreground">Let's get you set up in 3 simple steps</p>
+            <div className="flex items-center justify-center gap-2">
+              <p className="text-sm text-muted-foreground">
+                Let's set up your <span className="font-medium text-foreground">{planConfig.name}</span> plan
+              </p>
+              <Badge variant="secondary" className="text-xs">{steps.length} steps</Badge>
+            </div>
           </div>
 
           {/* Progress dots */}
