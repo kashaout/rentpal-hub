@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, Users, Banknote, AlertTriangle, Plus, Loader2, ArrowRight, FileText, Wrench, TrendingUp, Calendar } from "lucide-react";
+import { Building2, Users, Banknote, AlertTriangle, Plus, Loader2, ArrowRight, Wrench, TrendingUp, Calendar } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { PropertyCard } from "@/components/PropertyCard";
 import { TenantCard } from "@/components/TenantCard";
