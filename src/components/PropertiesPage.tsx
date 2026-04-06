@@ -13,14 +13,18 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyFormDialog } from "@/components/PropertyFormDialog";
+import { UpgradeModal } from "@/components/subscription/UpgradeModal";
 import { useProperties, PropertyWithStats } from "@/hooks/useProperties";
+import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
 
 export function PropertiesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<PropertyWithStats | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<string>("name");
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+  const { canAddProperty, isReadOnly } = useSubscriptionContext();
 
   const { data: properties, isLoading } = useProperties();
 
@@ -140,8 +144,16 @@ export function PropertiesPage() {
           </Select>
         </div>
         <Button
-          onClick={() => setDialogOpen(true)}
+          onClick={() => {
+            if (isReadOnly) return;
+            if (!canAddProperty) {
+              setUpgradeOpen(true);
+              return;
+            }
+            setDialogOpen(true);
+          }}
           className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
+          disabled={isReadOnly}
         >
           <Plus className="h-4 w-4" />
           Add Property
@@ -174,6 +186,7 @@ export function PropertiesPage() {
         onOpenChange={handleDialogClose}
         property={editingProperty}
       />
+      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} reason="property_limit" />
     </div>
   );
 }
