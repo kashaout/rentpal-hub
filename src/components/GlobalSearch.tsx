@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Search, Building2, Users, Wrench, FileText, Banknote, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { useProperties } from "@/hooks/useProperties";
 import { useTenants } from "@/hooks/useTenants";
 import { useMaintenanceRequests } from "@/hooks/useMaintenanceRequests";

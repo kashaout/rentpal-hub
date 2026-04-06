@@ -75,9 +75,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   const currentHint = planHints[plan] || planHints.free;
 
-  // Post-onboarding helper
-  const showOnboardingHelper = profile?.onboarding_completed && totalProperties === 0;
-
   return (
     <div className="space-y-8">
       <SubscriptionBanner onNavigateToPlans={() => onNavigate?.("subscription")} />
