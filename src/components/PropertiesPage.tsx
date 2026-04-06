@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Building2, Plus, Search, Filter, Loader2, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PropertyDetailView } from "@/components/PropertyDetailView";
+import { PropertyCommandCenter } from "@/components/property/PropertyCommandCenter";
 import {
   Select,
   SelectContent,
