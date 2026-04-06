@@ -54,14 +54,14 @@ export function TenantCommandCenter() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full flex-wrap h-auto gap-1 bg-muted/50 p-1">
+        <TabsList className="w-full overflow-x-auto flex-nowrap sm:flex-wrap h-auto gap-1 bg-muted/50 p-1 justify-start">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             return (
               <TabsTrigger
                 key={tab.key}
                 value={tab.key}
-                className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-background"
+                className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-background shrink-0"
               >
                 <Icon className="h-4 w-4" />
                 <span className="hidden sm:inline">{tab.label}</span>
