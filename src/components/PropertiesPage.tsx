@@ -24,10 +24,10 @@ export function PropertiesPage() {
 
   const { data: properties, isLoading } = useProperties();
 
-  // If a property is selected, show detail view
+  // If a property is selected, show command center
   if (selectedPropertyId) {
     return (
-      <PropertyDetailView
+      <PropertyCommandCenter
         propertyId={selectedPropertyId}
         onBack={() => setSelectedPropertyId(null)}
       />
