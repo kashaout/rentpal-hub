@@ -102,6 +102,12 @@ export function Header({ title, subtitle, onToggleNav, navOpen, onNavigate, onGo
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
+          {/* Public Site */}
+          <a href="/" target="_blank" rel="noopener noreferrer">
+            <Button variant="ghost" size="icon" className="rounded-full" title="Visit public site">
+              <Globe className="h-5 w-5" />
+            </Button>
+          </a>
           {/* Current page title (mobile) */}
           <span className="md:hidden text-sm font-semibold truncate max-w-[120px]">
             {title}
