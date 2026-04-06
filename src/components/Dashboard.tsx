@@ -169,7 +169,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               </button>
             )}
           </div>
-          <Button onClick={() => setPropertyDialogOpen(true)} className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90">
+          <Button
+            onClick={() => {
+              if (isReadOnly) return;
+              if (!canAddProperty) {
+                setUpgradeOpen(true);
+                return;
+              }
+              setPropertyDialogOpen(true);
+            }}
+            className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
+            disabled={isReadOnly}
+          >
             <Plus className="h-4 w-4" />
             Add Property
           </Button>
@@ -185,7 +196,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <Building2 className="mx-auto h-10 w-10 text-muted-foreground/50" />
             <h3 className="mt-4 font-medium text-foreground">No properties yet</h3>
             <p className="mt-1 text-sm text-muted-foreground">Add your first property to get started.</p>
-            <Button onClick={() => setPropertyDialogOpen(true)} className="mt-4 gap-2" variant="outline">
+            <Button
+              onClick={() => {
+                if (isReadOnly) return;
+                if (!canAddProperty) {
+                  setUpgradeOpen(true);
+                  return;
+                }
+                setPropertyDialogOpen(true);
+              }}
+              className="mt-4 gap-2" variant="outline"
+              disabled={isReadOnly}
+            >
               <Plus className="h-4 w-4" />
               Add Property
             </Button>
@@ -204,7 +226,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               </button>
             )}
           </div>
-          <Button onClick={() => setTenantDialogOpen(true)} variant="outline" className="gap-2" disabled={!properties || properties.length === 0}>
+          <Button onClick={() => !isReadOnly && setTenantDialogOpen(true)} variant="outline" className="gap-2" disabled={isReadOnly || !properties || properties.length === 0}>
             <Plus className="h-4 w-4" />
             Add Tenant
           </Button>
