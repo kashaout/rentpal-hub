@@ -15,7 +15,7 @@ export function AdminPanel({ defaultTab = "users" }: AdminPanelProps) {
         <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="users" className="gap-2">
             <Users className="h-4 w-4" />
-            Users & Roles
+            Manage Users
           </TabsTrigger>
           <TabsTrigger value="assignments" className="gap-2">
             <UserCog className="h-4 w-4" />

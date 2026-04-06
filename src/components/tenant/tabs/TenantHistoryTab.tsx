@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Loader2, Activity } from "lucide-react";
+import { Loader2, Activity, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +16,7 @@ interface HistoryItem {
   type: string;
   description: string;
   date: string;
+  rating?: number;
 }
 
 const typeColors: Record<string, string> = {
@@ -23,6 +24,7 @@ const typeColors: Record<string, string> = {
   Maintenance: "bg-warning/10 text-warning border-warning/20",
   Lease: "bg-primary/10 text-primary border-primary/20",
   Request: "bg-accent/10 text-accent border-accent/20",
+  Review: "bg-secondary text-secondary-foreground border-secondary",
 };
 
 export function TenantHistoryTab({ tenantId, propertyId }: Props) {
@@ -47,16 +49,16 @@ export function TenantHistoryTab({ tenantId, propertyId }: Props) {
       // Maintenance requests
       const { data: requests } = await supabase
         .from("maintenance_requests")
-        .select("id, title, status, created_at")
+        .select("id, title, status, rating, created_at")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false })
         .limit(10);
       requests?.forEach(r => items.push({
-        id: `mr-${r.id}`, type: "Maintenance", description: `${r.title} (${r.status})`, date: r.created_at,
+        id: `mr-${r.id}`, type: "Maintenance", description: `${r.title} (${r.status})`, date: r.created_at, rating: r.rating || undefined,
       }));
 
-      // Lease agreements
       if (user?.id) {
+        // Lease agreements
         const { data: leases } = await supabase
           .from("lease_agreements")
           .select("id, status, created_at, unit_number")
@@ -77,10 +79,21 @@ export function TenantHistoryTab({ tenantId, propertyId }: Props) {
         tRequests?.forEach(r => items.push({
           id: `tr-${r.id}`, type: "Request", description: `${r.subject} (${r.status})`, date: r.created_at,
         }));
+
+        // Reviews
+        const { data: reviews } = await supabase
+          .from("reviews")
+          .select("id, overall_rating, comment, review_type, created_at")
+          .eq("reviewer_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        reviews?.forEach(r => items.push({
+          id: `rv-${r.id}`, type: "Review", description: `${r.review_type} review – ${r.overall_rating}/5${r.comment ? `: "${r.comment.slice(0, 60)}"` : ""}`, date: r.created_at, rating: r.overall_rating,
+        }));
       }
 
       items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      return items.slice(0, 30);
+      return items.slice(0, 40);
     },
     enabled: !!tenantId,
   });
@@ -108,6 +121,12 @@ export function TenantHistoryTab({ tenantId, propertyId }: Props) {
                 <p className="text-sm">{item.description}</p>
                 <p className="text-xs text-muted-foreground">{format(new Date(item.date), "MMM d, yyyy 'at' h:mm a")}</p>
               </div>
+              {item.rating && (
+                <div className="flex items-center gap-1 text-xs shrink-0">
+                  <Star className="h-3 w-3 text-warning fill-warning" />
+                  {item.rating}/5
+                </div>
+              )}
             </div>
           ))}
         </div>
