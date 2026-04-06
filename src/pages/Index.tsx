@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Header } from "@/components/Header";
 import { Dashboard } from "@/components/Dashboard";
@@ -45,11 +45,34 @@ const Index = () => {
   const queryClient = useQueryClient();
   const verifiedRef = useRef(false);
   const [navOpen, setNavOpen] = useState(false);
+  const viewHistoryRef = useRef<string[]>([]);
   
   const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
   const isMaintenanceOnly = (isMaintenance || isVendor) && !isAdmin && !isConsultant && !isLandlord && !isTenant;
   const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : "dashboard";
   const [currentView, setCurrentView] = useState(defaultView);
+
+  const navigateTo = useCallback((view: string) => {
+    setCurrentView(prev => {
+      if (prev !== view) {
+        viewHistoryRef.current.push(prev);
+      }
+      return view;
+    });
+  }, []);
+
+  const goBack = useCallback(() => {
+    const history = viewHistoryRef.current;
+    if (history.length > 0) {
+      const prev = history.pop()!;
+      setCurrentView(prev);
+    }
+  }, []);
+
+  const goHome = useCallback(() => {
+    viewHistoryRef.current = [];
+    setCurrentView(defaultView);
+  }, [defaultView]);
 
   // Redirect tenant-only users away from landlord dashboard
   useEffect(() => {
