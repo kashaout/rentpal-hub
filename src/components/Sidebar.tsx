@@ -192,6 +192,7 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     { icon: FileText, label: "Agreements", id: "agreements", show: isLandlord || isAdmin },
 
     { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant },
+    { icon: LayoutDashboard, label: "My Tenancy", id: "tenant-command-center", show: isTenant },
     { icon: Building2, label: "Browse Properties", id: "browse-properties", show: isTenant },
     { icon: FileText, label: "My Agreements", id: "agreements", show: isTenant },
     { icon: Users, label: "Inbox", id: "tenant-inbox", show: isTenant },

@@ -5,6 +5,7 @@ import { Dashboard } from "@/components/Dashboard";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 import { LandlordUserManagement } from "@/components/admin/LandlordUserManagement";
 import { TenantPortal } from "@/components/tenant/TenantPortal";
+import { TenantCommandCenter } from "@/components/tenant/TenantCommandCenter";
 import { TenantBrowseProperties } from "@/components/tenant/TenantBrowseProperties";
 import { LeaseAgreementView } from "@/components/tenant/LeaseAgreementView";
 import { TenantRequestsInbox } from "@/components/tenant/TenantRequestsInbox";
@@ -32,6 +33,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Welcome back! Here's your overview." },
   "tenant-portal": { title: "My Portal", subtitle: "View your lease, payments, and submit requests." },
+  "tenant-command-center": { title: "My Tenancy", subtitle: "Your complete tenancy dashboard." },
   "browse-properties": { title: "Browse Properties", subtitle: "Find available properties to rent or book." },
   agreements: { title: "Lease Agreements", subtitle: "Review and sign your lease agreements." },
   "tenant-inbox": { title: "Inbox", subtitle: "All your requests and communication in one place." },
@@ -138,6 +140,8 @@ const Index = () => {
         return <SubscriptionPlans />;
       case "tenant-portal":
         return <TenantPortal />;
+      case "tenant-command-center":
+        return <TenantCommandCenter />;
       case "browse-properties":
         return <TenantBrowseProperties />;
       case "agreements":
