@@ -13,6 +13,12 @@ export function FinanceDashboard() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-lg bg-muted/50 border p-3">
+        <p className="text-sm text-muted-foreground">
+          <strong>Financials</strong> gives you a unified view of all money flowing through your properties — rent received from tenants, escrow held for bookings, maintenance expenses, and full transaction history with downloadable statements.
+        </p>
+      </div>
+
       <FinancialMetricsGrid metrics={metrics} isLoading={metricsLoading} />
 
       <Tabs defaultValue="rent" className="w-full">

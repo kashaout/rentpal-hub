@@ -117,6 +117,17 @@ export function PropertyIssuesTab({ propertyId }: Props) {
 
   return (
     <div className="space-y-3">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+        <span className="hover:text-foreground cursor-pointer">Property</span>
+        <span>›</span>
+        <span className="hover:text-foreground cursor-pointer">Tenant</span>
+        <span>›</span>
+        <span className="text-foreground font-medium">Issues</span>
+        <span>›</span>
+        <span>Work Orders</span>
+      </div>
+
       {issues.map((issue: any) => {
         const isExpanded = expandedId === issue.id;
         const hasWO = issue.work_orders.length > 0;
