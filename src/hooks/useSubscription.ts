@@ -13,6 +13,10 @@ export interface SubscriptionFeatures {
   advanced_reports: boolean;
   ai_insights: boolean;
   multi_user: boolean;
+  maintenance: boolean;
+  financials: boolean;
+  reports: boolean;
+  consultants: boolean;
 }
 
 export interface Subscription {
@@ -38,18 +42,22 @@ export const PLAN_CONFIGS: Record<SubscriptionPlan, {
   free: {
     name: "Free",
     price: 0,
-    property_limit: 3,
+    property_limit: 1,
     features: {
       compliance_tracker: false,
       automation_workflows: false,
       advanced_reports: false,
       ai_insights: false,
       multi_user: false,
+      maintenance: false,
+      financials: false,
+      reports: false,
+      consultants: false,
     },
     description: "Perfect for getting started with basic property management",
   },
   basic: {
-    name: "Basic",
+    name: "Starter",
     price: 20000,
     property_limit: 10,
     features: {
@@ -58,6 +66,10 @@ export const PLAN_CONFIGS: Record<SubscriptionPlan, {
       advanced_reports: false,
       ai_insights: false,
       multi_user: false,
+      maintenance: true,
+      financials: false,
+      reports: false,
+      consultants: false,
     },
     description: "Essential features for small landlords",
   },
@@ -67,10 +79,14 @@ export const PLAN_CONFIGS: Record<SubscriptionPlan, {
     property_limit: 50,
     features: {
       compliance_tracker: true,
-      automation_workflows: true,
+      automation_workflows: false,
       advanced_reports: true,
       ai_insights: false,
       multi_user: true,
+      maintenance: true,
+      financials: true,
+      reports: true,
+      consultants: false,
     },
     description: "Advanced features for growing portfolios",
   },
@@ -84,6 +100,10 @@ export const PLAN_CONFIGS: Record<SubscriptionPlan, {
       advanced_reports: true,
       ai_insights: true,
       multi_user: true,
+      maintenance: true,
+      financials: true,
+      reports: true,
+      consultants: true,
     },
     description: "Full-featured solution for property management companies",
   },
@@ -111,7 +131,7 @@ export function useSubscription() {
           id: "",
           user_id: user.id,
           plan: "free" as SubscriptionPlan,
-          property_limit: 3,
+          property_limit: 1,
           features: PLAN_CONFIGS.free.features,
           started_at: new Date().toISOString(),
           expires_at: null,
@@ -212,7 +232,7 @@ export function useCanAddProperty() {
       if (error) throw error;
 
       const propertyCount = count || 0;
-      const limit = subscription?.property_limit || 3;
+      const limit = subscription?.property_limit || 1;
 
       return {
         canAdd: propertyCount < limit,

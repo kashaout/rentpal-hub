@@ -21,6 +21,10 @@ const FEATURE_LABELS: Record<string, string> = {
   advanced_reports: "Advanced Reports",
   ai_insights: "AI Insights",
   multi_user: "Multi-User Access",
+  maintenance: "Maintenance Board",
+  financials: "Financial Intelligence",
+  reports: "Reports & Analytics",
+  consultants: "Consultants & Automation",
 };
 
 export function SubscriptionPlans() {

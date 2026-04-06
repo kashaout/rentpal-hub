@@ -188,14 +188,17 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
   const { signOut, isAdmin, isConsultant, isLandlord, isTenant, isMaintenance, isVendor, profile } = useAuth();
   const { hasFeature, isReadOnly } = useSubscriptionContext();
 
+  const isManagerRole = isAdmin || isConsultant || isLandlord;
+
   const navItems = [
-    // Landlord / Admin / Consultant
-    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isAdmin || isConsultant || isLandlord, locked: false },
-    { icon: Building2, label: "Properties", id: "properties", show: isAdmin || isConsultant || isLandlord, locked: false },
-    { icon: Users, label: "Tenants", id: "tenants", show: isAdmin || isConsultant || isLandlord, locked: false },
-    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isAdmin || isConsultant || isLandlord || isMaintenance || isVendor, locked: false },
-    { icon: Wallet, label: "Financials", id: "finance", show: isAdmin || isConsultant || isLandlord, locked: !hasFeature("advanced_reports") },
-    { icon: BarChart3, label: "Reports", id: "reports", show: isAdmin || isConsultant || isLandlord, locked: !hasFeature("advanced_reports") },
+    // Landlord / Admin / Consultant - always visible
+    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isManagerRole, locked: false },
+    { icon: Building2, label: "Properties", id: "properties", show: isManagerRole, locked: false },
+    { icon: Users, label: "Tenants", id: "tenants", show: isManagerRole, locked: false },
+    // Plan-gated
+    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isManagerRole || isMaintenance || isVendor, locked: isManagerRole && !isAdmin && !hasFeature("maintenance") },
+    { icon: Wallet, label: "Financials", id: "finance", show: isManagerRole, locked: !isAdmin && !hasFeature("financials") },
+    { icon: BarChart3, label: "Reports", id: "reports", show: isManagerRole, locked: !isAdmin && !hasFeature("reports") },
 
     // Tenant
     { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant, locked: false },
@@ -255,7 +258,7 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <Home className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-display text-lg font-bold">PropManage</span>
+            <span className="font-display text-lg font-bold">RentPal</span>
           </div>
           <Button variant="ghost" size="icon" className="rounded-full" onClick={onClose}>
             <X className="h-5 w-5" />
