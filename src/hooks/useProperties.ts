@@ -53,6 +53,7 @@ export function useProperties() {
       const { data: properties, error } = await supabase
         .from("properties")
         .select("*")
+        .eq("is_archived", false)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

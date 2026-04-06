@@ -53,7 +53,7 @@ export function useTenants(propertyId?: string) {
   return useQuery({
     queryKey: ["tenants", propertyId],
     queryFn: async () => {
-      let query = supabase.from("tenants").select("*").order("created_at", { ascending: false });
+      let query = supabase.from("tenants").select("*").eq("is_archived", false).order("created_at", { ascending: false });
 
       if (propertyId) {
         query = query.eq("property_id", propertyId);
