@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard, Building2, Users, Receipt, FileText, Settings, LogOut,
-  Home, UserCog, Shield, ShieldCheck, BarChart3, Wrench, ClipboardList,
-  TrendingUp, Wallet, Zap, Crown, Plus, MessageSquare, ChevronDown, Loader2,
-  Clipboard, Scale, Star, X,
+  LayoutDashboard, Building2, Users, Settings, LogOut,
+  Home, UserCog, Shield, BarChart3, Wrench,
+  TrendingUp, Wallet, Crown, Plus, MessageSquare, ChevronDown, Loader2,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useUnreadAlertCount } from "@/hooks/useAutomationWorkflows";
 import { useTenantLease } from "@/hooks/useTenantPortal";
 import { useCreateMaintenanceRequest } from "@/hooks/useMaintenanceRequests";
 import { useCreateTenantRequest } from "@/hooks/useTenantRequests";
@@ -182,37 +181,22 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarProps) {
-  const { signOut, isAdmin, isConsultant, isLandlord, isTenant, isMaintenance, isVendor, profile, roles } = useAuth();
-  const unreadAlerts = useUnreadAlertCount();
+  const { signOut, isAdmin, isConsultant, isLandlord, isTenant, isMaintenance, isVendor, profile } = useAuth();
 
   const navItems = [
+    // Landlord / Admin / Consultant
     { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isAdmin || isConsultant || isLandlord },
     { icon: Building2, label: "Properties", id: "properties", show: isAdmin || isConsultant || isLandlord },
     { icon: Users, label: "Tenants", id: "tenants", show: isAdmin || isConsultant || isLandlord },
-    { icon: FileText, label: "Agreements", id: "agreements", show: isLandlord || isAdmin },
+    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isAdmin || isConsultant || isLandlord || isMaintenance || isVendor },
+    { icon: Wallet, label: "Financials", id: "finance", show: isAdmin || isConsultant || isLandlord },
+    { icon: BarChart3, label: "Reports", id: "reports", show: isAdmin || isConsultant || isLandlord },
 
+    // Tenant
     { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant },
     { icon: LayoutDashboard, label: "My Tenancy", id: "tenant-command-center", show: isTenant },
     { icon: Building2, label: "Browse Properties", id: "browse-properties", show: isTenant },
-    { icon: FileText, label: "My Agreements", id: "agreements", show: isTenant },
     { icon: Users, label: "Inbox", id: "tenant-inbox", show: isTenant },
-
-    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isMaintenance || isVendor },
-    { icon: ClipboardList, label: "Issue Reports", id: "issue-reports", show: isAdmin || isConsultant || isLandlord },
-    { icon: Clipboard, label: "Work Orders", id: "work-orders", show: isAdmin || isConsultant || isLandlord || isMaintenance || isVendor },
-    { icon: ClipboardList, label: "Kanban Board", id: "maintenance-kanban", show: isAdmin || isConsultant || isLandlord || isMaintenance || isVendor },
-
-    { icon: Receipt, label: "Payments", id: "payments", show: isAdmin || isConsultant || isLandlord || isTenant },
-    { icon: Wallet, label: "Finance", id: "finance", show: isAdmin || isConsultant || isLandlord },
-    { icon: Scale, label: "Escrow & Disputes", id: "escrow", show: isAdmin || isLandlord },
-
-    { icon: ShieldCheck, label: "Compliance", id: "compliance", show: isAdmin || isConsultant || isLandlord },
-    { icon: Zap, label: "Automation", id: "automation", show: isAdmin || isConsultant || isLandlord, badge: unreadAlerts },
-
-    { icon: Star, label: "Reviews", id: "reviews-page", show: isAdmin || isLandlord || isTenant },
-    { icon: BarChart3, label: "Reports", id: "reports", show: isAdmin || isConsultant || isLandlord },
-    { icon: FileText, label: "Documents", id: "documents", show: isAdmin || isConsultant || isLandlord || isTenant },
-    { icon: UserCog, label: "Manage Users", id: "manage-users", show: isLandlord && !isAdmin },
   ];
 
   const adminItems = [
@@ -221,6 +205,9 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     { icon: TrendingUp, label: "Worker Performance", id: "worker-performance" },
     { icon: Crown, label: "Subscription", id: "subscription" },
   ];
+
+  // Landlord (non-admin) user management
+  const showLandlordAdmin = isLandlord && !isAdmin;
 
   const filteredNavItems = navItems.filter((item) => item.show);
 
@@ -301,9 +288,20 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
               label={item.label}
               active={currentView === item.id}
               onClick={() => handleNavigate(item.id)}
-              badge={'badge' in item ? item.badge : undefined}
             />
           ))}
+
+          {showLandlordAdmin && (
+            <>
+              <div className="my-3 border-t" />
+              <NavItem
+                icon={UserCog}
+                label="Manage Users"
+                active={currentView === "manage-users"}
+                onClick={() => handleNavigate("manage-users")}
+              />
+            </>
+          )}
 
           {isAdmin && (
             <>
