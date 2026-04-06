@@ -33,7 +33,7 @@ import { useProperties } from "@/hooks/useProperties";
 import { useAvailableTenantUsers } from "@/hooks/useTenantUsers";
 
 const tenantSchema = z.object({
-  user_id: z.string().optional(),
+  user_id: z.string().optional().transform(val => (!val || val === "__none__") ? undefined : val),
   property_id: z.string().uuid("Select a property"),
   unit_number: z.string().min(1, "Unit number is required").max(20),
   lease_start: z.string().min(1, "Lease start date is required"),
@@ -145,7 +145,7 @@ export function TenantFormDialog({ open, onOpenChange, tenant, defaultPropertyId
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">No user linked</SelectItem>
+                      <SelectItem value="__none__">No user linked</SelectItem>
                       {availableUsers?.map((user) => (
                         <SelectItem key={user.user_id} value={user.user_id}>
                           {user.full_name || user.email} ({user.email})
