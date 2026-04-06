@@ -33,7 +33,7 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   tenants: { title: "Tenants", subtitle: "View and manage your tenants." },
   reports: { title: "Reports", subtitle: "Analytics and performance metrics." },
   "manage-users": { title: "Manage Users", subtitle: "Add and manage user accounts." },
-  roles: { title: "Roles & Permissions", subtitle: "Configure access levels." },
+  
   "worker-performance": { title: "Worker Performance", subtitle: "Track maintenance team metrics and ratings." },
   subscription: { title: "Subscription Plans", subtitle: "Manage your plan and unlock features." },
   settings: { title: "Settings", subtitle: "Configure your preferences." },
@@ -114,8 +114,6 @@ const Index = () => {
     switch (currentView) {
       case "manage-users":
         return isAdmin ? <AdminPanel defaultTab="users" /> : <LandlordUserManagement />;
-      case "roles":
-        return <AdminPanel defaultTab="assignments" />;
       case "worker-performance":
         return <MaintenancePerformanceDashboard />;
       case "subscription":

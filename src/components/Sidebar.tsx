@@ -201,7 +201,6 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
 
   const adminItems = [
     { icon: UserCog, label: "Manage Users", id: "manage-users" },
-    { icon: Shield, label: "Roles & Permissions", id: "roles" },
     { icon: TrendingUp, label: "Worker Performance", id: "worker-performance" },
     { icon: Crown, label: "Subscription", id: "subscription" },
   ];
