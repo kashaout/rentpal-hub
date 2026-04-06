@@ -16,9 +16,11 @@ interface HeaderProps {
   onToggleNav?: () => void;
   navOpen?: boolean;
   onNavigate?: (view: string) => void;
+  onGoBack?: () => void;
+  onGoHome?: () => void;
 }
 
-export function Header({ title, subtitle, onToggleNav, navOpen, onNavigate }: HeaderProps) {
+export function Header({ title, subtitle, onToggleNav, navOpen, onNavigate, onGoBack, onGoHome }: HeaderProps) {
   const { profile, isLandlord, isTenant, signOut } = useAuth();
   const unreadAlerts = useUnreadAlertCount();
   const unreadLandlordCount = useUnreadLandlordNotificationCount();
@@ -68,7 +70,7 @@ export function Header({ title, subtitle, onToggleNav, navOpen, onNavigate }: He
             variant="ghost"
             size="icon"
             className="rounded-full"
-            onClick={() => onNavigate?.("dashboard")}
+            onClick={onGoHome}
             title="Home"
           >
             <Home className="h-4.5 w-4.5" />
@@ -77,7 +79,7 @@ export function Header({ title, subtitle, onToggleNav, navOpen, onNavigate }: He
             variant="ghost"
             size="icon"
             className="rounded-full"
-            onClick={() => window.history.back()}
+            onClick={onGoBack}
             title="Back"
           >
             <ArrowLeft className="h-4.5 w-4.5" />
