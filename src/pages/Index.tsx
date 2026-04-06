@@ -140,6 +140,8 @@ const Index = () => {
         return <SubscriptionPlans />;
       case "tenant-portal":
         return <TenantPortal />;
+      case "tenant-command-center":
+        return <TenantCommandCenter />;
       case "browse-properties":
         return <TenantBrowseProperties />;
       case "agreements":
