@@ -12,6 +12,8 @@ import {
 import { TenantCard } from "@/components/TenantCard";
 import { TenantFormDialog } from "@/components/TenantFormDialog";
 import { PaymentHistorySheet } from "@/components/PaymentHistorySheet";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";
 
@@ -47,21 +49,20 @@ export function TenantsPage() {
     if (!open) setPaymentTenant(null);
   };
 
-  // Filter and search tenants
   const filteredTenants = tenants?.filter((t) => {
     const matchesSearch =
       t.profile?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.profile?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.property_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.unit_number?.toLowerCase().includes(searchQuery.toLowerCase());
-
     const matchesStatus = filterStatus === "all" || t.payment_status === filterStatus;
     const matchesProperty = filterProperty === "all" || t.property_id === filterProperty;
-
     return matchesSearch && matchesStatus && matchesProperty;
   });
 
   const isLoading = tenantsLoading || propertiesLoading;
+  const hasNoProperties = !properties || properties.length === 0;
+  const hasFilters = searchQuery || filterStatus !== "all" || filterProperty !== "all";
 
   if (isLoading) {
     return (
@@ -75,18 +76,13 @@ export function TenantsPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* Toolbar */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-1 flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search tenants..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+            <Input placeholder="Search tenants..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
           </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-[140px]">
@@ -107,9 +103,7 @@ export function TenantsPage() {
             <SelectContent>
               <SelectItem value="all">All Properties</SelectItem>
               {properties?.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.name}
-                </SelectItem>
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -117,10 +111,10 @@ export function TenantsPage() {
         <Button
           onClick={() => setDialogOpen(true)}
           className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
-          disabled={!properties || properties.length === 0}
+          disabled={hasNoProperties}
+          title={hasNoProperties ? "Add a property first" : undefined}
         >
-          <Plus className="h-4 w-4" />
-          Add Tenant
+          <Plus className="h-4 w-4" /> Add Tenant
         </Button>
       </div>
 
@@ -132,15 +126,11 @@ export function TenantsPage() {
         </div>
         <div className="rounded-lg border bg-card p-4">
           <p className="text-sm text-muted-foreground">Paid This Month</p>
-          <p className="text-2xl font-semibold text-success">
-            {tenants?.filter((t) => t.payment_status === "paid").length || 0}
-          </p>
+          <p className="text-2xl font-semibold text-success">{tenants?.filter((t) => t.payment_status === "paid").length || 0}</p>
         </div>
         <div className="rounded-lg border bg-card p-4">
           <p className="text-sm text-muted-foreground">Overdue</p>
-          <p className="text-2xl font-semibold text-destructive">
-            {tenants?.filter((t) => t.payment_status === "overdue").length || 0}
-          </p>
+          <p className="text-2xl font-semibold text-destructive">{tenants?.filter((t) => t.payment_status === "overdue").length || 0}</p>
         </div>
       </div>
 
@@ -148,53 +138,28 @@ export function TenantsPage() {
       {filteredTenants && filteredTenants.length > 0 ? (
         <div className="grid gap-4 lg:grid-cols-2">
           {filteredTenants.map((tenant) => (
-            <TenantCard
-              key={tenant.id}
-              tenant={tenant}
-              onEdit={handleEdit}
-              onViewPayments={handleViewPayments}
-            />
+            <TenantCard key={tenant.id} tenant={tenant} onEdit={handleEdit} onViewPayments={handleViewPayments} />
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed bg-muted/50 p-12 text-center">
-          <Users className="mx-auto h-12 w-12 text-muted-foreground/50" />
-          <h3 className="mt-4 text-lg font-medium text-foreground">
-            {searchQuery || filterStatus !== "all" || filterProperty !== "all"
-              ? "No tenants found"
-              : "No tenants yet"}
-          </h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {searchQuery || filterStatus !== "all" || filterProperty !== "all"
+        <EmptyState
+          icon={Users}
+          title={hasFilters ? "No tenants found" : hasNoProperties ? "Add a property first" : "No tenants yet"}
+          description={
+            hasFilters
               ? "Try adjusting your filters."
-              : properties && properties.length > 0
-              ? "Add your first tenant to a property."
-              : "Add a property first, then add tenants."}
-          </p>
-          {!searchQuery && filterStatus === "all" && filterProperty === "all" && properties && properties.length > 0 && (
-            <Button
-              onClick={() => setDialogOpen(true)}
-              className="mt-4 gap-2"
-              variant="outline"
-            >
-              <Plus className="h-4 w-4" />
-              Add Tenant
-            </Button>
-          )}
-        </div>
+              : hasNoProperties
+              ? "You need at least one property before adding tenants."
+              : "Add your first tenant to a property to start tracking leases and payments."
+          }
+          actionLabel={hasFilters || hasNoProperties ? undefined : "Add Tenant"}
+          onAction={hasFilters || hasNoProperties ? undefined : () => setDialogOpen(true)}
+        />
       )}
 
       {/* Dialogs */}
-      <TenantFormDialog
-        open={dialogOpen}
-        onOpenChange={handleDialogClose}
-        tenant={editingTenant}
-      />
-      <PaymentHistorySheet
-        open={paymentSheetOpen}
-        onOpenChange={handlePaymentSheetClose}
-        tenant={paymentTenant}
-      />
+      <TenantFormDialog open={dialogOpen} onOpenChange={handleDialogClose} tenant={editingTenant} />
+      <PaymentHistorySheet open={paymentSheetOpen} onOpenChange={handlePaymentSheetClose} tenant={paymentTenant} />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, Users, Banknote, AlertTriangle, Plus, Loader2, ArrowRight, Wrench, TrendingUp, Calendar } from "lucide-react";
+import { Building2, Users, Banknote, AlertTriangle, Plus, Loader2, ArrowRight, Wrench, TrendingUp, Crown } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { PropertyCard } from "@/components/PropertyCard";
 import { TenantCard } from "@/components/TenantCard";
@@ -8,16 +8,16 @@ import { TenantFormDialog } from "@/components/TenantFormDialog";
 import { PaymentHistorySheet } from "@/components/PaymentHistorySheet";
 import { SubscriptionBanner } from "@/components/subscription/SubscriptionBanner";
 import { UpgradeModal } from "@/components/subscription/UpgradeModal";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { useProperties, PropertyWithStats } from "@/hooks/useProperties";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
 import { useMaintenanceRequests } from "@/hooks/useMaintenanceRequests";
 import { useMyLeaseAgreements } from "@/hooks/useLeaseAgreements";
-import { cn } from "@/lib/utils";
+import { PLAN_CONFIGS } from "@/hooks/useSubscription";
 
 interface DashboardProps {
   onNavigate?: (view: string) => void;
@@ -25,7 +25,7 @@ interface DashboardProps {
 
 export function Dashboard({ onNavigate }: DashboardProps) {
   const { isAdmin, isLandlord } = useAuth();
-  const { canAddProperty, isReadOnly } = useSubscriptionContext();
+  const { canAddProperty, isReadOnly, plan, hasFeature } = useSubscriptionContext();
   const [propertyDialogOpen, setPropertyDialogOpen] = useState(false);
   const [tenantDialogOpen, setTenantDialogOpen] = useState(false);
   const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
@@ -39,43 +39,18 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const { data: maintenanceRequests } = useMaintenanceRequests();
   const { data: agreements } = useMyLeaseAgreements();
 
-  // Calculate stats
   const totalProperties = properties?.length || 0;
   const totalTenants = tenants?.length || 0;
   const monthlyRevenue = properties?.reduce((sum, p) => sum + Number(p.monthly_rent), 0) || 0;
   const overduePayments = tenants?.filter((t) => t.payment_status === "overdue").length || 0;
   const pendingMaintenance = maintenanceRequests?.filter((r) => r.status === "pending" || r.status === "in_progress").length || 0;
-  const pendingAgreements = agreements?.filter((a) => a.status === "pending_signature" || (a.tenant_signed && !a.landlord_signed)).length || 0;
 
-  const handleEditProperty = (property: PropertyWithStats) => {
-    setEditingProperty(property);
-    setPropertyDialogOpen(true);
-  };
-
-  const handleEditTenant = (tenant: TenantWithDetails) => {
-    setEditingTenant(tenant);
-    setTenantDialogOpen(true);
-  };
-
-  const handleViewPayments = (tenant: TenantWithDetails) => {
-    setPaymentTenant(tenant);
-    setPaymentSheetOpen(true);
-  };
-
-  const handlePropertyDialogClose = (open: boolean) => {
-    setPropertyDialogOpen(open);
-    if (!open) setEditingProperty(undefined);
-  };
-
-  const handleTenantDialogClose = (open: boolean) => {
-    setTenantDialogOpen(open);
-    if (!open) setEditingTenant(undefined);
-  };
-
-  const handlePaymentSheetClose = (open: boolean) => {
-    setPaymentSheetOpen(open);
-    if (!open) setPaymentTenant(null);
-  };
+  const handleEditProperty = (property: PropertyWithStats) => { setEditingProperty(property); setPropertyDialogOpen(true); };
+  const handleEditTenant = (tenant: TenantWithDetails) => { setEditingTenant(tenant); setTenantDialogOpen(true); };
+  const handleViewPayments = (tenant: TenantWithDetails) => { setPaymentTenant(tenant); setPaymentSheetOpen(true); };
+  const handlePropertyDialogClose = (open: boolean) => { setPropertyDialogOpen(open); if (!open) setEditingProperty(undefined); };
+  const handleTenantDialogClose = (open: boolean) => { setTenantDialogOpen(open); if (!open) setEditingTenant(undefined); };
+  const handlePaymentSheetClose = (open: boolean) => { setPaymentSheetOpen(open); if (!open) setPaymentTenant(null); };
 
   const isLoading = propertiesLoading || tenantsLoading;
 
@@ -90,12 +65,41 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     );
   }
 
+  // Plan-based smart hints
+  const planHints: Record<string, { title: string; description: string; action: string; view: string }> = {
+    free: { title: "You're on the Free plan", description: "Manage 1 property with basic tools. Upgrade to unlock maintenance, financials, and more.", action: "View Plans", view: "subscription" },
+    basic: { title: "Starter plan active", description: "You have maintenance access. Upgrade to Pro for financial intelligence and reports.", action: "Upgrade to Pro", view: "subscription" },
+    pro: { title: "Pro plan active", description: "Unlock automation workflows and consultant access with the Business plan.", action: "Go Business", view: "subscription" },
+    business: { title: "Business plan — Full access", description: "You have access to all RentPal features including automation and consultants.", action: "", view: "" },
+  };
+
+  const currentHint = planHints[plan] || planHints.free;
+
   return (
-    <div className="space-y-8 p-6">
-      {/* Subscription Banner */}
+    <div className="space-y-8">
       <SubscriptionBanner onNavigateToPlans={() => onNavigate?.("subscription")} />
 
-      {/* Smart Hints */}
+      {/* Plan-based hint */}
+      {plan !== "business" && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+              <Crown className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-sm">{currentHint.title}</p>
+              <p className="text-xs text-muted-foreground">{currentHint.description}</p>
+            </div>
+            {currentHint.action && (
+              <Button size="sm" variant="outline" onClick={() => onNavigate?.(currentHint.view)} className="gap-1.5">
+                {currentHint.action} <ArrowRight className="h-3 w-3" />
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Smart onboarding hints */}
       {totalProperties === 0 && (
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="flex items-center gap-4 py-4">
@@ -131,8 +135,24 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </CardContent>
         </Card>
       )}
+      {totalTenants > 0 && overduePayments === 0 && !hasFeature("financials") && plan !== "free" && (
+        <Card className="border-accent/30 bg-accent/5">
+          <CardContent className="flex items-center gap-4 py-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10">
+              <Banknote className="h-5 w-5 text-accent" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-sm">Unlock Financial Intelligence</p>
+              <p className="text-xs text-muted-foreground">Upgrade to Pro to access rent tracking, expense reports, and financial statements.</p>
+            </div>
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onNavigate?.("subscription")}>
+              Upgrade <ArrowRight className="h-3 w-3" />
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Stats Grid — clickable */}
+      {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <button className="text-left" onClick={() => onNavigate?.("properties")}>
           <StatCard title="Total Properties" value={totalProperties} icon={Building2} variant="default" />
@@ -193,49 +213,32 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               </button>
             )}
           </div>
-          <Button
-            onClick={() => {
-              if (isReadOnly) return;
-              if (!canAddProperty) {
-                setUpgradeOpen(true);
-                return;
-              }
-              setPropertyDialogOpen(true);
-            }}
-            className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
-            disabled={isReadOnly}
-          >
-            <Plus className="h-4 w-4" />
-            Add Property
+          <Button onClick={() => {
+            if (isReadOnly) return;
+            if (!canAddProperty) { setUpgradeOpen(true); return; }
+            setPropertyDialogOpen(true);
+          }} className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90" disabled={isReadOnly}>
+            <Plus className="h-4 w-4" /> Add Property
           </Button>
         </div>
         {properties && properties.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {properties.slice(0, 6).map((property) => (
-              <PropertyCard key={property.id} property={property} onEdit={handleEditProperty} />
+              <PropertyCard key={property.id} property={property} onEdit={handleEditProperty} onClick={(p) => onNavigate?.("properties")} />
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed bg-muted/50 p-8 text-center">
-            <Building2 className="mx-auto h-10 w-10 text-muted-foreground/50" />
-            <h3 className="mt-4 font-medium text-foreground">No properties yet</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Add your first property to get started.</p>
-            <Button
-              onClick={() => {
-                if (isReadOnly) return;
-                if (!canAddProperty) {
-                  setUpgradeOpen(true);
-                  return;
-                }
-                setPropertyDialogOpen(true);
-              }}
-              className="mt-4 gap-2" variant="outline"
-              disabled={isReadOnly}
-            >
-              <Plus className="h-4 w-4" />
-              Add Property
-            </Button>
-          </div>
+          <EmptyState
+            icon={Building2}
+            title="No properties yet"
+            description="Add your first property to get started with tenant and payment management."
+            actionLabel="Add Property"
+            onAction={() => {
+              if (isReadOnly) return;
+              if (!canAddProperty) { setUpgradeOpen(true); return; }
+              setPropertyDialogOpen(true);
+            }}
+          />
         )}
       </section>
 
@@ -251,8 +254,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             )}
           </div>
           <Button onClick={() => !isReadOnly && setTenantDialogOpen(true)} variant="outline" className="gap-2" disabled={isReadOnly || !properties || properties.length === 0}>
-            <Plus className="h-4 w-4" />
-            Add Tenant
+            <Plus className="h-4 w-4" /> Add Tenant
           </Button>
         </div>
         {tenants && tenants.length > 0 ? (
@@ -262,13 +264,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed bg-muted/50 p-8 text-center">
-            <Users className="mx-auto h-10 w-10 text-muted-foreground/50" />
-            <h3 className="mt-4 font-medium text-foreground">No tenants yet</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {properties && properties.length > 0 ? "Add your first tenant to a property." : "Add a property first, then add tenants."}
-            </p>
-          </div>
+          <EmptyState
+            icon={Users}
+            title="No tenants yet"
+            description={properties && properties.length > 0 ? "Add your first tenant to a property." : "Add a property first, then add tenants."}
+          />
         )}
       </section>
 
