@@ -163,7 +163,7 @@ const Index = () => {
         return <SettingsPage />;
       case "dashboard":
       default:
-        return <Dashboard onNavigate={setCurrentView} />;
+        return <Dashboard onNavigate={navigateTo} />;
     }
   };
 
@@ -171,7 +171,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Sidebar
         currentView={currentView}
-        onViewChange={setCurrentView}
+        onViewChange={navigateTo}
         open={navOpen}
         onClose={() => setNavOpen(false)}
       />
@@ -180,7 +180,9 @@ const Index = () => {
         subtitle={subtitle}
         onToggleNav={() => setNavOpen(!navOpen)}
         navOpen={navOpen}
-        onNavigate={setCurrentView}
+        onNavigate={navigateTo}
+        onGoBack={goBack}
+        onGoHome={goHome}
       />
       <main className="max-w-[1760px] mx-auto px-4 md:px-6 py-6">
         {renderContent()}
