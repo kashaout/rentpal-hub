@@ -56,11 +56,11 @@ export function SystemSettings() {
   const handleExportAll = async () => {
     setIsExporting(true);
     try {
-      const tables = ["properties", "tenants", "payments", "lease_agreements", "maintenance_requests", "work_orders", "documents", "compliance_items", "financial_transactions"];
+      const tables = ["properties", "tenants", "payments", "lease_agreements", "maintenance_requests", "work_orders", "documents", "compliance_items", "financial_transactions"] as const;
       const allData: Record<string, unknown[]> = {};
 
       for (const table of tables) {
-        const { data } = await supabase.from(table).select("*").limit(1000);
+        const { data } = await (supabase.from(table) as any).select("*").limit(1000);
         allData[table] = data || [];
       }
 
