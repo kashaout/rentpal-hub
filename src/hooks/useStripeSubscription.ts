@@ -16,17 +16,17 @@ export interface StripeSubscriptionStatus {
 // Map Stripe product IDs to plan tiers
 export const STRIPE_PLAN_MAP: Record<string, { plan: SubscriptionPlan; price_id: string; product_id: string }> = {
   basic: {
-    price_id: "price_1T6w53Rs3ISzADV2hFpTz53c",
+    price_id: "price_1TJCAORs3ISzADV2iXpQSzDw",
     product_id: "prod_U56HhHl0McCqXL",
     plan: "basic",
   },
   pro: {
-    price_id: "price_1T6w5KRs3ISzADV2GNO45vxC",
+    price_id: "price_1TJCBeRs3ISzADV2Mxu3IGx4",
     product_id: "prod_U56HGz3tPG9Saz",
     plan: "pro",
   },
   business: {
-    price_id: "price_1T6w5aRs3ISzADV2rTJS82HS",
+    price_id: "price_1TJCBuRs3ISzADV2LolLCnr0",
     product_id: "prod_U56IV4VuqX1ZAc",
     plan: "business",
   },
