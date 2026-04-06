@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { SessionTimeoutDialog } from "@/components/SessionTimeoutDialog";
 import { Header } from "@/components/Header";
+import { FeedbackButton } from "@/components/FeedbackButton";
 import { Dashboard } from "@/components/Dashboard";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 import { LandlordUserManagement } from "@/components/admin/LandlordUserManagement";
@@ -199,6 +200,7 @@ const Index = () => {
       <main className="max-w-[1760px] mx-auto px-4 md:px-6 py-6">
         {renderContent()}
       </main>
+      <FeedbackButton />
       <SessionTimeoutDialog />
     </div>
   );
