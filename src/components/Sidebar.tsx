@@ -200,6 +200,7 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isMaintenance || isVendor },
     { icon: ClipboardList, label: "Issue Reports", id: "issue-reports", show: isAdmin || isConsultant || isLandlord },
     { icon: Clipboard, label: "Work Orders", id: "work-orders", show: isAdmin || isConsultant || isLandlord || isMaintenance || isVendor },
+    { icon: ClipboardList, label: "Kanban Board", id: "maintenance-kanban", show: isAdmin || isConsultant || isLandlord || isMaintenance || isVendor },
 
     { icon: Receipt, label: "Payments", id: "payments", show: isAdmin || isConsultant || isLandlord || isTenant },
     { icon: Wallet, label: "Finance", id: "finance", show: isAdmin || isConsultant || isLandlord },

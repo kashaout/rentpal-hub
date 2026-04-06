@@ -23,6 +23,7 @@ import { ComplianceDashboard } from "@/components/compliance/ComplianceDashboard
 import { AutomationDashboard } from "@/components/automation/AutomationDashboard";
 import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { WorkOrdersDashboard } from "@/components/workorders/WorkOrdersDashboard";
+import { MaintenanceKanbanBoard } from "@/components/maintenance/MaintenanceKanbanBoard";
 import { EscrowDisputesDashboard } from "@/components/escrow/EscrowDisputesDashboard";
 import { ReviewsPage } from "@/components/reviews/ReviewsPage";
 import { useAuth } from "@/hooks/useAuth";
@@ -153,6 +154,8 @@ const Index = () => {
         return <MaintenancePortal />;
       case "work-orders":
         return <WorkOrdersDashboard />;
+      case "maintenance-kanban":
+        return <MaintenanceKanbanBoard />;
       case "finance":
         return <FinanceDashboard />;
       case "escrow":
