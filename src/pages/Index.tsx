@@ -178,6 +178,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {showOnboarding && (
+        <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
+      )}
       <Sidebar
         currentView={currentView}
         onViewChange={navigateTo}
