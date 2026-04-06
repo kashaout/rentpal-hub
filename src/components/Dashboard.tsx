@@ -252,6 +252,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       <PropertyFormDialog open={propertyDialogOpen} onOpenChange={handlePropertyDialogClose} property={editingProperty} />
       <TenantFormDialog open={tenantDialogOpen} onOpenChange={handleTenantDialogClose} tenant={editingTenant} />
       <PaymentHistorySheet open={paymentSheetOpen} onOpenChange={handlePaymentSheetClose} tenant={paymentTenant} />
+      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} reason="property_limit" onNavigateToPlans={() => onNavigate?.("subscription")} />
     </div>
   );
 }
