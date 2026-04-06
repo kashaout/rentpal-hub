@@ -5,6 +5,7 @@ import { Dashboard } from "@/components/Dashboard";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 import { LandlordUserManagement } from "@/components/admin/LandlordUserManagement";
 import { TenantPortal } from "@/components/tenant/TenantPortal";
+import { TenantCommandCenter } from "@/components/tenant/TenantCommandCenter";
 import { TenantBrowseProperties } from "@/components/tenant/TenantBrowseProperties";
 import { LeaseAgreementView } from "@/components/tenant/LeaseAgreementView";
 import { TenantRequestsInbox } from "@/components/tenant/TenantRequestsInbox";
