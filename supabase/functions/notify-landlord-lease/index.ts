@@ -87,7 +87,7 @@ serve(async (req) => {
       </div>`;
 
     const emailResponse = await resend.emails.send({
-      from: "PropManage <onboarding@resend.dev>",
+      from: "RentPal <onboarding@resend.dev>",
       to: [landlordProfile.email],
       subject: `📋 Lease Agreement Signed by ${tenant_name} — Action Required`,
       html: htmlContent,
