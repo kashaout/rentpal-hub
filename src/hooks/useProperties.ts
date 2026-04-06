@@ -175,12 +175,12 @@ export function useDeleteProperty() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("properties").delete().eq("id", id);
+      const { error } = await supabase.from("properties").update({ is_archived: true } as any).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["properties"] });
-      toast({ title: "Property deleted successfully!" });
+      toast({ title: "Property archived successfully!" });
     },
     onError: (error: Error) => {
       toast({
