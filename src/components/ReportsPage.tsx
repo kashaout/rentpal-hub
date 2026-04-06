@@ -206,7 +206,8 @@ export function ReportsPage() {
         <TabsContent value="tenant-history">
           <TenantIssueReviewTab requests={maintenanceRequests} properties={properties} />
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   );
 }
