@@ -15,6 +15,18 @@ interface LeaseTemplateViewerProps {
 }
 
 export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerProps) {
+  // Fetch credentials securely via RPC instead of reading from agreement object
+  const { data: credentials } = useQuery({
+    queryKey: ["lease-credentials", agreement.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_lease_credentials", {
+        _lease_id: agreement.id,
+      } as any);
+      if (error) return null;
+      return (data as any)?.[0] ?? null;
+    },
+    enabled: !!agreement.credentials_sent_at && agreement.tenant_signed && agreement.landlord_signed,
+  });
   const { user, isTenant, isLandlord } = useAuth();
   const signAgreement = useSignLeaseAgreement();
 
