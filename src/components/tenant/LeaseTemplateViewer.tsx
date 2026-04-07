@@ -6,6 +6,8 @@ import { LeaseAgreement, useSignLeaseAgreement } from "@/hooks/useLeaseAgreement
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LeaseTemplateViewerProps {
   agreement: LeaseAgreement;
