@@ -342,7 +342,7 @@ export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerPr
         </div>
 
         {/* Access Credentials Section */}
-        {agreement.credentials_sent_at && agreement.wifi_password && agreement.keybox_password && (
+        {agreement.credentials_sent_at && credentials?.wifi_password && credentials?.keybox_password && (
           <div className="mt-8">
             <Separator className="my-6" />
             <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-6 space-y-4">
@@ -360,7 +360,7 @@ export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerPr
                     <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">WiFi Password</p>
                   </div>
                   <p className="font-mono text-lg font-bold text-foreground tracking-wider select-all">
-                    {agreement.wifi_password}
+                    {credentials.wifi_password}
                   </p>
                 </div>
                 <div className="rounded-lg bg-card border p-4 space-y-1">
@@ -369,7 +369,7 @@ export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerPr
                     <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Key Box Code</p>
                   </div>
                   <p className="font-mono text-lg font-bold text-foreground tracking-wider select-all">
-                    {agreement.keybox_password}
+                    {credentials.keybox_password}
                   </p>
                 </div>
               </div>
