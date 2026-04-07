@@ -145,12 +145,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) return { error: new Error(error.message) };
 
-    // Add user role after signup
+    // Add user role after signup via secure RPC
     if (data.user) {
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: data.user.id,
-        role: role,
-      });
+      const { error: roleError } = await supabase.rpc("assign_initial_role", {
+        _role: role,
+      } as any);
       if (roleError) {
         console.error("Error assigning role:", roleError);
       }
