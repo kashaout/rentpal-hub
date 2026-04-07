@@ -1722,6 +1722,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_initial_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: undefined
+      }
       auto_dispatch_work_order: {
         Args: { _work_order_id: string }
         Returns: string
