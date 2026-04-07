@@ -6,6 +6,8 @@ import { LeaseAgreement, useSignLeaseAgreement } from "@/hooks/useLeaseAgreement
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LeaseTemplateViewerProps {
   agreement: LeaseAgreement;
@@ -13,6 +15,18 @@ interface LeaseTemplateViewerProps {
 }
 
 export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerProps) {
+  // Fetch credentials securely via RPC instead of reading from agreement object
+  const { data: credentials } = useQuery({
+    queryKey: ["lease-credentials", agreement.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_lease_credentials", {
+        _lease_id: agreement.id,
+      } as any);
+      if (error) return null;
+      return (data as any)?.[0] ?? null;
+    },
+    enabled: !!agreement.credentials_sent_at && agreement.tenant_signed && agreement.landlord_signed,
+  });
   const { user, isTenant, isLandlord } = useAuth();
   const signAgreement = useSignLeaseAgreement();
 
@@ -328,7 +342,7 @@ export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerPr
         </div>
 
         {/* Access Credentials Section */}
-        {agreement.credentials_sent_at && agreement.wifi_password && agreement.keybox_password && (
+        {agreement.credentials_sent_at && credentials?.wifi_password && credentials?.keybox_password && (
           <div className="mt-8">
             <Separator className="my-6" />
             <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-6 space-y-4">
@@ -346,7 +360,7 @@ export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerPr
                     <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">WiFi Password</p>
                   </div>
                   <p className="font-mono text-lg font-bold text-foreground tracking-wider select-all">
-                    {agreement.wifi_password}
+                    {credentials.wifi_password}
                   </p>
                 </div>
                 <div className="rounded-lg bg-card border p-4 space-y-1">
@@ -355,7 +369,7 @@ export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerPr
                     <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Key Box Code</p>
                   </div>
                   <p className="font-mono text-lg font-bold text-foreground tracking-wider select-all">
-                    {agreement.keybox_password}
+                    {credentials.keybox_password}
                   </p>
                 </div>
               </div>

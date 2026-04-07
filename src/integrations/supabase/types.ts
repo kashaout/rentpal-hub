@@ -1736,6 +1736,13 @@ export type Database = {
         }[]
       }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      get_lease_credentials: {
+        Args: { _lease_id: string }
+        Returns: {
+          keybox_password: string
+          wifi_password: string
+        }[]
+      }
       get_maintenance_users: {
         Args: never
         Returns: {
