@@ -24,9 +24,9 @@ export function useBrowseProperties() {
     queryKey: ["browse-properties"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("properties")
+        .from("public_property_listings" as any)
         .select("id, name, address, description, image_url, property_type, listing_type, monthly_rent, currency, units, region, amenities")
-        .order("created_at", { ascending: false });
+        .order("name", { ascending: true });
 
       if (error) throw error;
       return (data || []).map((p) => ({
