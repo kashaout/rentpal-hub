@@ -1,9 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { sanitizeErrorMessage } from "@/lib/errorUtils";
-import type { Json } from "@/integrations/supabase/types";
 
 export type SubscriptionPlan = "free" | "basic" | "pro" | "business";
 
@@ -150,65 +148,20 @@ export function useSubscription() {
   });
 }
 
+// Direct subscription updates are blocked by RLS.
+// Subscription changes are handled server-side via Stripe checkout + check-subscription edge function.
+// This hook is kept as a no-op for backward compatibility.
 export function useCreateOrUpdateSubscription() {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (plan: SubscriptionPlan) => {
-      if (!user) throw new Error("Not authenticated");
-
-      const planConfig = PLAN_CONFIGS[plan];
-      
-      // Check if subscription exists
-      const { data: existing } = await supabase
-        .from("subscriptions")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (existing) {
-        const { data, error } = await supabase
-          .from("subscriptions")
-          .update({
-            plan,
-            property_limit: planConfig.property_limit,
-            features: JSON.parse(JSON.stringify(planConfig.features)) as Json,
-          })
-          .eq("user_id", user.id)
-          .select()
-          .single();
-
-        if (error) throw error;
-        return data;
-      } else {
-        const { data, error } = await supabase
-          .from("subscriptions")
-          .insert([{
-            user_id: user.id,
-            plan,
-            property_limit: planConfig.property_limit,
-            features: JSON.parse(JSON.stringify(planConfig.features)) as Json,
-          }])
-          .select()
-          .single();
-
-        if (error) throw error;
-        return data;
-      }
-    },
-    onSuccess: (_, plan) => {
-      queryClient.invalidateQueries({ queryKey: ["subscription"] });
-      toast({
-        title: "Plan updated!",
-        description: `You are now on the ${PLAN_CONFIGS[plan].name} plan.`,
-      });
+    mutationFn: async (_plan: SubscriptionPlan) => {
+      throw new Error("Direct subscription updates are not allowed. Please use the subscription checkout flow.");
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to update plan",
-        description: sanitizeErrorMessage(error),
+        title: "Subscription update blocked",
+        description: "Please use the upgrade button to subscribe via the secure checkout flow.",
         variant: "destructive",
       });
     },
