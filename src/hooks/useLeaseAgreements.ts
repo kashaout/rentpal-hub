@@ -101,39 +101,35 @@ export function useSignLeaseAgreement() {
 
   return useMutation({
     mutationFn: async ({ agreementId, role }: { agreementId: string; role: "tenant" | "landlord" }) => {
-      const updateData: any = {};
       if (role === "tenant") {
-        updateData.tenant_signed = true;
-        updateData.tenant_signed_at = new Date().toISOString();
+        // Use secure RPC that only updates signing fields
+        const { error } = await supabase.rpc("sign_lease_as_tenant", {
+          _lease_id: agreementId,
+        } as any);
+        if (error) throw error;
       } else {
-        updateData.landlord_signed = true;
-        updateData.landlord_signed_at = new Date().toISOString();
+        const updateData: any = {
+          landlord_signed: true,
+          landlord_signed_at: new Date().toISOString(),
+        };
+
+        // Check if tenant already signed
+        const { data: current } = await supabase
+          .from("lease_agreements" as any)
+          .select("tenant_signed")
+          .eq("id", agreementId)
+          .single();
+
+        const currentData = current as any;
+        updateData.status = currentData?.tenant_signed ? "active" : "pending_signature";
+
+        const { error } = await supabase
+          .from("lease_agreements" as any)
+          .update(updateData as any)
+          .eq("id", agreementId);
+
+        if (error) throw error;
       }
-
-      // Check if both parties have now signed
-      const { data: current } = await supabase
-        .from("lease_agreements" as any)
-        .select("tenant_signed, landlord_signed")
-        .eq("id", agreementId)
-        .single();
-
-      const currentData = current as any;
-      const bothSigned =
-        (role === "tenant" && currentData?.landlord_signed) ||
-        (role === "landlord" && currentData?.tenant_signed);
-
-      if (bothSigned) {
-        updateData.status = "active";
-      } else {
-        updateData.status = "pending_signature";
-      }
-
-      const { error } = await supabase
-        .from("lease_agreements" as any)
-        .update(updateData as any)
-        .eq("id", agreementId);
-
-      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["lease-agreements"] });
