@@ -1973,6 +1973,7 @@ export type Database = {
       }
       release_expired_bookings: { Args: never; Returns: undefined }
       release_soft_locks: { Args: never; Returns: undefined }
+      sign_lease_as_tenant: { Args: { _lease_id: string }; Returns: undefined }
     }
     Enums: {
       app_role:
