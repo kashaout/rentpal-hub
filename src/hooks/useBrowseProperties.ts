@@ -29,7 +29,7 @@ export function useBrowseProperties() {
         .order("name", { ascending: true });
 
       if (error) throw error;
-      return (data || []).map((p) => ({
+      return ((data as any[]) || []).map((p) => ({
         ...p,
         amenities: (p.amenities as string[]) || [],
       })) as BrowseProperty[];
