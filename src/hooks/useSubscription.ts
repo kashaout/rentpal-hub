@@ -1,9 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { sanitizeErrorMessage } from "@/lib/errorUtils";
-import type { Json } from "@/integrations/supabase/types";
 
 export type SubscriptionPlan = "free" | "basic" | "pro" | "business";
 
