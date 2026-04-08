@@ -22,8 +22,8 @@ export interface LeaseAgreement {
   landlord_signed_at: string | null;
   document_id: string | null;
   status: string;
-  wifi_password: string | null;
-  keybox_password: string | null;
+  // wifi_password and keybox_password are NOT accessible via direct SELECT
+  // Use get_lease_credentials RPC to retrieve them securely
   credentials_sent_at: string | null;
   check_in_time: string | null;
   created_at: string;
