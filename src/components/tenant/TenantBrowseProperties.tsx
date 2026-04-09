@@ -71,6 +71,10 @@ export function TenantBrowseProperties() {
   const [search, setSearch] = useState("");
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [tab, setTab] = useState("all");
+  const [showVerification, setShowVerification] = useState(false);
+  const { data: verifications } = useVerificationStatus();
+  const tenantVerification = verifications?.find(v => v.verification_type.startsWith("tenant_"));
+  const isTenantVerified = tenantVerification?.status === "approved";
 
   if (selectedPropertyId) {
     return (
