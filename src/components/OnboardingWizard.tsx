@@ -1,91 +1,98 @@
 import { useState, useMemo } from "react";
-import { Building2, Users, Wrench, BarChart3, Shield, Zap, Check, ArrowRight, ArrowLeft, FileText } from "lucide-react";
+import { Building2, Users, Home, ArrowRight, ArrowLeft, Check, MapPin, CreditCard, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription, PLAN_CONFIGS } from "@/hooks/useSubscription";
 import type { LucideIcon } from "lucide-react";
 
 interface OnboardingWizardProps {
   onComplete: () => void;
 }
 
+type UxRole = "landlord" | "tenant";
+
 interface OnboardingStep {
   icon: LucideIcon;
   title: string;
   description: string;
   tip: string;
-  requiredPlan?: string;
 }
 
-const allSteps: OnboardingStep[] = [
+const landlordSteps: OnboardingStep[] = [
   {
     icon: Building2,
     title: "Add Your Properties",
-    description: "Start by adding your rental properties with addresses, unit counts, rent amounts, and photos.",
-    tip: "Go to Properties → Add Property to get started.",
+    description: "Start by adding your rental properties. You'll need to verify your identity first before listing.",
+    tip: "Go to Properties → Add Property. You'll be guided through landlord verification.",
   },
   {
     icon: Users,
-    title: "Add Your Tenants",
-    description: "Add tenants with their lease details, unit assignments, and payment schedules.",
+    title: "Manage Tenants",
+    description: "Once verified, add tenants, assign them to properties, and track their lease and payment status.",
     tip: "Go to Tenants → Add Tenant and link them to a property.",
   },
   {
-    icon: FileText,
-    title: "Manage Documents",
-    description: "Upload and organize lease agreements, ID documents, and property records in one place.",
-    tip: "Open any property or tenant to upload and manage documents.",
+    icon: CreditCard,
+    title: "Track Payments & Finances",
+    description: "Monitor rent collection, expenses, and financial performance across your portfolio.",
+    tip: "Payments are tracked automatically when tenants pay via the portal.",
   },
   {
     icon: Wrench,
-    title: "Track Maintenance",
-    description: "Tenants can submit maintenance requests. View and manage them on the Maintenance Kanban board.",
-    tip: "Go to Maintenance to see all requests organized by status.",
-    requiredPlan: "basic",
-  },
-  {
-    icon: BarChart3,
-    title: "Financial Intelligence",
-    description: "Track rent payments, expenses, and view P&L, cashflow, and ROI analytics with AI-powered insights.",
-    tip: "Go to Financials to see your financial dashboard and generate statements.",
-    requiredPlan: "pro",
-  },
-  {
-    icon: Shield,
-    title: "Reports & Analytics",
-    description: "Access detailed reports on occupancy, maintenance performance, revenue trends, and tenant reviews.",
-    tip: "Go to Reports for comprehensive analytics across your portfolio.",
-    requiredPlan: "pro",
-  },
-  {
-    icon: Zap,
-    title: "Automation & Consultants",
-    description: "Set up automated workflows for overdue rent, lease expiry, and compliance alerts. Assign consultants to properties.",
-    tip: "Go to Settings → Automation to create your first workflow.",
-    requiredPlan: "business",
+    title: "Handle Maintenance",
+    description: "Tenants can submit maintenance requests. View and manage them on the Kanban board.",
+    tip: "Go to Maintenance to see requests organized by status.",
   },
 ];
 
-const planOrder = ["free", "basic", "pro", "business"];
+const tenantSteps: OnboardingStep[] = [
+  {
+    icon: MapPin,
+    title: "Browse Properties",
+    description: "Search and explore available rental properties listed by verified landlords.",
+    tip: "Go to Browse Properties to find available listings.",
+  },
+  {
+    icon: Home,
+    title: "Apply & Verify",
+    description: "When you find a property, you'll be asked to verify your identity. Short-term and long-term options available.",
+    tip: "Verification is quick — just upload your ID and complete a few steps.",
+  },
+  {
+    icon: CreditCard,
+    title: "Payments & Lease",
+    description: "View your lease details, make rent payments, and track your payment history.",
+    tip: "Go to My Portal to see everything about your tenancy.",
+  },
+  {
+    icon: Wrench,
+    title: "Maintenance Requests",
+    description: "Submit maintenance requests directly to your landlord and track their resolution.",
+    tip: "Go to My Portal → Report Issue to create a maintenance request.",
+  },
+];
 
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const { user } = useAuth();
-  const { data: subscription } = useSubscription();
+  const [phase, setPhase] = useState<"role" | "tips">("role");
+  const [uxRole, setUxRole] = useState<UxRole | null>(null);
   const [step, setStep] = useState(0);
   const [completing, setCompleting] = useState(false);
 
-  const currentPlan = subscription?.plan || "free";
+  const steps = uxRole === "landlord" ? landlordSteps : tenantSteps;
 
-  const steps = useMemo(() => {
-    const planIndex = planOrder.indexOf(currentPlan);
-    return allSteps.filter((s) => {
-      if (!s.requiredPlan) return true;
-      return planOrder.indexOf(s.requiredPlan) <= planIndex;
-    });
-  }, [currentPlan]);
+  const handleRoleSelected = async () => {
+    if (!uxRole || !user?.id) return;
+    // Save UX role to profile
+    await supabase
+      .from("profiles")
+      .update({ ux_role: uxRole } as any)
+      .eq("user_id", user.id);
+    setPhase("tips");
+  };
 
   const handleComplete = async () => {
     setCompleting(true);
@@ -99,34 +106,68 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
     onComplete();
   };
 
+  if (phase === "role") {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <Card className="w-full max-w-lg mx-4 shadow-elevated">
+          <CardContent className="pt-8 pb-6 px-8 space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold text-foreground">Welcome to RentPal! 🏠</h2>
+              <p className="text-sm text-muted-foreground">
+                Tell us how you plan to use RentPal so we can personalize your experience.
+              </p>
+              <p className="text-xs text-muted-foreground">You can change this anytime in Settings.</p>
+            </div>
+
+            <RadioGroup value={uxRole || ""} onValueChange={(v) => setUxRole(v as UxRole)} className="space-y-3">
+              <label className={`flex items-start gap-3 rounded-lg border p-4 cursor-pointer transition-colors ${uxRole === "landlord" ? "border-primary bg-primary/5" : "hover:bg-muted/50"}`}>
+                <RadioGroupItem value="landlord" className="mt-1" />
+                <div>
+                  <p className="font-medium">I'm a Landlord / Property Manager</p>
+                  <p className="text-sm text-muted-foreground">I want to list and manage rental properties, tenants, and payments.</p>
+                </div>
+              </label>
+              <label className={`flex items-start gap-3 rounded-lg border p-4 cursor-pointer transition-colors ${uxRole === "tenant" ? "border-primary bg-primary/5" : "hover:bg-muted/50"}`}>
+                <RadioGroupItem value="tenant" className="mt-1" />
+                <div>
+                  <p className="font-medium">I'm a Tenant / Renter</p>
+                  <p className="text-sm text-muted-foreground">I want to find properties, pay rent, and manage my tenancy.</p>
+                </div>
+              </label>
+            </RadioGroup>
+
+            <Button onClick={handleRoleSelected} disabled={!uxRole} className="w-full gap-2">
+              Continue <ArrowRight className="h-4 w-4" />
+            </Button>
+
+            <button onClick={handleComplete} className="block mx-auto text-xs text-muted-foreground hover:text-foreground underline">
+              Skip onboarding
+            </button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const current = steps[step];
   const Icon = current.icon;
   const isLast = step === steps.length - 1;
-  const planConfig = PLAN_CONFIGS[currentPlan];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm">
       <Card className="w-full max-w-lg mx-4 shadow-elevated">
         <CardContent className="pt-8 pb-6 px-8 space-y-6">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-foreground">Welcome to RentPal! 🏠</h2>
-            <div className="flex items-center justify-center gap-2">
-              <p className="text-sm text-muted-foreground">
-                Let's set up your <span className="font-medium text-foreground">{planConfig.name}</span> plan
-              </p>
-              <Badge variant="secondary" className="text-xs">{steps.length} steps</Badge>
-            </div>
+            <h2 className="text-2xl font-bold text-foreground">
+              {uxRole === "landlord" ? "Landlord" : "Tenant"} Quick Start 🚀
+            </h2>
+            <Badge variant="secondary" className="text-xs">{step + 1} / {steps.length}</Badge>
           </div>
 
           {/* Progress dots */}
           <div className="flex justify-center gap-2">
             {steps.map((_, i) => (
-              <div
-                key={i}
-                className={`h-2 rounded-full transition-all ${
-                  i === step ? "w-8 bg-primary" : i < step ? "w-2 bg-primary/50" : "w-2 bg-muted"
-                }`}
-              />
+              <div key={i} className={`h-2 rounded-full transition-all ${i === step ? "w-8 bg-primary" : i < step ? "w-2 bg-primary/50" : "w-2 bg-muted"}`} />
             ))}
           </div>
 
@@ -146,12 +187,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
           {/* Actions */}
           <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              onClick={() => setStep(s => s - 1)}
-              disabled={step === 0}
-              className="gap-1"
-            >
+            <Button variant="ghost" onClick={() => step === 0 ? setPhase("role") : setStep(s => s - 1)} className="gap-1">
               <ArrowLeft className="h-4 w-4" /> Back
             </Button>
             {isLast ? (
@@ -165,10 +201,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             )}
           </div>
 
-          <button
-            onClick={handleComplete}
-            className="block mx-auto text-xs text-muted-foreground hover:text-foreground underline"
-          >
+          <button onClick={handleComplete} className="block mx-auto text-xs text-muted-foreground hover:text-foreground underline">
             Skip onboarding
           </button>
         </CardContent>

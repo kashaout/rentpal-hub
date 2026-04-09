@@ -55,12 +55,12 @@ const Index = () => {
   const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : "dashboard";
   const [currentView, setCurrentView] = useState(defaultView);
 
-  // Check onboarding status
+  // Check onboarding status - show for ALL new users
   useEffect(() => {
-    if (profile && !(profile as any).onboarding_completed && (isLandlord || isAdmin)) {
+    if (profile && !(profile as any).onboarding_completed) {
       setShowOnboarding(true);
     }
-  }, [profile, isLandlord, isAdmin]);
+  }, [profile]);
 
   const navigateTo = useCallback((view: string) => {
     setCurrentView(prev => {

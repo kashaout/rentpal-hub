@@ -5,26 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { differenceInYears } from "date-fns";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { checkRateLimit, recordAttempt, resetRateLimit } from "@/lib/rateLimiter";
-
-type PublicAppRole = "landlord" | "tenant";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<PublicAppRole>("landlord");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [dobError, setDobError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -127,7 +117,7 @@ export default function Auth() {
           navigate("/dashboard");
         }
       } else {
-        const { error } = await signUp(email, password, fullName, role);
+        const { error } = await signUp(email, password, fullName);
         if (error) {
           toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
         } else {
@@ -234,20 +224,6 @@ export default function Auth() {
               </div>
             )}
 
-            {!isLogin && (
-              <div className="space-y-1.5">
-                <Label htmlFor="role" className="text-sm font-semibold">I am a...</Label>
-                <Select value={role} onValueChange={(v) => setRole(v as PublicAppRole)}>
-                  <SelectTrigger className="rounded-xl">
-                    <SelectValue placeholder="Select your role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="landlord">Landlord</SelectItem>
-                    <SelectItem value="tenant">Tenant</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
 
             <Button
               type="submit"

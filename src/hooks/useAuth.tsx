@@ -20,7 +20,7 @@ interface AuthContextType {
   roles: AppRole[];
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string, role: AppRole) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
   /**
@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? new Error(error.message) : null };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, role: AppRole) => {
+  const signUp = async (email: string, password: string, fullName: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -145,16 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) return { error: new Error(error.message) };
 
-    // Add user role after signup via secure RPC
-    if (data.user) {
-      const { error: roleError } = await supabase.rpc("assign_initial_role", {
-        _role: role,
-      } as any);
-      if (roleError) {
-        console.error("Error assigning role:", roleError);
-      }
-    }
-
+    // No role assignment at signup — roles are assigned after verification
     return { error: null };
   };
 

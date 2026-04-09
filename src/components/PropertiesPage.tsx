@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, Plus, Search, Filter, Loader2, Home } from "lucide-react";
+import { Building2, Plus, Search, Filter, Loader2, Home, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PropertyCommandCenter } from "@/components/property/PropertyCommandCenter";
@@ -17,15 +17,23 @@ import { UpgradeModal } from "@/components/subscription/UpgradeModal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useProperties, PropertyWithStats } from "@/hooks/useProperties";
 import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
+import { useVerificationStatus } from "@/hooks/useVerification";
+import { LandlordVerificationFlow } from "@/components/verification/LandlordVerificationFlow";
+import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
 
 export function PropertiesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
   const [editingProperty, setEditingProperty] = useState<PropertyWithStats | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<string>("name");
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const { canAddProperty, isReadOnly } = useSubscriptionContext();
+  const { data: verifications } = useVerificationStatus();
+
+  const landlordVerification = verifications?.find(v => v.verification_type === "landlord");
+  const isLandlordVerified = landlordVerification?.status === "approved";
 
   const { data: properties, isLoading } = useProperties();
 
@@ -85,6 +93,11 @@ export function PropertiesPage() {
 
   const handleAddProperty = () => {
     if (isReadOnly) return;
+    // Check landlord verification first
+    if (!isLandlordVerified) {
+      setShowVerification(true);
+      return;
+    }
     if (!canAddProperty) {
       setUpgradeOpen(true);
       return;
@@ -111,6 +124,29 @@ export function PropertiesPage() {
 
   return (
     <div className="space-y-6">
+      <VerificationStatusBanner />
+
+      {showVerification && (
+        <LandlordVerificationFlow
+          onComplete={() => setShowVerification(false)}
+          onCancel={() => setShowVerification(false)}
+        />
+      )}
+
+      {/* Verification hint */}
+      {!isLandlordVerified && landlordVerification?.status !== "pending" && (
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            <div>
+              <p className="font-medium text-sm">Landlord Verification Required</p>
+              <p className="text-xs text-muted-foreground">Verify your identity to add and manage properties.</p>
+            </div>
+          </div>
+          <Button size="sm" onClick={() => setShowVerification(true)}>Start Verification</Button>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 items-center gap-3">
