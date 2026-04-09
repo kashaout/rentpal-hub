@@ -24,11 +24,16 @@ import { VerificationStatusBanner } from "@/components/verification/Verification
 export function PropertiesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
   const [editingProperty, setEditingProperty] = useState<PropertyWithStats | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<string>("name");
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const { canAddProperty, isReadOnly } = useSubscriptionContext();
+  const { data: verifications } = useVerificationStatus();
+
+  const landlordVerification = verifications?.find(v => v.verification_type === "landlord");
+  const isLandlordVerified = landlordVerification?.status === "approved";
 
   const { data: properties, isLoading } = useProperties();
 
@@ -88,6 +93,11 @@ export function PropertiesPage() {
 
   const handleAddProperty = () => {
     if (isReadOnly) return;
+    // Check landlord verification first
+    if (!isLandlordVerified) {
+      setShowVerification(true);
+      return;
+    }
     if (!canAddProperty) {
       setUpgradeOpen(true);
       return;
