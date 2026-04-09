@@ -109,6 +109,30 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6 p-6 max-w-3xl">
+      {/* UX Role Preference */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserCog className="h-5 w-5" />
+            Experience Preference
+          </CardTitle>
+          <CardDescription>
+            Choose how you primarily use RentPal. This customizes your navigation and tips — it does not affect permissions.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select defaultValue={(profile as any)?.ux_role || ""} onValueChange={handleUxRoleChange}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select preference" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="landlord">Landlord</SelectItem>
+              <SelectItem value="tenant">Tenant</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
       {/* Profile Settings */}
       <Card>
         <CardHeader>
