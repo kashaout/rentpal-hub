@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, Plus, Search, Filter, Loader2, Home } from "lucide-react";
+import { Building2, Plus, Search, Filter, Loader2, Home, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PropertyCommandCenter } from "@/components/property/PropertyCommandCenter";
@@ -17,6 +17,9 @@ import { UpgradeModal } from "@/components/subscription/UpgradeModal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useProperties, PropertyWithStats } from "@/hooks/useProperties";
 import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
+import { useVerificationStatus } from "@/hooks/useVerification";
+import { LandlordVerificationFlow } from "@/components/verification/LandlordVerificationFlow";
+import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
 
 export function PropertiesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
