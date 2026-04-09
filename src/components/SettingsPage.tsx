@@ -11,6 +11,14 @@ import {
   Palette,
   Save,
   Loader2,
+  UserCog,
+} from "lucide-react";
+  Phone,
+  Bell,
+  Shield,
+  Palette,
+  Save,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +32,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -83,6 +98,19 @@ export function SettingsPage() {
       toast.error(error.message || "Failed to update profile");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleUxRoleChange = async (value: string) => {
+    if (!user) return;
+    try {
+      await supabase
+        .from("profiles")
+        .update({ ux_role: value } as any)
+        .eq("user_id", user.id);
+      toast.success("Experience preference updated");
+    } catch {
+      toast.error("Failed to update preference");
     }
   };
 
