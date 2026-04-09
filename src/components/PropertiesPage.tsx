@@ -124,6 +124,29 @@ export function PropertiesPage() {
 
   return (
     <div className="space-y-6">
+      <VerificationStatusBanner />
+
+      {showVerification && (
+        <LandlordVerificationFlow
+          onComplete={() => setShowVerification(false)}
+          onCancel={() => setShowVerification(false)}
+        />
+      )}
+
+      {/* Verification hint */}
+      {!isLandlordVerified && landlordVerification?.status !== "pending" && (
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            <div>
+              <p className="font-medium text-sm">Landlord Verification Required</p>
+              <p className="text-xs text-muted-foreground">Verify your identity to add and manage properties.</p>
+            </div>
+          </div>
+          <Button size="sm" onClick={() => setShowVerification(true)}>Start Verification</Button>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-1 items-center gap-3">
