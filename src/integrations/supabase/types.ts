@@ -1149,6 +1149,7 @@ export type Database = {
           total_jobs_completed: number | null
           updated_at: string
           user_id: string
+          ux_role: string | null
           vendor_performance_score: number | null
         }
         Insert: {
@@ -1164,6 +1165,7 @@ export type Database = {
           total_jobs_completed?: number | null
           updated_at?: string
           user_id: string
+          ux_role?: string | null
           vendor_performance_score?: number | null
         }
         Update: {
@@ -1179,6 +1181,7 @@ export type Database = {
           total_jobs_completed?: number | null
           updated_at?: string
           user_id?: string
+          ux_role?: string | null
           vendor_performance_score?: number | null
         }
         Relationships: []
@@ -1656,6 +1659,48 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          document_paths: string[] | null
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_data: Json
+          updated_at: string
+          user_id: string
+          verification_type: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          document_paths?: string[] | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_data?: Json
+          updated_at?: string
+          user_id: string
+          verification_type: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          document_paths?: string[] | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_data?: Json
+          updated_at?: string
+          user_id?: string
+          verification_type?: string
+        }
+        Relationships: []
+      }
       work_orders: {
         Row: {
           actual_cost: number | null
@@ -1906,6 +1951,10 @@ export type Database = {
       }
     }
     Functions: {
+      approve_verification: {
+        Args: { _approved: boolean; _notes?: string; _request_id: string }
+        Returns: undefined
+      }
       assign_initial_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: undefined
