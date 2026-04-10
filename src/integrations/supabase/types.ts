@@ -801,7 +801,6 @@ export type Database = {
           currency: string
           document_id: string | null
           id: string
-          keybox_password: string | null
           landlord_name: string
           landlord_signed: boolean
           landlord_signed_at: string | null
@@ -818,7 +817,6 @@ export type Database = {
           terms: string
           unit_number: string
           updated_at: string
-          wifi_password: string | null
         }
         Insert: {
           check_in_time?: string | null
@@ -827,7 +825,6 @@ export type Database = {
           currency?: string
           document_id?: string | null
           id?: string
-          keybox_password?: string | null
           landlord_name: string
           landlord_signed?: boolean
           landlord_signed_at?: string | null
@@ -844,7 +841,6 @@ export type Database = {
           terms?: string
           unit_number: string
           updated_at?: string
-          wifi_password?: string | null
         }
         Update: {
           check_in_time?: string | null
@@ -853,7 +849,6 @@ export type Database = {
           currency?: string
           document_id?: string | null
           id?: string
-          keybox_password?: string | null
           landlord_name?: string
           landlord_signed?: boolean
           landlord_signed_at?: string | null
@@ -870,7 +865,6 @@ export type Database = {
           terms?: string
           unit_number?: string
           updated_at?: string
-          wifi_password?: string | null
         }
         Relationships: [
           {
@@ -892,6 +886,41 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "public_property_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lease_credentials: {
+        Row: {
+          created_at: string
+          id: string
+          keybox_password: string | null
+          lease_id: string
+          updated_at: string
+          wifi_password: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          keybox_password?: string | null
+          lease_id: string
+          updated_at?: string
+          wifi_password?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          keybox_password?: string | null
+          lease_id?: string
+          updated_at?: string
+          wifi_password?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lease_credentials_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: true
+            referencedRelation: "lease_agreements"
             referencedColumns: ["id"]
           },
         ]
@@ -1949,6 +1978,24 @@ export type Database = {
         }
         Relationships: []
       }
+      verified_landlords: {
+        Row: {
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      verified_tenants_long_term: {
+        Row: {
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      verified_tenants_short_term: {
+        Row: {
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       approve_verification: {
@@ -2020,6 +2067,8 @@ export type Database = {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
       }
+      is_verified_landlord: { Args: { _user_id: string }; Returns: boolean }
+      is_verified_tenant: { Args: { _user_id: string }; Returns: boolean }
       release_expired_bookings: { Args: never; Returns: undefined }
       release_soft_locks: { Args: never; Returns: undefined }
       sign_lease_as_tenant: { Args: { _lease_id: string }; Returns: undefined }
