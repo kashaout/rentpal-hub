@@ -69,57 +69,6 @@ export function TenantBrowseProperties() {
   const [search, setSearch] = useState("");
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [tab, setTab] = useState("all");
-  const [showVerification, setShowVerification] = useState(false);
-  const { data: verifications } = useVerificationStatus();
-  const tenantVerification = verifications?.find(v => v.verification_type.startsWith("tenant_"));
-  const isTenantVerified = tenantVerification?.status === "approved";
-
-  if (selectedPropertyId) {
-    return (
-      <PropertyDetailView
-        propertyId={selectedPropertyId}
-        onBack={() => setSelectedPropertyId(null)}
-      />
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-accent" />
-      </div>
-    );
-  }
-
-  const filtered = (properties || []).filter((p) => {
-    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.address.toLowerCase().includes(search.toLowerCase());
-    const matchTab = tab === "all" || p.listing_type === tab;
-    return matchSearch && matchTab;
-  });
-
-  return (
-    <div className="space-y-6 p-6">
-      <VerificationStatusBanner />
-
-      {showVerification && (
-        <TenantVerificationFlow
-          onComplete={() => setShowVerification(false)}
-          onCancel={() => setShowVerification(false)}
-        />
-      )}
-
-      {!isTenantVerified && tenantVerification?.status !== "pending" && (
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-5 w-5 text-primary" />
-            <div>
-              <p className="font-medium text-sm">Tenant Verification</p>
-              <p className="text-xs text-muted-foreground">Verify your identity to apply for or book properties.</p>
-            </div>
-          </div>
-          <Button size="sm" onClick={() => setShowVerification(true)}>Verify Now</Button>
-        </div>
-      )}
 
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
