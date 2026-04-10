@@ -8,8 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBrowseProperties, BrowseProperty } from "@/hooks/useBrowseProperties";
 import { PropertyDetailView } from "@/components/PropertyDetailView";
 import { formatCurrency } from "@/lib/formatCurrency";
-import { useVerificationStatus } from "@/hooks/useVerification";
-import { TenantVerificationFlow } from "@/components/verification/TenantVerificationFlow";
 import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
 
 function PropertyBrowseCard({ property, onClick }: { property: BrowseProperty; onClick: () => void }) {
