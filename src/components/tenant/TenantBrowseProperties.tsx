@@ -70,6 +70,33 @@ export function TenantBrowseProperties() {
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [tab, setTab] = useState("all");
 
+  if (selectedPropertyId) {
+    return (
+      <PropertyDetailView
+        propertyId={selectedPropertyId}
+        onBack={() => setSelectedPropertyId(null)}
+      />
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
+  const filtered = (properties || []).filter((p) => {
+    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.address.toLowerCase().includes(search.toLowerCase());
+    const matchTab = tab === "all" || p.listing_type === tab;
+    return matchSearch && matchTab;
+  });
+
+  return (
+    <div className="space-y-6 p-6">
+      <VerificationStatusBanner />
+
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <h2 className="font-display text-xl font-semibold text-foreground">Browse Properties</h2>
