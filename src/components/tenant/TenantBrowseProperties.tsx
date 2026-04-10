@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, MapPin, Home, Search, Bed, Banknote, Wifi, ShieldCheck, Waves, Loader2 } from "lucide-react";
+import { Building2, MapPin, Home, Search, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBrowseProperties, BrowseProperty } from "@/hooks/useBrowseProperties";
 import { PropertyDetailView } from "@/components/PropertyDetailView";
 import { formatCurrency } from "@/lib/formatCurrency";
-import { useVerificationStatus } from "@/hooks/useVerification";
-import { TenantVerificationFlow } from "@/components/verification/TenantVerificationFlow";
 import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
 
 function PropertyBrowseCard({ property, onClick }: { property: BrowseProperty; onClick: () => void }) {
@@ -71,10 +69,6 @@ export function TenantBrowseProperties() {
   const [search, setSearch] = useState("");
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [tab, setTab] = useState("all");
-  const [showVerification, setShowVerification] = useState(false);
-  const { data: verifications } = useVerificationStatus();
-  const tenantVerification = verifications?.find(v => v.verification_type.startsWith("tenant_"));
-  const isTenantVerified = tenantVerification?.status === "approved";
 
   if (selectedPropertyId) {
     return (
@@ -102,26 +96,6 @@ export function TenantBrowseProperties() {
   return (
     <div className="space-y-6 p-6">
       <VerificationStatusBanner />
-
-      {showVerification && (
-        <TenantVerificationFlow
-          onComplete={() => setShowVerification(false)}
-          onCancel={() => setShowVerification(false)}
-        />
-      )}
-
-      {!isTenantVerified && tenantVerification?.status !== "pending" && (
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-5 w-5 text-primary" />
-            <div>
-              <p className="font-medium text-sm">Tenant Verification</p>
-              <p className="text-xs text-muted-foreground">Verify your identity to apply for or book properties.</p>
-            </div>
-          </div>
-          <Button size="sm" onClick={() => setShowVerification(true)}>Verify Now</Button>
-        </div>
-      )}
 
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>

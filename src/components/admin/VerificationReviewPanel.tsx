@@ -1,10 +1,9 @@
-import { useState } from "react";
-import { Check, X, Eye, Loader2, User, Building2, Clock, FileText } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Check, X, Eye, Loader2, User, Building2, Clock, FileText, AlertTriangle, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +15,84 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useAllVerificationRequests, useApproveVerification, VerificationRequest } from "@/hooks/useVerification";
 import { toast } from "sonner";
 import { format } from "date-fns";
+
+function RiskFlagsSection({ request, allRequests }: { request: VerificationRequest; allRequests: VerificationRequest[] }) {
+  const flags: { label: string; severity: "warn" | "error"; detail: string }[] = [];
+
+  // 1. Multiple verification attempts by this user
+  const userRequests = allRequests.filter((r) => r.user_id === request.user_id);
+  if (userRequests.length > 1) {
+    flags.push({
+      label: "Multiple Attempts",
+      severity: "warn",
+      detail: `This user has ${userRequests.length} verification requests (including rejected/previous).`,
+    });
+  }
+
+  // 2. Duplicate address across accounts
+  const submittedAddress = (request.submitted_data as any)?.address?.toLowerCase?.()?.trim();
+  if (submittedAddress) {
+    const duplicateAddressUsers = allRequests.filter(
+      (r) =>
+        r.user_id !== request.user_id &&
+        (r.submitted_data as any)?.address?.toLowerCase?.()?.trim() === submittedAddress
+    );
+    if (duplicateAddressUsers.length > 0) {
+      flags.push({
+        label: "Duplicate Address",
+        severity: "error",
+        detail: `Address "${submittedAddress}" appears in ${duplicateAddressUsers.length} other account(s).`,
+      });
+    }
+  }
+
+  // 3. Name mismatch between profile name and submitted name
+  const submittedName = (request.submitted_data as any)?.full_name?.toLowerCase?.()?.trim();
+  // We compare against the user_id — in a full implementation you'd fetch the profile name,
+  // but we can flag if the submitted name changed between attempts
+  const otherNames = userRequests
+    .filter((r) => r.id !== request.id)
+    .map((r) => (r.submitted_data as any)?.full_name?.toLowerCase?.()?.trim())
+    .filter(Boolean);
+  if (otherNames.length > 0 && submittedName) {
+    const hasMismatch = otherNames.some((n) => n !== submittedName);
+    if (hasMismatch) {
+      flags.push({
+        label: "Name Mismatch",
+        severity: "error",
+        detail: `Name "${submittedName}" differs from previous submissions: ${[...new Set(otherNames)].join(", ")}`,
+      });
+    }
+  }
+
+  if (flags.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      <p className="font-medium text-sm flex items-center gap-1.5">
+        <ShieldAlert className="h-4 w-4 text-destructive" /> Risk Flags
+      </p>
+      <div className="space-y-1.5">
+        {flags.map((flag, i) => (
+          <div
+            key={i}
+            className={`rounded-md border p-2 text-xs ${
+              flag.severity === "error"
+                ? "border-destructive/30 bg-destructive/5 text-destructive"
+                : "border-yellow-500/30 bg-yellow-500/5 text-yellow-700 dark:text-yellow-400"
+            }`}
+          >
+            <div className="flex items-center gap-1.5 font-medium">
+              <AlertTriangle className="h-3 w-3" />
+              {flag.label}
+            </div>
+            <p className="mt-0.5 opacity-80">{flag.detail}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function VerificationReviewPanel() {
   const { data: requests, isLoading } = useAllVerificationRequests();
@@ -112,6 +189,9 @@ export function VerificationReviewPanel() {
                 <span className="font-medium">{typeLabel(selectedRequest.verification_type)}</span>
                 {statusBadge(selectedRequest.status)}
               </div>
+
+              {/* Risk Flags */}
+              <RiskFlagsSection request={selectedRequest} allRequests={requests || []} />
 
               <div className="rounded-lg border p-3 space-y-1.5">
                 {Object.entries(selectedRequest.submitted_data as Record<string, any>).map(([key, val]) =>

@@ -74,7 +74,7 @@ export function useCreateLeaseAgreement() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: Omit<LeaseAgreement, "id" | "created_at" | "updated_at" | "tenant_signed" | "landlord_signed" | "tenant_signed_at" | "landlord_signed_at" | "document_id" | "status" | "wifi_password" | "keybox_password" | "credentials_sent_at" | "check_in_time">) => {
+    mutationFn: async (data: Omit<LeaseAgreement, "id" | "created_at" | "updated_at" | "tenant_signed" | "landlord_signed" | "tenant_signed_at" | "landlord_signed_at" | "document_id" | "status" | "credentials_sent_at" | "check_in_time">) => {
       const { data: result, error } = await supabase
         .from("lease_agreements" as any)
         .insert(data as any)
