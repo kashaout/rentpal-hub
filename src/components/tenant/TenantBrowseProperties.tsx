@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, MapPin, Home, Search, Bed, Banknote, Wifi, ShieldCheck, Waves, Loader2 } from "lucide-react";
+import { Building2, MapPin, Home, Search, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
