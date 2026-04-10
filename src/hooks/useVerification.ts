@@ -153,3 +153,45 @@ export function useApproveVerification() {
     },
   });
 }
+
+// Permission views hooks - the ONLY source for determining verified status
+export function useIsVerifiedLandlord() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["verified-landlord", user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      const { data, error } = await supabase
+        .from("verified_landlords" as any)
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) return false;
+      return !!data;
+    },
+    enabled: !!user,
+  });
+}
+
+export function useIsVerifiedTenant() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["verified-tenant", user?.id],
+    queryFn: async () => {
+      if (!user) return { shortTerm: false, longTerm: false, any: false };
+
+      const [shortRes, longRes] = await Promise.all([
+        supabase.from("verified_tenants_short_term" as any).select("user_id").eq("user_id", user.id).maybeSingle(),
+        supabase.from("verified_tenants_long_term" as any).select("user_id").eq("user_id", user.id).maybeSingle(),
+      ]);
+
+      const shortTerm = !!shortRes.data;
+      const longTerm = !!longRes.data;
+      return { shortTerm, longTerm, any: shortTerm || longTerm };
+    },
+    enabled: !!user,
+  });
+}
