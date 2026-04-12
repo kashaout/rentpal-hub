@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Building2, Users, Settings, LogOut,
   Home, UserCog, Shield, BarChart3, Wrench,
   TrendingUp, Wallet, Crown, Plus, MessageSquare, ChevronDown, Loader2,
-  X, Lock,
+  X, Lock, Star, FileText,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
@@ -189,6 +189,10 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
   const { hasFeature, isReadOnly } = useSubscriptionContext();
 
   const isManagerRole = isAdmin || isConsultant || isLandlord;
+  const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
+  // New users (no roles) should see tenant-like nav with browse
+  const isNewUser = !isAdmin && !isConsultant && !isLandlord && !isTenant && !isMaintenance && !isVendor;
+  const showTenantNav = isTenant || isNewUser;
 
   const navItems = [
     // Landlord / Admin / Consultant - always visible
@@ -200,11 +204,11 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     { icon: Wallet, label: "Financials", id: "finance", show: isManagerRole, locked: !isAdmin && !hasFeature("financials") },
     { icon: BarChart3, label: "Reports", id: "reports", show: isManagerRole, locked: !isAdmin && !hasFeature("reports") },
 
-    // Tenant
-    { icon: Home, label: "My Portal", id: "tenant-portal", show: isTenant, locked: false },
-    { icon: LayoutDashboard, label: "My Tenancy", id: "tenant-command-center", show: isTenant, locked: false },
-    { icon: Building2, label: "Browse Properties", id: "browse-properties", show: isTenant, locked: false },
-    { icon: Users, label: "Inbox", id: "tenant-inbox", show: isTenant, locked: false },
+    // Tenant (and new users without roles)
+    { icon: Home, label: "My Portal", id: "tenant-portal", show: showTenantNav && !isNewUser, locked: false },
+    { icon: LayoutDashboard, label: "My Tenancy", id: "tenant-command-center", show: showTenantNav && !isNewUser, locked: false },
+    { icon: Building2, label: "Browse Properties", id: "browse-properties", show: showTenantNav, locked: false },
+    { icon: Users, label: "Inbox", id: "tenant-inbox", show: showTenantNav && !isNewUser, locked: false },
   ];
 
   const adminItems = [
@@ -225,7 +229,7 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     if (isMaintenance) return { label: "Maintenance", className: "bg-warning/10 text-warning" };
     if (isVendor) return { label: "Vendor", className: "bg-secondary text-secondary-foreground" };
     if (isTenant) return { label: "Tenant", className: "bg-primary/10 text-primary" };
-    return null;
+    return { label: "New User", className: "bg-muted text-muted-foreground" };
   };
 
   const roleBadge = getRoleBadge();
@@ -317,6 +321,7 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
             </>
           )}
 
+          {/* Admin section - subscription only visible to admin, NOT tenants */}
           {isAdmin && (
             <>
               <div className="my-3 border-t" />

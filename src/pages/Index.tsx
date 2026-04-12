@@ -52,7 +52,8 @@ const Index = () => {
   
   const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
   const isMaintenanceOnly = (isMaintenance || isVendor) && !isAdmin && !isConsultant && !isLandlord && !isTenant;
-  const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : "dashboard";
+  const isNewUser = !isAdmin && !isConsultant && !isLandlord && !isTenant && !isMaintenance && !isVendor;
+  const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : isNewUser ? "browse-properties" : "dashboard";
   const [currentView, setCurrentView] = useState(defaultView);
 
   // Check onboarding status - show for ALL new users
@@ -87,6 +88,17 @@ const Index = () => {
   // Redirect tenant-only users away from landlord dashboard
   useEffect(() => {
     if (isTenantOnly && currentView === "dashboard") {
+      setCurrentView("tenant-portal");
+    }
+    // New users without roles should default to browse
+    if (isNewUser && currentView === "dashboard") {
+      setCurrentView("browse-properties");
+    }
+  }, [isTenantOnly, isNewUser, currentView]);
+
+  // Block tenants from accessing subscription
+  useEffect(() => {
+    if (isTenantOnly && currentView === "subscription") {
       setCurrentView("tenant-portal");
     }
   }, [isTenantOnly, currentView]);
@@ -150,6 +162,8 @@ const Index = () => {
       case "worker-performance":
         return <MaintenancePerformanceDashboard />;
       case "subscription":
+        // Only admin/landlord can see subscription
+        if (isTenantOnly) return <TenantPortal />;
         return <SubscriptionPlans />;
       case "tenant-portal":
         return <TenantPortal />;
