@@ -9,7 +9,7 @@ import {
   Home, Building2, Users, Wrench, FileText, BarChart3, Shield, DollarSign,
   CheckCircle2, ArrowRight, Menu, X, ChevronRight, Star, Zap, Crown,
   Lock, Clock, AlertTriangle, Folder, ClipboardCheck, Phone, Mail, MapPin,
-  Facebook, Twitter, Linkedin, Instagram, Check, XIcon, Play
+  Facebook, Twitter, Linkedin, Instagram, Check, XIcon
 } from "lucide-react";
 import heroImg from "@/assets/hero-property.jpg";
 import dashboardImg from "@/assets/dashboard-preview.jpg";
@@ -98,8 +98,8 @@ export default function Landing() {
             <a href={APP_AUTH_URL}>
               <Button variant="ghost" size="sm">Login</Button>
             </a>
-            <a href="#pricing">
-              <Button size="sm" className="gap-1">Subscribe <ArrowRight className="h-3 w-3" /></Button>
+            <a href={APP_AUTH_URL}>
+              <Button size="sm" className="gap-1">Sign Up <ArrowRight className="h-3 w-3" /></Button>
             </a>
           </div>
 
@@ -119,7 +119,7 @@ export default function Landing() {
             )}
             <div className="flex gap-2 pt-2">
               <a href={APP_AUTH_URL} className="flex-1"><Button variant="outline" className="w-full" size="sm">Login</Button></a>
-              <a href="#pricing" className="flex-1" onClick={() => setMobileOpen(false)}><Button className="w-full" size="sm">Subscribe</Button></a>
+              <a href={APP_AUTH_URL} className="flex-1"><Button className="w-full" size="sm">Sign Up</Button></a>
             </div>
           </div>
         )}
@@ -141,16 +141,16 @@ export default function Landing() {
               RentPal is the all-in-one platform for landlords and property managers to manage tenants, maintenance, documents, and finances in one place.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
-              <a href="#pricing">
+              <a href={APP_AUTH_URL}>
                 <Button size="lg" className="gap-2 text-base h-12 px-8">
                   Get Started <ArrowRight className="h-4 w-4" />
                 </Button>
               </a>
-              <Link to="/auth?demo=true">
+              <a href="#pricing">
                 <Button variant="outline" size="lg" className="gap-2 text-base h-12 px-8">
-                  <Play className="h-4 w-4" /> Try Demo
+                  View Plans
                 </Button>
-              </Link>
+              </a>
             </div>
             <div className="mt-8 flex items-center gap-6 text-sm text-muted-foreground">
               <span className="flex items-center gap-1"><CheckCircle2 className="h-4 w-4 text-primary" /> Free plan available</span>
@@ -305,7 +305,7 @@ export default function Landing() {
                         );
                       })}
                     </ul>
-                    <a href={planKey === "free" ? APP_AUTH_URL : APP_AUTH_URL}>
+                    <a href={APP_AUTH_URL}>
                       <Button className="w-full" variant={isPro ? "default" : "secondary"}>
                         {planKey === "free" ? "Get Started Free" : "Subscribe"}
                       </Button>
@@ -325,24 +325,35 @@ export default function Landing() {
       {/* Security */}
       <section className="py-20 bg-secondary/30">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Shield className="h-8 w-8" />
+          <div className="grid gap-12 lg:grid-cols-2 items-center">
+            <div>
+              <h2 className="text-3xl font-extrabold sm:text-4xl">Enterprise-Grade Security</h2>
+              <p className="mt-4 text-muted-foreground">Your data is protected with the same security standards used by financial institutions.</p>
+              <div className="mt-8 space-y-4">
+                {[
+                  { icon: Shield, title: "Bank-Grade Encryption", desc: "All data encrypted at rest and in transit." },
+                  { icon: Lock, title: "Row-Level Security", desc: "Users only see data they're authorized to access." },
+                  { icon: CheckCircle2, title: "Audit Logging", desc: "Every action tracked for compliance and transparency." },
+                ].map(item => (
+                  <div key={item.title} className="flex gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                      <item.icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">{item.title}</h3>
+                      <p className="text-sm text-muted-foreground">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <h2 className="text-3xl font-extrabold sm:text-4xl">Security & Data Protection</h2>
-            <p className="mt-4 text-muted-foreground">
-              Your data is protected with enterprise-grade security. We use encrypted storage for all lease agreements, tenant information, and financial records. Role-based access ensures only authorised users see what they need.
-            </p>
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              {[
-                { icon: Lock, label: "End-to-end encryption" },
-                { icon: Shield, label: "Role-based access control" },
-                { icon: CheckCircle2, label: "Compliance-ready storage" },
-              ].map(s => (
-                <div key={s.label} className="flex items-center gap-3 justify-center text-sm font-medium">
-                  <s.icon className="h-5 w-5 text-primary" /> {s.label}
+            <div className="flex items-center justify-center">
+              <div className="relative h-64 w-64">
+                <div className="absolute inset-0 rounded-full bg-primary/5 animate-pulse" />
+                <div className="absolute inset-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Shield className="h-20 w-20 text-primary" />
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
@@ -351,12 +362,14 @@ export default function Landing() {
       {/* FAQ */}
       <section className="py-20">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold text-center sm:text-4xl">Frequently Asked Questions</h2>
-          <Accordion type="single" collapsible className="mt-12">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-extrabold sm:text-4xl">Frequently Asked Questions</h2>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
             {FAQS.map((faq, i) => (
               <AccordionItem key={i} value={`faq-${i}`}>
-                <AccordionTrigger className="text-left">{faq.q}</AccordionTrigger>
-                <AccordionContent>{faq.a}</AccordionContent>
+                <AccordionTrigger className="text-left font-semibold">{faq.q}</AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">{faq.a}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
@@ -364,19 +377,16 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 bg-gradient-warm text-primary-foreground">
-        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold sm:text-4xl">Ready to simplify your property management?</h2>
-          <p className="mt-4 text-primary-foreground/80 text-lg">Join landlords and property managers who trust RentPal to run their operations.</p>
-          <div className="mt-8 flex justify-center gap-4">
-            <a href="#pricing">
-              <Button size="lg" variant="secondary" className="gap-2 text-base h-12 px-8">
-                View Plans <ArrowRight className="h-4 w-4" />
-              </Button>
-            </a>
+      <section className="py-20 bg-primary text-primary-foreground">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-extrabold sm:text-4xl">Ready to simplify property management?</h2>
+          <p className="mt-4 text-lg text-primary-foreground/80 max-w-2xl mx-auto">
+            Join landlords and property managers who've ditched spreadsheets for RentPal.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
             <a href={APP_AUTH_URL}>
-              <Button size="lg" variant="outline" className="gap-2 text-base h-12 px-8 border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground/10">
-                Login
+              <Button size="lg" variant="secondary" className="gap-2 text-base h-12 px-8">
+                Start Free Today <ArrowRight className="h-4 w-4" />
               </Button>
             </a>
           </div>
@@ -389,33 +399,10 @@ export default function Landing() {
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <img src={logoImg} alt="RentPal" className="h-8 w-8" />
-                <span className="font-extrabold text-lg">RentPal</span>
+                <img src={logoImg} alt="RentPal" className="h-6 w-6" />
+                <span className="font-bold text-foreground">RentPal</span>
               </div>
-              <p className="text-sm text-muted-foreground">The all-in-one property operations platform for modern landlords.</p>
-            </div>
-            <div>
-              <h4 className="font-bold mb-3">Product</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
-                <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
-                <li><a href="#how-it-works" className="hover:text-foreground transition-colors">How it Works</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-3">Company</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link to="/about" className="hover:text-foreground transition-colors">About Us</Link></li>
-                <li><Link to="/help" className="hover:text-foreground transition-colors">Help Center</Link></li>
-                <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-3">Legal</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
-                <li><Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
-              </ul>
+              <p className="text-sm text-muted-foreground">The complete property management platform for modern landlords.</p>
               <div className="flex gap-3 mt-4">
                 <a href="#" className="text-muted-foreground hover:text-foreground"><Facebook className="h-5 w-5" /></a>
                 <a href="#" className="text-muted-foreground hover:text-foreground"><Twitter className="h-5 w-5" /></a>
@@ -423,9 +410,37 @@ export default function Landing() {
                 <a href="#" className="text-muted-foreground hover:text-foreground"><Instagram className="h-5 w-5" /></a>
               </div>
             </div>
+            <div>
+              <h3 className="font-semibold text-foreground mb-3">Product</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#features" className="hover:text-foreground">Features</a></li>
+                <li><a href="#pricing" className="hover:text-foreground">Pricing</a></li>
+                <li><a href="#how-it-works" className="hover:text-foreground">How It Works</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground mb-3">Company</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link to="/about" className="hover:text-foreground">About</Link></li>
+                <li><Link to="/contact" className="hover:text-foreground">Contact</Link></li>
+                <li><Link to="/help" className="hover:text-foreground">Help Center</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground mb-3">Legal</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link to="/terms" className="hover:text-foreground">Terms of Service</Link></li>
+                <li><Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link></li>
+              </ul>
+              <div className="mt-4 space-y-1 text-sm text-muted-foreground">
+                <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> support@rentpal.app</p>
+                <p className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> +234 800 RENTPAL</p>
+                <p className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> Lagos, Nigeria</p>
+              </div>
+            </div>
           </div>
           <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} RentPal. All rights reserved.
+            © 2026 RentPal. All rights reserved.
           </div>
         </div>
       </footer>

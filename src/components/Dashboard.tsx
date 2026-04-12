@@ -24,7 +24,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
-  const { isAdmin, isLandlord, profile } = useAuth();
+  const { isAdmin, isLandlord, isTenant, isMaintenance, isVendor, isConsultant, profile } = useAuth();
   const { canAddProperty, isReadOnly, plan, hasFeature } = useSubscriptionContext();
   const [propertyDialogOpen, setPropertyDialogOpen] = useState(false);
   const [tenantDialogOpen, setTenantDialogOpen] = useState(false);
@@ -38,6 +38,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: maintenanceRequests } = useMaintenanceRequests();
   const { data: agreements } = useMyLeaseAgreements();
+
+  // Determine if this is a landlord/admin/consultant (manager) role
+  const isManagerRole = isAdmin || isLandlord || isConsultant;
+  const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
 
   const totalProperties = properties?.length || 0;
   const totalTenants = tenants?.length || 0;
@@ -65,7 +69,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     );
   }
 
-  // Plan-based smart hints
+  // Plan-based smart hints (landlord only)
   const planHints: Record<string, { title: string; description: string; action: string; view: string }> = {
     free: { title: "You're on the Free plan", description: "Manage 1 property with basic tools. Upgrade to unlock maintenance, financials, and more.", action: "View Plans", view: "subscription" },
     basic: { title: "Starter plan active", description: "You have maintenance access. Upgrade to Pro for financial intelligence and reports.", action: "Upgrade to Pro", view: "subscription" },
@@ -75,13 +79,16 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   const currentHint = planHints[plan] || planHints.free;
 
-  const showQuickGuide = (profile as any)?.onboarding_completed && totalProperties === 0;
+  const showQuickGuide = isManagerRole && (profile as any)?.onboarding_completed && totalProperties === 0;
 
   return (
     <div className="space-y-8">
-      <SubscriptionBanner onNavigateToPlans={() => onNavigate?.("subscription")} />
+      {/* Subscription banner - landlord/admin only */}
+      {isManagerRole && (
+        <SubscriptionBanner onNavigateToPlans={() => onNavigate?.("subscription")} />
+      )}
 
-      {/* Post-onboarding quick guide */}
+      {/* Post-onboarding quick guide - landlord only */}
       {showQuickGuide && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="flex items-center gap-4 py-4">
@@ -102,8 +109,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </Card>
       )}
 
-      {/* Plan-based hint */}
-      {plan !== "business" && (
+      {/* Plan-based hint - landlord only */}
+      {isManagerRole && plan !== "business" && (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="flex items-center gap-4 py-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -122,8 +129,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </Card>
       )}
 
-      {/* Smart onboarding hints */}
-      {totalProperties === 0 && (
+      {/* Smart onboarding hints - landlord/admin only */}
+      {isManagerRole && totalProperties === 0 && (
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="flex items-center gap-4 py-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -142,7 +149,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </CardContent>
         </Card>
       )}
-      {totalProperties > 0 && totalTenants === 0 && (
+      {/* "Add your first tenant" - landlord only, never for tenants */}
+      {isManagerRole && totalProperties > 0 && totalTenants === 0 && (
         <Card className="border-accent/30 bg-accent/5">
           <CardContent className="flex items-center gap-4 py-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10">
@@ -158,7 +166,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </CardContent>
         </Card>
       )}
-      {totalTenants > 0 && overduePayments === 0 && !hasFeature("financials") && plan !== "free" && (
+      {/* Financial upgrade hint - landlord only */}
+      {isManagerRole && totalTenants > 0 && overduePayments === 0 && !hasFeature("financials") && plan !== "free" && (
         <Card className="border-accent/30 bg-accent/5">
           <CardContent className="flex items-center gap-4 py-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10">
@@ -261,36 +270,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               if (!canAddProperty) { setUpgradeOpen(true); return; }
               setPropertyDialogOpen(true);
             }}
-          />
-        )}
-      </section>
-
-      {/* Tenants Section */}
-      <section>
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h2 className="font-display text-xl font-semibold text-foreground">Recent Tenants</h2>
-            {totalTenants > 4 && (
-              <button onClick={() => onNavigate?.("tenants")} className="text-sm text-primary hover:underline mt-0.5">
-                View all {totalTenants} tenants →
-              </button>
-            )}
-          </div>
-          <Button onClick={() => !isReadOnly && setTenantDialogOpen(true)} variant="outline" className="gap-2" disabled={isReadOnly || !properties || properties.length === 0}>
-            <Plus className="h-4 w-4" /> Add Tenant
-          </Button>
-        </div>
-        {tenants && tenants.length > 0 ? (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {tenants.slice(0, 4).map((tenant) => (
-              <TenantCard key={tenant.id} tenant={tenant} onEdit={handleEditTenant} onViewPayments={handleViewPayments} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            icon={Users}
-            title="No tenants yet"
-            description={properties && properties.length > 0 ? "Add your first tenant to a property." : "Add a property first, then add tenants."}
           />
         )}
       </section>
