@@ -47,7 +47,8 @@ function useManageableUsers() {
         }));
       }
 
-      // Landlords see tenants in their properties
+      // Landlords see all users linked to their properties:
+      // tenants, maintenance workers, consultants
       const { data: properties } = await supabase
         .from("properties")
         .select("id")
@@ -56,24 +57,46 @@ function useManageableUsers() {
       if (!properties?.length) return [];
 
       const propIds = properties.map((p: any) => p.id);
+
+      // Get tenant user IDs
       const { data: tenants } = await supabase
         .from("tenants")
         .select("user_id, property_id")
         .in("property_id", propIds)
         .not("user_id", "is", null);
 
-      if (!tenants?.length) return [];
+      // Get maintenance/vendor user IDs from work orders
+      const { data: workOrders } = await supabase
+        .from("work_orders")
+        .select("assigned_to, vendor_id")
+        .in("property_id", propIds);
 
-      const userIds = [...new Set(tenants.map((t: any) => t.user_id))];
+      // Get consultant user IDs from assignments
+      const { data: consultantAssignments } = await supabase
+        .from("consultant_assignments")
+        .select("consultant_id")
+        .in("property_id", propIds);
+
+      const userIds = new Set<string>();
+      tenants?.forEach((t: any) => { if (t.user_id) userIds.add(t.user_id); });
+      workOrders?.forEach((wo: any) => {
+        if (wo.assigned_to) userIds.add(wo.assigned_to);
+        if (wo.vendor_id) userIds.add(wo.vendor_id);
+      });
+      consultantAssignments?.forEach((ca: any) => { if (ca.consultant_id) userIds.add(ca.consultant_id); });
+
+      if (userIds.size === 0) return [];
+
+      const userIdArray = [...userIds];
       const { data: profiles } = await supabase
         .from("profiles")
         .select("*")
-        .in("user_id", userIds);
+        .in("user_id", userIdArray);
 
       const { data: roles } = await supabase
         .from("user_roles")
         .select("*")
-        .in("user_id", userIds);
+        .in("user_id", userIdArray);
 
       return (profiles || []).map((p: any) => ({
         ...p,
