@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useProperty } from "@/hooks/useProperties";
 import { usePropertyBookings, useCreateBooking } from "@/hooks/useBookings";
 import { useAuth } from "@/hooks/useAuth";
@@ -37,7 +38,7 @@ const AMENITY_LABELS: Record<string, string> = {
   bathroom: "Private Bathroom", bedroom: "King Bed",
 };
 
-type RentalStep = "browse" | "dates" | "details" | "contract" | "payment";
+type RentalStep = "browse" | "dates" | "details" | "contract" | "payment" | "complete";
 
 const STEPS: { key: RentalStep; label: string; icon: any }[] = [
   { key: "dates", label: "Dates", icon: CalendarIcon },
@@ -49,19 +50,24 @@ const STEPS: { key: RentalStep; label: string; icon: any }[] = [
 interface PropertyDetailViewProps {
   propertyId: string;
   onBack: () => void;
+  /** If true, we just came back from a successful payment */
+  paymentSuccess?: boolean;
 }
 
-export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewProps) {
+export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: PropertyDetailViewProps) {
   const { data: property, isLoading } = useProperty(propertyId);
   const { data: bookings } = usePropertyBookings(propertyId);
   const createBooking = useCreateBooking();
-  const { user, profile } = useAuth();
+  const { user, profile, isLandlord, isAdmin, isConsultant } = useAuth();
   const { toast } = useToast();
   const createAgreement = useCreateLeaseAgreement();
   const signAgreement = useSignLeaseAgreement();
 
+  // Landlords/admins/consultants should NOT be able to reserve/book
+  const isManagerRole = isLandlord || isAdmin || isConsultant;
+
   // Rental flow state
-  const [rentalStep, setRentalStep] = useState<RentalStep>("browse");
+  const [rentalStep, setRentalStep] = useState<RentalStep>(paymentSuccess ? "complete" : "browse");
   const [selectedRange, setSelectedRange] = useState<{ from?: Date; to?: Date }>({});
   const [guestCount, setGuestCount] = useState(1);
   const [notes, setNotes] = useState("");
@@ -69,7 +75,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
-  // Pre-fill from profile (including data saved from previous bookings)
+  // Pre-fill from profile
   useEffect(() => {
     if (profile?.full_name && !fullName) setFullName(profile.full_name);
     if (user?.email && !email) setEmail(user.email);
@@ -102,7 +108,6 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
 
   const notifyLandlord = async (agreementId: string, landlordId: string) => {
     if (!user || !property || !selectedRange.from || !selectedRange.to) return;
-    // In-app notification
     await supabase.from("landlord_notifications" as any).insert({
       landlord_user_id: landlordId,
       tenant_user_id: user.id,
@@ -113,7 +118,6 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
       message: `${fullName || "A tenant"} has signed a lease agreement for ${property.name}, Unit ${unitNumber}. Please review and counter-sign.`,
     } as any);
 
-    // Email notification (fire-and-forget)
     supabase.functions.invoke("notify-landlord-lease", {
       body: {
         landlord_user_id: landlordId,
@@ -151,7 +155,6 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
   const isAirbnb = property?.listing_type === "airbnb";
   const currency = property?.currency || "NGN";
 
-  // For standard: monthly rent × months
   const monthCount = selectedRange.from && selectedRange.to
     ? Math.max(1, Math.round(nightCount / 30))
     : 0;
@@ -159,34 +162,12 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
   const airbnbTotal = property ? nightCount * Number(property.monthly_rent) : 0;
   const totalPrice = isAirbnb ? airbnbTotal : standardTotal;
 
-  const handleBook = async () => {
-    if (!selectedRange.from || !selectedRange.to || !property) return;
-    if (isAirbnb && nightCount < 1) {
-      toast({ title: "Please select at least one night", variant: "destructive" });
-      return;
-    }
-
-    await createBooking.mutateAsync({
-      property_id: property.id,
-      check_in: format(selectedRange.from, "yyyy-MM-dd"),
-      check_out: format(selectedRange.to, "yyyy-MM-dd"),
-      total_price: totalPrice,
-      guest_count: guestCount,
-      notes: notes || undefined,
-    });
-
-    setSelectedRange({});
-    setNotes("");
-    setGuestCount(1);
-  };
-
   const handleCreateAndSignContract = async () => {
     if (!property || !user || !selectedRange.from || !selectedRange.to) return;
 
     try {
       setUploading(true);
 
-      // Upload verification files to cloud storage
       if (idDocFile) await uploadFileToStorage(idDocFile, "id-document");
       if (selfieFile) await uploadFileToStorage(selfieFile, "selfie");
       if (profilePhotoFile) await uploadFileToStorage(profilePhotoFile, "profile-photo");
@@ -207,11 +188,10 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
 
       setCreatedAgreementId(agreement.id);
 
-      // Tenant auto-signs
       await signAgreement.mutateAsync({ agreementId: agreement.id, role: "tenant" });
       setAgreementSigned(true);
 
-      // Create tenant record so the tenant portal shows active lease
+      // Create tenant record
       try {
         await supabase.from("tenants").insert({
           property_id: property.id,
@@ -227,7 +207,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
         console.error("Failed to create tenant record:", e);
       }
 
-      // For airbnb properties, also create a booking record
+      // For airbnb, also create booking
       if (isAirbnb) {
         try {
           await createBooking.mutateAsync({
@@ -243,7 +223,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
         }
       }
 
-      // Store lease agreement as a document for the landlord's document section
+      // Store lease document
       try {
         const leaseDocContent = new Blob(
           [agreement.terms || "Lease agreement terms"],
@@ -264,7 +244,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
         console.error("Failed to store lease document:", e);
       }
 
-      // Update profile with personal details for future bookings
+      // Update profile
       try {
         await supabase.from("profiles").update({
           full_name: fullName,
@@ -274,7 +254,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
         console.error("Failed to update profile:", e);
       }
 
-      // Notify the landlord to counter-sign
+      // Notify landlord
       const landlordId = property.landlord_id || user.id;
       await notifyLandlord(agreement.id, landlordId);
 
@@ -296,6 +276,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
           amount: totalPrice,
           currency: property.currency || "NGN",
           tenantId: user.id,
+          propertyId: property.id,
           propertyName: property.name,
           unitNumber: unitNumber,
         },
@@ -303,7 +284,8 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
 
       if (error) throw error;
       if (data?.url) {
-        window.open(data.url, "_blank");
+        // Open in same tab so redirect works
+        window.location.href = data.url;
       }
     } catch (error: any) {
       toast({ title: "Payment failed", description: error.message, variant: "destructive" });
@@ -335,10 +317,41 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
     ? `${nightCount} night${nightCount > 1 ? "s" : ""}`
     : `${monthCount} month${monthCount > 1 ? "s" : ""}`;
 
-  // Shared wizard steps for details → contract → payment (used by both standard and airbnb)
+  // Date picker popover component
+  const DatePickerPopover = ({ label, value, onSelect, disabled }: { label: string; value?: Date; onSelect: (d: Date | undefined) => void; disabled?: (date: Date) => boolean }) => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start text-left font-normal h-auto py-3",
+            !value && "text-muted-foreground"
+          )}
+        >
+          <div className="flex flex-col items-start">
+            <span className="text-xs text-muted-foreground uppercase">{label}</span>
+            <span className="text-sm font-medium">
+              {value ? format(value, "MMM d, yyyy") : "Select date"}
+            </span>
+          </div>
+          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={value}
+          onSelect={onSelect}
+          disabled={disabled}
+          initialFocus
+          className="p-3 pointer-events-auto"
+        />
+      </PopoverContent>
+    </Popover>
+  );
+
+  // Shared wizard steps for details → contract → payment
   const renderWizardSteps = () => {
-    const currentStepIndex = STEPS.findIndex((s) => s.key === rentalStep);
-    // For airbnb, skip the "dates" step since dates are selected on the main calendar
     const visibleSteps = isAirbnb ? STEPS.filter(s => s.key !== "dates") : STEPS;
     const visibleStepIndex = visibleSteps.findIndex((s) => s.key === rentalStep);
 
@@ -365,6 +378,49 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
         </div>
 
         <Separator />
+
+        {rentalStep === "dates" && (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Select your lease period:</p>
+            <div className="grid grid-cols-2 gap-2">
+              <DatePickerPopover
+                label="Check-in"
+                value={selectedRange.from}
+                onSelect={(d) => setSelectedRange(prev => ({ ...prev, from: d }))}
+                disabled={(date) => isBefore(date, startOfDay(new Date())) || isDateBooked(date)}
+              />
+              <DatePickerPopover
+                label="Check-out"
+                value={selectedRange.to}
+                onSelect={(d) => setSelectedRange(prev => ({ ...prev, to: d }))}
+                disabled={(date) => {
+                  if (!selectedRange.from) return true;
+                  return isBefore(date, selectedRange.from) || isDateBooked(date);
+                }}
+              />
+            </div>
+            {nightCount > 0 && (
+              <div className="space-y-2 rounded-lg bg-secondary p-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {formatCurrency(Number(property.monthly_rent), currency)} × {durationLabel}
+                  </span>
+                  <span className="text-foreground font-medium">{formatCurrency(totalPrice, currency)}</span>
+                </div>
+              </div>
+            )}
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" onClick={() => setRentalStep("browse")} className="flex-1">Back</Button>
+              <Button
+                onClick={() => setRentalStep("details")}
+                disabled={!selectedRange.from || !selectedRange.to || nightCount < 1}
+                className="flex-1 gap-2"
+              >
+                Continue <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
 
         {rentalStep === "details" && (
           <div className="space-y-3">
@@ -563,6 +619,22 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
             </p>
           </div>
         )}
+
+        {rentalStep === "complete" && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-success">
+              <CheckCircle2 className="h-5 w-5" />
+              <p className="text-sm font-medium">Payment Complete!</p>
+            </div>
+            <div className="rounded-lg bg-success/10 border border-success/20 p-4 space-y-2 text-sm">
+              <p className="font-medium text-foreground">Your booking is confirmed.</p>
+              <p className="text-muted-foreground text-xs">The property is now reserved for your selected dates. Your landlord has been notified.</p>
+            </div>
+            <Badge className="bg-success/10 text-success border-success/20 w-full justify-center py-2 text-sm">
+              <CheckCircle2 className="h-4 w-4 mr-1" /> Booked
+            </Badge>
+          </div>
+        )}
       </div>
     );
   };
@@ -582,22 +654,23 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
               {property.units} unit{property.units > 1 ? "s" : ""} available
             </div>
           </div>
-          <Button
-            className="w-full bg-gradient-warm text-accent-foreground hover:opacity-90 h-12 text-base gap-2"
-            onClick={() => setRentalStep("dates")}
-          >
-            Rent <ArrowRight className="h-4 w-4" />
-          </Button>
+          {!isManagerRole && (
+            <Button
+              className="w-full bg-gradient-warm text-accent-foreground hover:opacity-90 h-12 text-base gap-2"
+              onClick={() => setRentalStep("dates")}
+            >
+              Rent <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
+          {isManagerRole && (
+            <p className="text-center text-xs text-muted-foreground italic">
+              Only tenants can reserve properties.
+            </p>
+          )}
         </>
       );
     }
 
-    // For dates step, show calendar; for details/contract/payment, use shared wizard
-    if (rentalStep === "dates") {
-      return renderWizardSteps();
-    }
-
-    // For details, contract, payment — delegate to shared wizard
     return renderWizardSteps();
   };
 
@@ -728,19 +801,23 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
               {isAirbnb ? (
                 rentalStep !== "browse" ? renderWizardSteps() : (
                 <>
+                  {/* Airbnb date pickers as popovers */}
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-lg border p-3">
-                      <p className="text-xs text-muted-foreground uppercase">Check-in</p>
-                      <p className="text-sm font-medium text-foreground">
-                        {selectedRange.from ? format(selectedRange.from, "MMM d, yyyy") : "Select date"}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border p-3">
-                      <p className="text-xs text-muted-foreground uppercase">Check-out</p>
-                      <p className="text-sm font-medium text-foreground">
-                        {selectedRange.to ? format(selectedRange.to, "MMM d, yyyy") : "Select date"}
-                      </p>
-                    </div>
+                    <DatePickerPopover
+                      label="Check-in"
+                      value={selectedRange.from}
+                      onSelect={(d) => setSelectedRange(prev => ({ ...prev, from: d }))}
+                      disabled={(date) => isBefore(date, startOfDay(new Date())) || isDateBooked(date)}
+                    />
+                    <DatePickerPopover
+                      label="Check-out"
+                      value={selectedRange.to}
+                      onSelect={(d) => setSelectedRange(prev => ({ ...prev, to: d }))}
+                      disabled={(date) => {
+                        if (!selectedRange.from) return true;
+                        return isBefore(date, selectedRange.from) || isDateBooked(date);
+                      }}
+                    />
                   </div>
                   <div>
                     <Label className="text-sm">Guests</Label>
@@ -765,13 +842,19 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
                       </div>
                     </div>
                   )}
-                  <Button
-                    onClick={() => setRentalStep("details")}
-                    disabled={!selectedRange.from || !selectedRange.to || nightCount < 1}
-                    className="w-full bg-gradient-warm text-accent-foreground hover:opacity-90 h-12 text-base"
-                  >
-                    Reserve
-                  </Button>
+                  {!isManagerRole ? (
+                    <Button
+                      onClick={() => setRentalStep("details")}
+                      disabled={!selectedRange.from || !selectedRange.to || nightCount < 1}
+                      className="w-full bg-gradient-warm text-accent-foreground hover:opacity-90 h-12 text-base"
+                    >
+                      Reserve
+                    </Button>
+                  ) : (
+                    <p className="text-center text-xs text-muted-foreground italic">
+                      Only tenants can reserve properties.
+                    </p>
+                  )}
                   <div className="flex items-start gap-2 rounded-lg bg-warning/10 border border-warning/20 p-3">
                     <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
                     <p className="text-xs text-warning">Payment must be completed within 24 hours or the booking will be automatically released.</p>
@@ -782,7 +865,7 @@ export function PropertyDetailView({ propertyId, onBack }: PropertyDetailViewPro
                 renderStandardSidebar()
               )}
 
-              {rentalStep === "browse" && (
+              {rentalStep === "browse" && !isManagerRole && (
                 <p className="text-center text-xs text-muted-foreground">You won't be charged yet</p>
               )}
             </CardContent>
