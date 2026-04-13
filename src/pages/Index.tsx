@@ -19,6 +19,8 @@ import { MaintenancePerformanceDashboard } from "@/components/admin/MaintenanceP
 import { FinanceDashboard } from "@/components/finance/FinanceDashboard";
 import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
+import { PendingLeasesPage } from "@/components/PendingLeasesPage";
+import { PropertyDetailView } from "@/components/PropertyDetailView";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -39,6 +41,8 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   "worker-performance": { title: "Worker Performance", subtitle: "Track maintenance team metrics and ratings." },
   subscription: { title: "Subscription Plans", subtitle: "Manage your plan and unlock features." },
   settings: { title: "Settings", subtitle: "Your account, subscription, and preferences." },
+  "pending-leases": { title: "Pending Leases", subtitle: "Lease agreements awaiting signature." },
+  "property-detail": { title: "Property Details", subtitle: "View property information and booking." },
 };
 
 const Index = () => {
@@ -49,6 +53,9 @@ const Index = () => {
   const [navOpen, setNavOpen] = useState(false);
   const viewHistoryRef = useRef<string[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  // Track property detail for post-payment redirect
+  const [detailPropertyId, setDetailPropertyId] = useState<string | null>(null);
+  const [paymentSuccessPropertyId, setPaymentSuccessPropertyId] = useState<string | null>(null);
   
   const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
   const isMaintenanceOnly = (isMaintenance || isVendor) && !isAdmin && !isConsultant && !isLandlord && !isTenant;
@@ -56,7 +63,7 @@ const Index = () => {
   const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : isNewUser ? "browse-properties" : "dashboard";
   const [currentView, setCurrentView] = useState(defaultView);
 
-  // Check onboarding status - show for ALL new users
+  // Check onboarding status
   useEffect(() => {
     if (profile && !(profile as any).onboarding_completed) {
       setShowOnboarding(true);
@@ -64,6 +71,20 @@ const Index = () => {
   }, [profile]);
 
   const navigateTo = useCallback((view: string) => {
+    // Handle property detail navigation: "property-detail:uuid"
+    if (view.startsWith("property-detail:")) {
+      const propId = view.split(":")[1];
+      setDetailPropertyId(propId);
+      setCurrentView(prev => {
+        if (prev !== "property-detail") {
+          viewHistoryRef.current.push(prev);
+        }
+        return "property-detail";
+      });
+      return;
+    }
+
+    setDetailPropertyId(null);
     setCurrentView(prev => {
       if (prev !== view) {
         viewHistoryRef.current.push(prev);
@@ -76,12 +97,14 @@ const Index = () => {
     const history = viewHistoryRef.current;
     if (history.length > 0) {
       const prev = history.pop()!;
+      setDetailPropertyId(null);
       setCurrentView(prev);
     }
   }, []);
 
   const goHome = useCallback(() => {
     viewHistoryRef.current = [];
+    setDetailPropertyId(null);
     setCurrentView(defaultView);
   }, [defaultView]);
 
@@ -90,7 +113,6 @@ const Index = () => {
     if (isTenantOnly && currentView === "dashboard") {
       setCurrentView("tenant-portal");
     }
-    // New users without roles should default to browse
     if (isNewUser && currentView === "dashboard") {
       setCurrentView("browse-properties");
     }
@@ -109,10 +131,18 @@ const Index = () => {
     const params = new URLSearchParams(window.location.search);
     const rentPayment = params.get("rent_payment");
     const sessionId = params.get("session_id");
+    const returnPropertyId = params.get("property_id");
 
     if (rentPayment === "success" && sessionId) {
       verifiedRef.current = true;
       window.history.replaceState({}, "", window.location.pathname);
+
+      // Navigate to the property detail page with payment success state
+      if (returnPropertyId) {
+        setPaymentSuccessPropertyId(returnPropertyId);
+        setDetailPropertyId(returnPropertyId);
+        setCurrentView("property-detail");
+      }
 
       supabase.functions
         .invoke("verify-rent-payment", { body: { sessionId } })
@@ -131,6 +161,8 @@ const Index = () => {
             });
             queryClient.invalidateQueries({ queryKey: ["payments"] });
             queryClient.invalidateQueries({ queryKey: ["tenant-lease"] });
+            queryClient.invalidateQueries({ queryKey: ["my-bookings"] });
+            queryClient.invalidateQueries({ queryKey: ["bookings"] });
           } else {
             toast({
               title: "Payment pending",
@@ -162,7 +194,6 @@ const Index = () => {
       case "worker-performance":
         return <MaintenancePerformanceDashboard />;
       case "subscription":
-        // Only admin/landlord can see subscription
         if (isTenantOnly) return <TenantPortal />;
         return <SubscriptionPlans />;
       case "tenant-portal":
@@ -185,6 +216,19 @@ const Index = () => {
         return <ReportsPage />;
       case "settings":
         return <SettingsPage />;
+      case "pending-leases":
+        return <PendingLeasesPage />;
+      case "property-detail":
+        if (detailPropertyId) {
+          return (
+            <PropertyDetailView
+              propertyId={detailPropertyId}
+              onBack={goBack}
+              paymentSuccess={paymentSuccessPropertyId === detailPropertyId}
+            />
+          );
+        }
+        return <Dashboard onNavigate={navigateTo} />;
       case "dashboard":
       default:
         return <Dashboard onNavigate={navigateTo} />;

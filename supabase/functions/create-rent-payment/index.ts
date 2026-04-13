@@ -29,7 +29,7 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated");
 
-    const { amount, currency, tenantId, propertyName, unitNumber } = await req.json();
+    const { amount, currency, tenantId, propertyId, propertyName, unitNumber } = await req.json();
     if (!amount || !tenantId) throw new Error("Amount and tenant ID are required");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -46,6 +46,11 @@ serve(async (req) => {
     const amountInMinorUnits = Math.round(amount * 100);
 
     const origin = req.headers.get("origin") || "https://id-preview--171329c0-0821-4377-b783-24da77ae62c5.lovable.app";
+
+    // Include property_id in success URL so we can redirect back to the property
+    const successUrl = propertyId
+      ? `${origin}/dashboard?rent_payment=success&session_id={CHECKOUT_SESSION_ID}&property_id=${propertyId}`
+      : `${origin}/dashboard?rent_payment=success&session_id={CHECKOUT_SESSION_ID}`;
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -64,27 +69,33 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/?rent_payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/?rent_payment=canceled`,
+      success_url: successUrl,
+      cancel_url: `${origin}/dashboard?rent_payment=canceled`,
       metadata: {
         tenant_id: tenantId,
+        property_id: propertyId || "",
         type: "rent_payment",
       },
     });
 
     // Insert a pending payment record using service role (bypasses RLS)
     const today = new Date().toISOString().split("T")[0];
+    const insertData: any = {
+      tenant_id: tenantId,
+      amount: amount,
+      payment_date: today,
+      due_date: today,
+      status: "pending",
+      payment_method: "card",
+      notes: `Stripe session: ${session.id}`,
+    };
+    if (propertyId) {
+      insertData.property_id = propertyId;
+    }
+
     const { error: insertError } = await supabaseAdmin
       .from("payments")
-      .insert({
-        tenant_id: tenantId,
-        amount: amount,
-        payment_date: today,
-        due_date: today,
-        status: "pending",
-        payment_method: "card",
-        notes: `Stripe session: ${session.id}`,
-      });
+      .insert(insertData);
 
     if (insertError) {
       console.error("Failed to insert pending payment:", insertError);
