@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Users, Plus, Search, Filter, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Users, Search, Filter, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,17 +9,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TenantCard } from "@/components/TenantCard";
-import { TenantFormDialog } from "@/components/TenantFormDialog";
 import { PaymentHistorySheet } from "@/components/PaymentHistorySheet";
 import { EmptyState } from "@/components/ui/empty-state";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
 import { useProperties } from "@/hooks/useProperties";
 
 export function TenantsPage() {
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
-  const [editingTenant, setEditingTenant] = useState<TenantWithDetails | undefined>();
   const [paymentTenant, setPaymentTenant] = useState<TenantWithDetails | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -29,19 +24,9 @@ export function TenantsPage() {
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: properties, isLoading: propertiesLoading } = useProperties();
 
-  const handleEdit = (tenant: TenantWithDetails) => {
-    setEditingTenant(tenant);
-    setDialogOpen(true);
-  };
-
   const handleViewPayments = (tenant: TenantWithDetails) => {
     setPaymentTenant(tenant);
     setPaymentSheetOpen(true);
-  };
-
-  const handleDialogClose = (open: boolean) => {
-    setDialogOpen(open);
-    if (!open) setEditingTenant(undefined);
   };
 
   const handlePaymentSheetClose = (open: boolean) => {
@@ -61,7 +46,6 @@ export function TenantsPage() {
   });
 
   const isLoading = tenantsLoading || propertiesLoading;
-  const hasNoProperties = !properties || properties.length === 0;
   const hasFilters = searchQuery || filterStatus !== "all" || filterProperty !== "all";
 
   if (isLoading) {
@@ -77,7 +61,7 @@ export function TenantsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Toolbar */}
+      {/* Toolbar - no Add Tenant button; tenants are created via booking flow */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-1 flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
@@ -108,14 +92,13 @@ export function TenantsPage() {
             </SelectContent>
           </Select>
         </div>
-        <Button
-          onClick={() => setDialogOpen(true)}
-          className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
-          disabled={hasNoProperties}
-          title={hasNoProperties ? "Add a property first" : undefined}
-        >
-          <Plus className="h-4 w-4" /> Add Tenant
-        </Button>
+      </div>
+
+      {/* Info banner */}
+      <div className="rounded-lg border bg-muted/50 px-4 py-3">
+        <p className="text-xs text-muted-foreground">
+          Tenants appear here automatically when they book or lease a property through the platform.
+        </p>
       </div>
 
       {/* Stats Summary */}
@@ -138,27 +121,22 @@ export function TenantsPage() {
       {filteredTenants && filteredTenants.length > 0 ? (
         <div className="grid gap-4 lg:grid-cols-2">
           {filteredTenants.map((tenant) => (
-            <TenantCard key={tenant.id} tenant={tenant} onEdit={handleEdit} onViewPayments={handleViewPayments} />
+            <TenantCard key={tenant.id} tenant={tenant} onEdit={() => {}} onViewPayments={handleViewPayments} />
           ))}
         </div>
       ) : (
         <EmptyState
           icon={Users}
-          title={hasFilters ? "No tenants found" : hasNoProperties ? "Add a property first" : "No tenants yet"}
+          title={hasFilters ? "No tenants found" : "No tenants yet"}
           description={
             hasFilters
               ? "Try adjusting your filters."
-              : hasNoProperties
-              ? "You need at least one property before adding tenants."
-              : "Add your first tenant to a property to start tracking leases and payments."
+              : "Tenants will appear here automatically when they book or lease one of your properties."
           }
-          actionLabel={hasFilters || hasNoProperties ? undefined : "Add Tenant"}
-          onAction={hasFilters || hasNoProperties ? undefined : () => setDialogOpen(true)}
         />
       )}
 
       {/* Dialogs */}
-      <TenantFormDialog open={dialogOpen} onOpenChange={handleDialogClose} tenant={editingTenant} />
       <PaymentHistorySheet open={paymentSheetOpen} onOpenChange={handlePaymentSheetClose} tenant={paymentTenant} />
     </div>
   );

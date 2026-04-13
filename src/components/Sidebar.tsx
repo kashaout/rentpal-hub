@@ -204,11 +204,15 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     { icon: Wallet, label: "Financials", id: "finance", show: isManagerRole, locked: !isAdmin && !hasFeature("financials") },
     { icon: BarChart3, label: "Reports", id: "reports", show: isManagerRole, locked: !isAdmin && !hasFeature("reports") },
 
+    // Pending Leases - visible to both landlords and tenants
+    { icon: FileText, label: "Pending Leases", id: "pending-leases", show: isManagerRole || showTenantNav, locked: false },
+
     // Tenant (and new users without roles)
     { icon: Home, label: "My Portal", id: "tenant-portal", show: showTenantNav && !isNewUser, locked: false },
     { icon: LayoutDashboard, label: "My Tenancy", id: "tenant-command-center", show: showTenantNav && !isNewUser, locked: false },
     { icon: Building2, label: "Browse Properties", id: "browse-properties", show: showTenantNav, locked: false },
     { icon: Users, label: "Inbox", id: "tenant-inbox", show: showTenantNav && !isNewUser, locked: false },
+    { icon: Star, label: "Reviews", id: "settings", show: showTenantNav && !isNewUser, locked: false },
   ];
 
   const adminItems = [

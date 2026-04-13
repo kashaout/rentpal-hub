@@ -1,23 +1,24 @@
 import { useState } from "react";
-import { Building2, Users, Banknote, AlertTriangle, Plus, Loader2, ArrowRight, Wrench, TrendingUp, Crown, BookOpen } from "lucide-react";
+import { Building2, Users, Banknote, AlertTriangle, Plus, Loader2, ArrowRight, Wrench, TrendingUp, Crown, BookOpen, Home, CalendarIcon } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { PropertyCard } from "@/components/PropertyCard";
-import { TenantCard } from "@/components/TenantCard";
 import { PropertyFormDialog } from "@/components/PropertyFormDialog";
-import { TenantFormDialog } from "@/components/TenantFormDialog";
-import { PaymentHistorySheet } from "@/components/PaymentHistorySheet";
 import { SubscriptionBanner } from "@/components/subscription/SubscriptionBanner";
 import { UpgradeModal } from "@/components/subscription/UpgradeModal";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useProperties, PropertyWithStats } from "@/hooks/useProperties";
-import { useTenants, TenantWithDetails } from "@/hooks/useTenants";
+import { useTenants } from "@/hooks/useTenants";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
 import { useMaintenanceRequests } from "@/hooks/useMaintenanceRequests";
 import { useMyLeaseAgreements } from "@/hooks/useLeaseAgreements";
+import { useMyBookings } from "@/hooks/useBookings";
 import { PLAN_CONFIGS } from "@/hooks/useSubscription";
+import { formatCurrency } from "@/lib/formatCurrency";
+import { format, parseISO } from "date-fns";
 
 interface DashboardProps {
   onNavigate?: (view: string) => void;
@@ -27,19 +28,15 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const { isAdmin, isLandlord, isTenant, isMaintenance, isVendor, isConsultant, profile } = useAuth();
   const { canAddProperty, isReadOnly, plan, hasFeature } = useSubscriptionContext();
   const [propertyDialogOpen, setPropertyDialogOpen] = useState(false);
-  const [tenantDialogOpen, setTenantDialogOpen] = useState(false);
-  const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<PropertyWithStats | undefined>();
-  const [editingTenant, setEditingTenant] = useState<TenantWithDetails | undefined>();
-  const [paymentTenant, setPaymentTenant] = useState<TenantWithDetails | null>(null);
 
   const { data: properties, isLoading: propertiesLoading } = useProperties();
   const { data: tenants, isLoading: tenantsLoading } = useTenants();
   const { data: maintenanceRequests } = useMaintenanceRequests();
   const { data: agreements } = useMyLeaseAgreements();
+  const { data: myBookings } = useMyBookings();
 
-  // Determine if this is a landlord/admin/consultant (manager) role
   const isManagerRole = isAdmin || isLandlord || isConsultant;
   const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
 
@@ -49,12 +46,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const overduePayments = tenants?.filter((t) => t.payment_status === "overdue").length || 0;
   const pendingMaintenance = maintenanceRequests?.filter((r) => r.status === "pending" || r.status === "in_progress").length || 0;
 
+  // Pending leases needing signature
+  const pendingLeases = agreements?.filter(a => a.status === "pending_signature" || (a.status === "draft" && (a.tenant_signed || a.landlord_signed))) || [];
+
   const handleEditProperty = (property: PropertyWithStats) => { setEditingProperty(property); setPropertyDialogOpen(true); };
-  const handleEditTenant = (tenant: TenantWithDetails) => { setEditingTenant(tenant); setTenantDialogOpen(true); };
-  const handleViewPayments = (tenant: TenantWithDetails) => { setPaymentTenant(tenant); setPaymentSheetOpen(true); };
   const handlePropertyDialogClose = (open: boolean) => { setPropertyDialogOpen(open); if (!open) setEditingProperty(undefined); };
-  const handleTenantDialogClose = (open: boolean) => { setTenantDialogOpen(open); if (!open) setEditingTenant(undefined); };
-  const handlePaymentSheetClose = (open: boolean) => { setPaymentSheetOpen(open); if (!open) setPaymentTenant(null); };
 
   const isLoading = propertiesLoading || tenantsLoading;
 
@@ -81,6 +77,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   const showQuickGuide = isManagerRole && (profile as any)?.onboarding_completed && totalProperties === 0;
 
+  // For tenant dashboard: show properties they have bookings/leases for
+  const tenantPropertyIds = new Set<string>();
+  myBookings?.forEach(b => tenantPropertyIds.add(b.property_id));
+  agreements?.forEach(a => tenantPropertyIds.add(a.property_id));
+
   return (
     <div className="space-y-8">
       {/* Subscription banner - landlord/admin only */}
@@ -97,7 +98,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </div>
             <div className="flex-1">
               <p className="font-medium text-sm">Quick Start Guide</p>
-              <p className="text-xs text-muted-foreground">Add a property → Add a tenant → Record your first payment. That's all you need to get going!</p>
+              <p className="text-xs text-muted-foreground">Add a property → Tenants will find and book it → You manage everything from here!</p>
             </div>
             <Button size="sm" variant="outline" className="gap-1.5" onClick={() => {
               if (!canAddProperty) { setUpgradeOpen(true); return; }
@@ -138,7 +139,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             </div>
             <div className="flex-1">
               <p className="font-medium text-sm">Get started by adding your first property</p>
-              <p className="text-xs text-muted-foreground">Once you add a property, you can start managing tenants, payments, and maintenance.</p>
+              <p className="text-xs text-muted-foreground">Once you add a property, tenants can find, book, and rent it through the platform.</p>
             </div>
             <Button size="sm" className="gap-1.5" onClick={() => {
               if (!canAddProperty) { setUpgradeOpen(true); return; }
@@ -149,23 +150,23 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           </CardContent>
         </Card>
       )}
-      {/* "Add your first tenant" - landlord only, never for tenants */}
-      {isManagerRole && totalProperties > 0 && totalTenants === 0 && (
-        <Card className="border-accent/30 bg-accent/5">
-          <CardContent className="flex items-center gap-4 py-4">
+
+      {/* Pending leases notification */}
+      {pendingLeases.length > 0 && (
+        <Card className="border-accent/30 bg-accent/5 cursor-pointer hover:shadow-card transition-shadow" onClick={() => onNavigate?.("pending-leases")}>
+          <CardContent className="flex items-center gap-3 py-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10">
-              <Users className="h-5 w-5 text-accent" />
+              <CalendarIcon className="h-5 w-5 text-accent" />
             </div>
             <div className="flex-1">
-              <p className="font-medium text-sm">Add your first tenant</p>
-              <p className="text-xs text-muted-foreground">Link a tenant to one of your properties to start tracking payments and leases.</p>
+              <p className="font-medium text-sm">{pendingLeases.length} Lease{pendingLeases.length > 1 ? "s" : ""} Awaiting Signature</p>
+              <p className="text-xs text-muted-foreground">Review and sign pending lease agreements</p>
             </div>
-            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onNavigate?.("tenants")} disabled={isReadOnly}>
-              <Plus className="h-3.5 w-3.5" /> Add Tenant
-            </Button>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
           </CardContent>
         </Card>
       )}
+
       {/* Financial upgrade hint - landlord only */}
       {isManagerRole && totalTenants > 0 && overduePayments === 0 && !hasFeature("financials") && plan !== "free" && (
         <Card className="border-accent/30 bg-accent/5">
@@ -185,20 +186,22 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       )}
 
       {/* Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <button className="text-left" onClick={() => onNavigate?.("properties")}>
-          <StatCard title="Total Properties" value={totalProperties} icon={Building2} variant="default" />
-        </button>
-        <button className="text-left" onClick={() => onNavigate?.("tenants")}>
-          <StatCard title="Total Tenants" value={totalTenants} icon={Users} variant="accent" />
-        </button>
-        <button className="text-left" onClick={() => onNavigate?.("finance")}>
-          <StatCard title="Monthly Revenue" value={`₦${monthlyRevenue.toLocaleString()}`} icon={Banknote} variant="success" />
-        </button>
-        <button className="text-left" onClick={() => onNavigate?.("finance")}>
-          <StatCard title="Overdue Payments" value={overduePayments} icon={AlertTriangle} variant="default" />
-        </button>
-      </div>
+      {isManagerRole && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <button className="text-left" onClick={() => onNavigate?.("properties")}>
+            <StatCard title="Total Properties" value={totalProperties} icon={Building2} variant="default" />
+          </button>
+          <button className="text-left" onClick={() => onNavigate?.("tenants")}>
+            <StatCard title="Total Tenants" value={totalTenants} icon={Users} variant="accent" />
+          </button>
+          <button className="text-left" onClick={() => onNavigate?.("finance")}>
+            <StatCard title="Monthly Revenue" value={`₦${monthlyRevenue.toLocaleString()}`} icon={Banknote} variant="success" />
+          </button>
+          <button className="text-left" onClick={() => onNavigate?.("finance")}>
+            <StatCard title="Overdue Payments" value={overduePayments} icon={AlertTriangle} variant="default" />
+          </button>
+        </div>
+      )}
 
       {/* Quick Actions & Alerts */}
       {(pendingMaintenance > 0 || overduePayments > 0) && (
@@ -234,50 +237,92 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         </div>
       )}
 
-      {/* Properties Section */}
-      <section>
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h2 className="font-display text-xl font-semibold text-foreground">Your Properties</h2>
-            {totalProperties > 3 && (
-              <button onClick={() => onNavigate?.("properties")} className="text-sm text-primary hover:underline mt-0.5">
-                View all {totalProperties} properties →
-              </button>
-            )}
-          </div>
-          <Button onClick={() => {
-            if (isReadOnly) return;
-            if (!canAddProperty) { setUpgradeOpen(true); return; }
-            setPropertyDialogOpen(true);
-          }} className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90" disabled={isReadOnly}>
-            <Plus className="h-4 w-4" /> Add Property
-          </Button>
-        </div>
-        {properties && properties.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {properties.slice(0, 6).map((property) => (
-              <PropertyCard key={property.id} property={property} onEdit={handleEditProperty} onClick={(p) => onNavigate?.("properties")} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            icon={Building2}
-            title="No properties yet"
-            description="Add your first property to get started with tenant and payment management."
-            actionLabel="Add Property"
-            onAction={() => {
+      {/* Properties Section - landlord view */}
+      {isManagerRole && (
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-xl font-semibold text-foreground">Your Properties</h2>
+              {totalProperties > 3 && (
+                <button onClick={() => onNavigate?.("properties")} className="text-sm text-primary hover:underline mt-0.5">
+                  View all {totalProperties} properties →
+                </button>
+              )}
+            </div>
+            <Button onClick={() => {
               if (isReadOnly) return;
               if (!canAddProperty) { setUpgradeOpen(true); return; }
               setPropertyDialogOpen(true);
-            }}
-          />
-        )}
-      </section>
+            }} className="gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90" disabled={isReadOnly}>
+              <Plus className="h-4 w-4" /> Add Property
+            </Button>
+          </div>
+          {properties && properties.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {properties.slice(0, 6).map((property) => (
+                <PropertyCard key={property.id} property={property} onEdit={handleEditProperty} onClick={(p) => onNavigate?.("properties")} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Building2}
+              title="No properties yet"
+              description="Add your first property to get started. Tenants will find and book it through the platform."
+              actionLabel="Add Property"
+              onAction={() => {
+                if (isReadOnly) return;
+                if (!canAddProperty) { setUpgradeOpen(true); return; }
+                setPropertyDialogOpen(true);
+              }}
+            />
+          )}
+        </section>
+      )}
+
+      {/* Tenant dashboard: My Bookings/Reservations */}
+      {isTenantOnly && (
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-display text-xl font-semibold text-foreground">My Reservations</h2>
+            <Button variant="outline" className="gap-2" onClick={() => onNavigate?.("browse-properties")}>
+              <Building2 className="h-4 w-4" /> Browse Properties
+            </Button>
+          </div>
+          {myBookings && myBookings.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {myBookings.slice(0, 6).map((booking) => (
+                <Card key={booking.id} className="cursor-pointer hover:shadow-card transition-shadow" onClick={() => onNavigate?.(`property-detail:${booking.property_id}`)}>
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className={booking.status === "confirmed" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}>
+                        {booking.status}
+                      </Badge>
+                      <Badge variant="outline" className={booking.payment_status === "paid" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}>
+                        {booking.payment_status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {format(parseISO(booking.check_in), "MMM d, yyyy")} – {format(parseISO(booking.check_out), "MMM d, yyyy")}
+                    </p>
+                    <p className="font-medium text-foreground">{formatCurrency(booking.total_price, "NGN")}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Home}
+              title="No reservations yet"
+              description="Browse available properties and make your first booking."
+              actionLabel="Browse Properties"
+              onAction={() => onNavigate?.("browse-properties")}
+            />
+          )}
+        </section>
+      )}
 
       {/* Dialogs */}
       <PropertyFormDialog open={propertyDialogOpen} onOpenChange={handlePropertyDialogClose} property={editingProperty} />
-      <TenantFormDialog open={tenantDialogOpen} onOpenChange={handleTenantDialogClose} tenant={editingTenant} />
-      <PaymentHistorySheet open={paymentSheetOpen} onOpenChange={handlePaymentSheetClose} tenant={paymentTenant} />
       <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} reason="property_limit" onNavigateToPlans={() => onNavigate?.("subscription")} />
     </div>
   );
