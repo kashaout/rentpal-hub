@@ -58,8 +58,8 @@ export function PendingLeasesPage() {
                     {format(new Date(lease.lease_start), "MMM d, yyyy")} – {format(new Date(lease.lease_end), "MMM d, yyyy")}
                   </p>
                 </div>
-                <Badge variant="outline" className={needsMySignature ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}>
-                  {needsMySignature ? "Needs Your Signature" : "Awaiting Counter-Signature"}
+                <Badge variant="outline" className={needsMySignature ? "bg-warning/10 text-warning" : waitingForOther ? "bg-accent/10 text-accent" : "bg-muted text-muted-foreground"}>
+                  {needsMySignature ? "Needs Your Signature" : waitingForOther ? `Pending ${isTenant ? "Landlord" : "Tenant"} Signature` : "Awaiting Counter-Signature"}
                 </Badge>
               </div>
 
