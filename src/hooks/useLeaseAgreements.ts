@@ -108,20 +108,25 @@ export function useSignLeaseAgreement() {
         } as any);
         if (error) throw error;
       } else {
-        const updateData: any = {
-          landlord_signed: true,
-          landlord_signed_at: new Date().toISOString(),
-        };
-
-        // Check if tenant already signed
-        const { data: current } = await supabase
+        // First fetch the current state to check landlord hasn't already signed
+        const { data: current, error: fetchError } = await supabase
           .from("lease_agreements" as any)
-          .select("tenant_signed")
+          .select("tenant_signed, landlord_signed")
           .eq("id", agreementId)
           .single();
 
+        if (fetchError) throw fetchError;
         const currentData = current as any;
-        updateData.status = currentData?.tenant_signed ? "active" : "pending_signature";
+
+        if (currentData?.landlord_signed) {
+          throw new Error("Lease already signed by landlord");
+        }
+
+        const updateData: any = {
+          landlord_signed: true,
+          landlord_signed_at: new Date().toISOString(),
+          status: currentData?.tenant_signed ? "active" : "pending_signature",
+        };
 
         const { error } = await supabase
           .from("lease_agreements" as any)

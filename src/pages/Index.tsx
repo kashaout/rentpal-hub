@@ -60,7 +60,8 @@ const Index = () => {
   const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
   const isMaintenanceOnly = (isMaintenance || isVendor) && !isAdmin && !isConsultant && !isLandlord && !isTenant;
   const isNewUser = !isAdmin && !isConsultant && !isLandlord && !isTenant && !isMaintenance && !isVendor;
-  const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : isNewUser ? "browse-properties" : "dashboard";
+  const isLandlordOnly = isLandlord && !isAdmin && !isConsultant;
+  const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : isNewUser ? "browse-properties" : isLandlordOnly ? "properties" : "dashboard";
   const [currentView, setCurrentView] = useState(defaultView);
 
   // Check onboarding status
@@ -108,7 +109,7 @@ const Index = () => {
     setCurrentView(defaultView);
   }, [defaultView]);
 
-  // Redirect tenant-only users away from landlord dashboard
+  // Redirect users away from views they shouldn't see
   useEffect(() => {
     if (isTenantOnly && currentView === "dashboard") {
       setCurrentView("tenant-portal");
@@ -116,7 +117,11 @@ const Index = () => {
     if (isNewUser && currentView === "dashboard") {
       setCurrentView("browse-properties");
     }
-  }, [isTenantOnly, isNewUser, currentView]);
+    // Landlord-only users skip dashboard, go to properties
+    if (isLandlordOnly && currentView === "dashboard") {
+      setCurrentView("properties");
+    }
+  }, [isTenantOnly, isNewUser, isLandlordOnly, currentView]);
 
   // Block tenants from accessing subscription
   useEffect(() => {

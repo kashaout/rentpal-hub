@@ -193,10 +193,11 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
   // New users (no roles) should see tenant-like nav with browse
   const isNewUser = !isAdmin && !isConsultant && !isLandlord && !isTenant && !isMaintenance && !isVendor;
   const showTenantNav = isTenant || isNewUser;
+  const showLandlordAdmin = isLandlord && !isAdmin;
 
   const navItems = [
-    // Landlord / Admin / Consultant - always visible
-    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isManagerRole, locked: false },
+    // Dashboard only for admin/consultant, not landlord-only
+    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isManagerRole && !showLandlordAdmin, locked: false },
     { icon: Building2, label: "Properties", id: "properties", show: isManagerRole, locked: false },
     { icon: Users, label: "Tenants", id: "tenants", show: isManagerRole, locked: false },
     // Plan-gated
@@ -220,9 +221,6 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     { icon: TrendingUp, label: "Worker Performance", id: "worker-performance" },
     { icon: Crown, label: "Subscription", id: "subscription" },
   ];
-
-  // Landlord (non-admin) user management
-  const showLandlordAdmin = isLandlord && !isAdmin;
 
   const filteredNavItems = navItems.filter((item) => item.show);
 
