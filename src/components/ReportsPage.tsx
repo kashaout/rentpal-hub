@@ -150,7 +150,7 @@ export function ReportsPage() {
       </div>
 
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <Tabs defaultValue="financial" className="w-full">
+        <Tabs defaultValue="accountant" className="w-full">
           <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
             <TabsList className="flex flex-wrap h-auto gap-1">
               <TabsTrigger value="accountant" className="gap-2 min-w-[120px]">
