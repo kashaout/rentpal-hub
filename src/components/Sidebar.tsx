@@ -196,7 +196,8 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
 
   const navItems = [
     // Landlord / Admin / Consultant - always visible
-    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isManagerRole, locked: false },
+    // Dashboard only for admin/consultant, not landlord-only
+    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isManagerRole && !showLandlordAdmin, locked: false },
     { icon: Building2, label: "Properties", id: "properties", show: isManagerRole, locked: false },
     { icon: Users, label: "Tenants", id: "tenants", show: isManagerRole, locked: false },
     // Plan-gated

@@ -48,7 +48,7 @@ function useManageableUsers() {
       }
 
       // Landlords see all users linked to their properties:
-      // tenants, maintenance workers, consultants
+      // tenants (via tenants table), booking users, maintenance workers, consultants
       const { data: properties } = await supabase
         .from("properties")
         .select("id")
@@ -58,12 +58,24 @@ function useManageableUsers() {
 
       const propIds = properties.map((p: any) => p.id);
 
-      // Get tenant user IDs
+      // Get tenant user IDs from tenants table
       const { data: tenants } = await supabase
         .from("tenants")
         .select("user_id, property_id")
         .in("property_id", propIds)
         .not("user_id", "is", null);
+
+      // Get user IDs from bookings (registered users who reserved/booked)
+      const { data: bookings } = await supabase
+        .from("bookings")
+        .select("user_id")
+        .in("property_id", propIds);
+
+      // Get user IDs from lease agreements
+      const { data: leases } = await supabase
+        .from("lease_agreements" as any)
+        .select("tenant_user_id")
+        .in("property_id", propIds);
 
       // Get maintenance/vendor user IDs from work orders
       const { data: workOrders } = await supabase
@@ -79,6 +91,8 @@ function useManageableUsers() {
 
       const userIds = new Set<string>();
       tenants?.forEach((t: any) => { if (t.user_id) userIds.add(t.user_id); });
+      (bookings as any[] || []).forEach((b: any) => { if (b.user_id) userIds.add(b.user_id); });
+      (leases as any[] || []).forEach((l: any) => { if (l.tenant_user_id) userIds.add(l.tenant_user_id); });
       workOrders?.forEach((wo: any) => {
         if (wo.assigned_to) userIds.add(wo.assigned_to);
         if (wo.vendor_id) userIds.add(wo.vendor_id);
