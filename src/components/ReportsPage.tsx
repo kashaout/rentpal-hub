@@ -17,11 +17,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { TrendingUp, Building2, Users, Banknote, Loader2, Wrench, Star, BarChart3, Download } from "lucide-react";
+import { TrendingUp, Building2, Users, Banknote, Loader2, Wrench, Star, BarChart3, Download, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 import { format, subMonths, startOfMonth, endOfMonth, parseISO, isWithinInterval } from "date-fns";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { AccountantReports } from "@/components/reports/AccountantReports";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--success))", "hsl(var(--warning))"];
 
@@ -149,9 +150,12 @@ export function ReportsPage() {
       </div>
 
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <Tabs defaultValue="financial" className="w-full">
+        <Tabs defaultValue="accountant" className="w-full">
           <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
             <TabsList className="flex flex-wrap h-auto gap-1">
+              <TabsTrigger value="accountant" className="gap-2 min-w-[120px]">
+                <FileSpreadsheet className="h-4 w-4" /> Accountant Reports
+              </TabsTrigger>
               <TabsTrigger value="financial" className="gap-2 min-w-[120px]">
                 <BarChart3 className="h-4 w-4" /> Financial
               </TabsTrigger>
@@ -190,6 +194,9 @@ export function ReportsPage() {
             </div>
           </div>
 
+        <TabsContent value="accountant">
+          <AccountantReports />
+        </TabsContent>
         <TabsContent value="financial">
           <FinancialReportsTab
             revenueData={revenueData}
