@@ -17,11 +17,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { TrendingUp, Building2, Users, Banknote, Loader2, Wrench, Star, BarChart3, Download } from "lucide-react";
+import { TrendingUp, Building2, Users, Banknote, Loader2, Wrench, Star, BarChart3, Download, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 import { format, subMonths, startOfMonth, endOfMonth, parseISO, isWithinInterval } from "date-fns";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { AccountantReports } from "@/components/reports/AccountantReports";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--success))", "hsl(var(--warning))"];
 
