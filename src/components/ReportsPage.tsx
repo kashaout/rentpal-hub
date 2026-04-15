@@ -194,6 +194,9 @@ export function ReportsPage() {
             </div>
           </div>
 
+        <TabsContent value="accountant">
+          <AccountantReports />
+        </TabsContent>
         <TabsContent value="financial">
           <FinancialReportsTab
             revenueData={revenueData}
