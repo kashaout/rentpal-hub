@@ -9,6 +9,7 @@ import { LandlordUserManagement } from "@/components/admin/LandlordUserManagemen
 import { TenantPortal } from "@/components/tenant/TenantPortal";
 import { TenantCommandCenter } from "@/components/tenant/TenantCommandCenter";
 import { TenantBrowseProperties } from "@/components/tenant/TenantBrowseProperties";
+import { MyBookingsPage } from "@/components/tenant/MyBookingsPage";
 import { TenantRequestsInbox } from "@/components/tenant/TenantRequestsInbox";
 import { MaintenancePortal } from "@/components/maintenance/MaintenancePortal";
 import { PropertiesPage } from "@/components/PropertiesPage";
@@ -31,6 +32,7 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   "tenant-portal": { title: "My Portal", subtitle: "View your lease, payments, and submit requests." },
   "tenant-command-center": { title: "My Tenancy", subtitle: "Your complete tenancy dashboard." },
   "browse-properties": { title: "Browse Properties", subtitle: "Find available properties to rent or book." },
+  "my-bookings": { title: "My Bookings", subtitle: "Your reservations and lease agreements." },
   "tenant-inbox": { title: "Inbox", subtitle: "All your requests and communication in one place." },
   "maintenance-portal": { title: "Maintenance", subtitle: "Maintenance jobs created from tenant issues and assigned to vendors." },
   finance: { title: "Financial Intelligence", subtitle: "Financial intelligence across rent, expenses, and escrow." },
@@ -207,6 +209,8 @@ const Index = () => {
         return <TenantCommandCenter />;
       case "browse-properties":
         return <TenantBrowseProperties />;
+      case "my-bookings":
+        return <MyBookingsPage />;
       case "tenant-inbox":
         return <TenantRequestsInbox />;
       case "maintenance-portal":
