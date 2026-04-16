@@ -569,6 +569,13 @@ export type Database = {
             foreignKeyName: "documents_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
+            referencedRelation: "maintenance_tenant_lookup"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
@@ -718,6 +725,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "public_property_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_tenant_lookup"
             referencedColumns: ["id"]
           },
           {
@@ -1037,6 +1051,13 @@ export type Database = {
             foreignKeyName: "maintenance_requests_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
+            referencedRelation: "maintenance_tenant_lookup"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
@@ -1105,6 +1126,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "public_property_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_tenant_lookup"
             referencedColumns: ["id"]
           },
           {
@@ -1919,6 +1947,13 @@ export type Database = {
             foreignKeyName: "workflow_alerts_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
+            referencedRelation: "maintenance_tenant_lookup"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_alerts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
@@ -1933,6 +1968,51 @@ export type Database = {
       }
     }
     Views: {
+      maintenance_tenant_lookup: {
+        Row: {
+          id: string | null
+          is_archived: boolean | null
+          lease_end: string | null
+          lease_start: string | null
+          property_id: string | null
+          unit_number: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string | null
+          is_archived?: boolean | null
+          lease_end?: string | null
+          lease_start?: string | null
+          property_id?: string | null
+          unit_number?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string | null
+          is_archived?: boolean | null
+          lease_end?: string | null
+          lease_start?: string | null
+          property_id?: string | null
+          unit_number?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenants_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenants_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "public_property_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_property_listings: {
         Row: {
           address: string | null
