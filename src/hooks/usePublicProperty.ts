@@ -21,9 +21,20 @@ export function usePublicProperty(id: string) {
 
       if (error) throw error;
       if (!data) return null;
+      const d = data as any;
       return {
-        ...data,
-        amenities: ((data as any).amenities as string[]) || [],
+        id: d.id,
+        name: d.name,
+        address: d.address,
+        description: d.description,
+        image_url: d.image_url,
+        property_type: d.property_type,
+        listing_type: d.listing_type,
+        monthly_rent: d.monthly_rent,
+        currency: d.currency,
+        units: d.units,
+        region: d.region,
+        amenities: (d.amenities as string[]) || [],
       } as BrowseProperty;
     },
     enabled: !!user && !!id,
