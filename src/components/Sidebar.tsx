@@ -238,7 +238,7 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     if (isLandlord) return { label: "Landlord", className: "bg-success/10 text-success" };
     if (isMaintenance) return { label: "Maintenance", className: "bg-warning/10 text-warning" };
     if (isVendor) return { label: "Vendor", className: "bg-secondary text-secondary-foreground" };
-    if (isTenant) return { label: "Tenant", className: "bg-primary/10 text-primary" };
+    if (isActiveTenant) return { label: "Tenant", className: "bg-primary/10 text-primary" };
     return { label: "New User", className: "bg-muted text-muted-foreground" };
   };
 
