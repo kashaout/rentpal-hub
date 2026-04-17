@@ -125,26 +125,35 @@ const Index = () => {
     setCurrentView(defaultView);
   }, [defaultView]);
 
-  // Redirect users away from views they shouldn't see
+  // Tenant routing is driven entirely by lease state (active_tenants).
+  // - Active tenant landing on a non-tenant view → command center
+  // - Pre-lease user landing on a tenant-only view → browse properties
   useEffect(() => {
-    if (isTenantOnly && currentView === "dashboard") {
-      setCurrentView("tenant-portal");
-    }
-    if (isNewUser && currentView === "dashboard") {
-      setCurrentView("browse-properties");
+    const tenantViews = ["tenant-command-center", "tenant-portal", "tenant-lease", "tenant-inbox", "tenant-documents", "tenant-payments"];
+    const preLeaseViews = ["browse-properties", "my-bookings"];
+
+    if (!isManagerRole && !isMaintenanceOnly) {
+      // Block access to subscription for tenants
+      if (currentView === "subscription") {
+        setCurrentView(isActiveTenant ? "tenant-command-center" : "browse-properties");
+        return;
+      }
+      // Active tenant landed on dashboard or pre-lease views → push into tenant app
+      if (isActiveTenant && (currentView === "dashboard" || preLeaseViews.includes(currentView))) {
+        setCurrentView("tenant-command-center");
+        return;
+      }
+      // Pre-lease user landed on a tenant-only view → push to browse
+      if (!isActiveTenant && tenantViews.includes(currentView)) {
+        setCurrentView("browse-properties");
+        return;
+      }
     }
     // Landlord-only users skip dashboard, go to properties
     if (isLandlordOnly && currentView === "dashboard") {
       setCurrentView("properties");
     }
-  }, [isTenantOnly, isNewUser, isLandlordOnly, currentView]);
-
-  // Block tenants from accessing subscription
-  useEffect(() => {
-    if (isTenantOnly && currentView === "subscription") {
-      setCurrentView("tenant-portal");
-    }
-  }, [isTenantOnly, currentView]);
+  }, [isActiveTenant, isManagerRole, isMaintenanceOnly, isLandlordOnly, currentView]);
 
   // Auto-verify rent payment on success redirect
   useEffect(() => {
@@ -215,12 +224,18 @@ const Index = () => {
       case "worker-performance":
         return <MaintenancePerformanceDashboard />;
       case "subscription":
-        if (isTenantOnly) return <TenantPortal />;
+        if (!isManagerRole) return isActiveTenant ? <TenantCommandCenter /> : <TenantBrowseProperties />;
         return <SubscriptionPlans />;
       case "tenant-portal":
         return <TenantPortal />;
       case "tenant-command-center":
         return <TenantCommandCenter />;
+      case "tenant-lease":
+        return <TenantLeasePage />;
+      case "tenant-documents":
+        return <TenantCommandCenter defaultTab="documents" />;
+      case "tenant-payments":
+        return <TenantCommandCenter defaultTab="payments" />;
       case "browse-properties":
         return <TenantBrowseProperties />;
       case "my-bookings":
