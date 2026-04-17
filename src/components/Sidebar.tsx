@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
 import { useTenantLease } from "@/hooks/useTenantPortal";
+import { useActiveTenant } from "@/hooks/useActiveTenant";
 import { useCreateMaintenanceRequest } from "@/hooks/useMaintenanceRequests";
 import { useCreateTenantRequest } from "@/hooks/useTenantRequests";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +55,8 @@ function NavItem({ icon: Icon, label, active, onClick, badge, locked }: NavItemP
 }
 
 function QuickIssueButton({ onViewChange }: { onViewChange: (view: string) => void }) {
-  const { user, isTenant } = useAuth();
+  const { user } = useAuth();
+  const { isActiveTenant, tenancy } = useActiveTenant();
   const { data: lease } = useTenantLease();
   const createMaintenanceRequest = useCreateMaintenanceRequest();
   const createTenantRequest = useCreateTenantRequest();
@@ -65,7 +67,8 @@ function QuickIssueButton({ onViewChange }: { onViewChange: (view: string) => vo
   const [priority, setPriority] = useState("medium");
   const [category, setCategory] = useState("general");
 
-  if (!isTenant || !lease) return null;
+  // Quick-issue is only for active tenants (signed lease on both sides)
+  if (!isActiveTenant || !tenancy || !lease) return null;
 
   const handleSubmit = async () => {
     if (!title.trim() || !description.trim() || !user) return;
@@ -185,36 +188,40 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarProps) {
-  const { signOut, isAdmin, isConsultant, isLandlord, isTenant, isMaintenance, isVendor, profile } = useAuth();
-  const { hasFeature, isReadOnly } = useSubscriptionContext();
+  const { signOut, isAdmin, isConsultant, isLandlord, isMaintenance, isVendor, profile } = useAuth();
+  const { hasFeature } = useSubscriptionContext();
+  const { isActiveTenant } = useActiveTenant();
 
   const isManagerRole = isAdmin || isConsultant || isLandlord;
-  const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
-  // New users (no roles) should see tenant-like nav with browse
-  const isNewUser = !isAdmin && !isConsultant && !isLandlord && !isTenant && !isMaintenance && !isVendor;
-  const showTenantNav = isTenant || isNewUser;
   const showLandlordAdmin = isLandlord && !isAdmin;
+  // Anyone who is NOT a manager/maintenance role sees the tenant-style nav.
+  // Active tenancy (driven by signed lease) unlocks the full tenant app.
+  const showTenantNav = !isManagerRole && !isMaintenance && !isVendor;
 
   const navItems = [
-    // Dashboard only for admin/consultant, not landlord-only
+    // ── Manager / staff nav ─────────────────────────────────────
     { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isManagerRole && !showLandlordAdmin, locked: false },
     { icon: Building2, label: "Properties", id: "properties", show: isManagerRole, locked: false },
     { icon: Users, label: "Tenants", id: "tenants", show: isManagerRole, locked: false },
-    // Plan-gated
     { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isManagerRole || isMaintenance || isVendor, locked: isManagerRole && !isAdmin && !hasFeature("maintenance") },
     { icon: Wallet, label: "Financials", id: "finance", show: isManagerRole, locked: !isAdmin && !hasFeature("financials") },
     { icon: BarChart3, label: "Reports", id: "reports", show: isManagerRole, locked: !isAdmin && !hasFeature("reports") },
+    { icon: FileText, label: "Pending Leases", id: "pending-leases", show: isManagerRole, locked: false },
 
-    // Pending Leases - visible to both landlords and tenants
-    { icon: FileText, label: "Pending Leases", id: "pending-leases", show: isManagerRole || showTenantNav, locked: false },
+    // ── Tenant nav — split by active-lease state ────────────────
+    // Pre-lease (no signed lease yet): Browse + Bookings only
+    { icon: Building2, label: "Browse Properties", id: "browse-properties", show: showTenantNav && !isActiveTenant, locked: false },
+    { icon: FileText, label: "My Bookings", id: "my-bookings", show: showTenantNav && !isActiveTenant, locked: false },
+    { icon: FileText, label: "Pending Leases", id: "pending-leases", show: showTenantNav && !isActiveTenant, locked: false },
 
-    // Tenant (and new users without roles)
-    { icon: Home, label: "My Portal", id: "tenant-portal", show: showTenantNav && !isNewUser, locked: false },
-    { icon: LayoutDashboard, label: "My Tenancy", id: "tenant-command-center", show: showTenantNav && !isNewUser, locked: false },
-    { icon: Building2, label: "Browse Properties", id: "browse-properties", show: showTenantNav, locked: false },
-    { icon: FileText, label: "My Bookings", id: "my-bookings", show: showTenantNav && !isNewUser, locked: false },
-    { icon: Users, label: "Inbox", id: "tenant-inbox", show: showTenantNav && !isNewUser, locked: false },
-    { icon: Star, label: "Reviews", id: "settings", show: showTenantNav && !isNewUser, locked: false },
+    // Active tenant (lease fully signed): full tenant app
+    { icon: LayoutDashboard, label: "Dashboard", id: "tenant-command-center", show: showTenantNav && isActiveTenant, locked: false },
+    { icon: Home, label: "My Property", id: "tenant-portal", show: showTenantNav && isActiveTenant, locked: false },
+    { icon: FileText, label: "Lease", id: "tenant-lease", show: showTenantNav && isActiveTenant, locked: false },
+    { icon: Wrench, label: "Maintenance", id: "tenant-portal", show: showTenantNav && isActiveTenant, locked: false },
+    { icon: MessageSquare, label: "Messages", id: "tenant-inbox", show: showTenantNav && isActiveTenant, locked: false },
+    { icon: FileText, label: "Documents", id: "tenant-documents", show: showTenantNav && isActiveTenant, locked: false },
+    { icon: Wallet, label: "Payments", id: "tenant-payments", show: showTenantNav && isActiveTenant, locked: false },
   ];
 
   const adminItems = [
@@ -231,7 +238,7 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     if (isLandlord) return { label: "Landlord", className: "bg-success/10 text-success" };
     if (isMaintenance) return { label: "Maintenance", className: "bg-warning/10 text-warning" };
     if (isVendor) return { label: "Vendor", className: "bg-secondary text-secondary-foreground" };
-    if (isTenant) return { label: "Tenant", className: "bg-primary/10 text-primary" };
+    if (isActiveTenant) return { label: "Tenant", className: "bg-primary/10 text-primary" };
     return { label: "New User", className: "bg-muted text-muted-foreground" };
   };
 

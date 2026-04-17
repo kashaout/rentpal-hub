@@ -541,6 +541,13 @@ export type Database = {
             foreignKeyName: "documents_lease_id_fkey"
             columns: ["lease_id"]
             isOneToOne: false
+            referencedRelation: "active_tenants"
+            referencedColumns: ["lease_id"]
+          },
+          {
+            foreignKeyName: "documents_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
             referencedRelation: "lease_agreements"
             referencedColumns: ["id"]
           },
@@ -788,6 +795,13 @@ export type Database = {
             foreignKeyName: "landlord_notifications_lease_agreement_id_fkey"
             columns: ["lease_agreement_id"]
             isOneToOne: false
+            referencedRelation: "active_tenants"
+            referencedColumns: ["lease_id"]
+          },
+          {
+            foreignKeyName: "landlord_notifications_lease_agreement_id_fkey"
+            columns: ["lease_agreement_id"]
+            isOneToOne: false
             referencedRelation: "lease_agreements"
             referencedColumns: ["id"]
           },
@@ -930,6 +944,13 @@ export type Database = {
           wifi_password?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "lease_credentials_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: true
+            referencedRelation: "active_tenants"
+            referencedColumns: ["lease_id"]
+          },
           {
             foreignKeyName: "lease_credentials_lease_id_fkey"
             columns: ["lease_id"]
@@ -1107,6 +1128,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_lease_id_fkey"
+            columns: ["lease_id"]
+            isOneToOne: false
+            referencedRelation: "active_tenants"
+            referencedColumns: ["lease_id"]
+          },
           {
             foreignKeyName: "payments_lease_id_fkey"
             columns: ["lease_id"]
@@ -1968,6 +1996,54 @@ export type Database = {
       }
     }
     Views: {
+      active_tenants: {
+        Row: {
+          landlord_signed_at: string | null
+          landlord_user_id: string | null
+          lease_end: string | null
+          lease_id: string | null
+          lease_start: string | null
+          property_id: string | null
+          tenant_signed_at: string | null
+          tenant_user_id: string | null
+        }
+        Insert: {
+          landlord_signed_at?: string | null
+          landlord_user_id?: string | null
+          lease_end?: string | null
+          lease_id?: string | null
+          lease_start?: string | null
+          property_id?: string | null
+          tenant_signed_at?: string | null
+          tenant_user_id?: string | null
+        }
+        Update: {
+          landlord_signed_at?: string | null
+          landlord_user_id?: string | null
+          lease_end?: string | null
+          lease_id?: string | null
+          lease_start?: string | null
+          property_id?: string | null
+          tenant_signed_at?: string | null
+          tenant_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lease_agreements_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lease_agreements_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "public_property_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_tenant_lookup: {
         Row: {
           id: string | null

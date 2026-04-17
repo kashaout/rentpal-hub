@@ -22,18 +22,23 @@ import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { PendingLeasesPage } from "@/components/PendingLeasesPage";
 import { PropertyDetailView } from "@/components/PropertyDetailView";
+import { TenantLeasePage } from "@/components/tenant/TenantLeasePage";
 import { useAuth } from "@/hooks/useAuth";
+import { useActiveTenant } from "@/hooks/useActiveTenant";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Welcome back! Here's your overview." },
-  "tenant-portal": { title: "My Portal", subtitle: "View your lease, payments, and submit requests." },
-  "tenant-command-center": { title: "My Tenancy", subtitle: "Your complete tenancy dashboard." },
+  "tenant-portal": { title: "My Property", subtitle: "Your home, lease, and quick actions." },
+  "tenant-command-center": { title: "Dashboard", subtitle: "Your complete tenancy overview." },
+  "tenant-lease": { title: "Lease", subtitle: "Your fully signed lease agreement." },
+  "tenant-documents": { title: "Documents", subtitle: "Files related to your tenancy." },
+  "tenant-payments": { title: "Payments", subtitle: "Your rent and payment history." },
   "browse-properties": { title: "Browse Properties", subtitle: "Find available properties to rent or book." },
   "my-bookings": { title: "My Bookings", subtitle: "Your reservations and lease agreements." },
-  "tenant-inbox": { title: "Inbox", subtitle: "All your requests and communication in one place." },
+  "tenant-inbox": { title: "Messages", subtitle: "All your requests and communication in one place." },
   "maintenance-portal": { title: "Maintenance", subtitle: "Maintenance jobs created from tenant issues and assigned to vendors." },
   finance: { title: "Financial Intelligence", subtitle: "Financial intelligence across rent, expenses, and escrow." },
   properties: { title: "Properties", subtitle: "All your properties and their current status in one place." },
@@ -48,7 +53,8 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
 };
 
 const Index = () => {
-  const { profile, isTenant, isAdmin, isConsultant, isLandlord, isMaintenance, isVendor, user } = useAuth();
+  const { profile, isAdmin, isConsultant, isLandlord, isMaintenance, isVendor, user } = useAuth();
+  const { isActiveTenant } = useActiveTenant();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const verifiedRef = useRef(false);
@@ -58,12 +64,20 @@ const Index = () => {
   // Track property detail for post-payment redirect
   const [detailPropertyId, setDetailPropertyId] = useState<string | null>(null);
   const [paymentSuccessPropertyId, setPaymentSuccessPropertyId] = useState<string | null>(null);
-  
-  const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
-  const isMaintenanceOnly = (isMaintenance || isVendor) && !isAdmin && !isConsultant && !isLandlord && !isTenant;
-  const isNewUser = !isAdmin && !isConsultant && !isLandlord && !isTenant && !isMaintenance && !isVendor;
+
+  const isManagerRole = isAdmin || isConsultant || isLandlord;
+  const isMaintenanceOnly = (isMaintenance || isVendor) && !isManagerRole;
   const isLandlordOnly = isLandlord && !isAdmin && !isConsultant;
-  const defaultView = isTenantOnly ? "tenant-portal" : isMaintenanceOnly ? "maintenance-portal" : isNewUser ? "browse-properties" : isLandlordOnly ? "properties" : "dashboard";
+
+  // Tenant-side default view is driven entirely by lease state (active_tenants).
+  // Active tenant → command center; otherwise → browse properties.
+  const defaultView = isManagerRole
+    ? (isLandlordOnly ? "properties" : "dashboard")
+    : isMaintenanceOnly
+    ? "maintenance-portal"
+    : isActiveTenant
+    ? "tenant-command-center"
+    : "browse-properties";
   const [currentView, setCurrentView] = useState(defaultView);
 
   // Check onboarding status
@@ -111,26 +125,35 @@ const Index = () => {
     setCurrentView(defaultView);
   }, [defaultView]);
 
-  // Redirect users away from views they shouldn't see
+  // Tenant routing is driven entirely by lease state (active_tenants).
+  // - Active tenant landing on a non-tenant view → command center
+  // - Pre-lease user landing on a tenant-only view → browse properties
   useEffect(() => {
-    if (isTenantOnly && currentView === "dashboard") {
-      setCurrentView("tenant-portal");
-    }
-    if (isNewUser && currentView === "dashboard") {
-      setCurrentView("browse-properties");
+    const tenantViews = ["tenant-command-center", "tenant-portal", "tenant-lease", "tenant-inbox", "tenant-documents", "tenant-payments"];
+    const preLeaseViews = ["browse-properties", "my-bookings"];
+
+    if (!isManagerRole && !isMaintenanceOnly) {
+      // Block access to subscription for tenants
+      if (currentView === "subscription") {
+        setCurrentView(isActiveTenant ? "tenant-command-center" : "browse-properties");
+        return;
+      }
+      // Active tenant landed on dashboard or pre-lease views → push into tenant app
+      if (isActiveTenant && (currentView === "dashboard" || preLeaseViews.includes(currentView))) {
+        setCurrentView("tenant-command-center");
+        return;
+      }
+      // Pre-lease user landed on a tenant-only view → push to browse
+      if (!isActiveTenant && tenantViews.includes(currentView)) {
+        setCurrentView("browse-properties");
+        return;
+      }
     }
     // Landlord-only users skip dashboard, go to properties
     if (isLandlordOnly && currentView === "dashboard") {
       setCurrentView("properties");
     }
-  }, [isTenantOnly, isNewUser, isLandlordOnly, currentView]);
-
-  // Block tenants from accessing subscription
-  useEffect(() => {
-    if (isTenantOnly && currentView === "subscription") {
-      setCurrentView("tenant-portal");
-    }
-  }, [isTenantOnly, currentView]);
+  }, [isActiveTenant, isManagerRole, isMaintenanceOnly, isLandlordOnly, currentView]);
 
   // Auto-verify rent payment on success redirect
   useEffect(() => {
@@ -201,12 +224,18 @@ const Index = () => {
       case "worker-performance":
         return <MaintenancePerformanceDashboard />;
       case "subscription":
-        if (isTenantOnly) return <TenantPortal />;
+        if (!isManagerRole) return isActiveTenant ? <TenantCommandCenter /> : <TenantBrowseProperties />;
         return <SubscriptionPlans />;
       case "tenant-portal":
         return <TenantPortal />;
       case "tenant-command-center":
         return <TenantCommandCenter />;
+      case "tenant-lease":
+        return <TenantLeasePage />;
+      case "tenant-documents":
+        return <TenantCommandCenter defaultTab="documents" />;
+      case "tenant-payments":
+        return <TenantCommandCenter defaultTab="payments" />;
       case "browse-properties":
         return <TenantBrowseProperties />;
       case "my-bookings":
