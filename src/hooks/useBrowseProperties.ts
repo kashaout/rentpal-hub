@@ -28,6 +28,9 @@ export function useBrowseProperties() {
         .select("id, name, address, description, image_url, property_type, listing_type, monthly_rent, currency, units, region, amenities")
         .order("name", { ascending: true });
 
+      // Guard log — confirms tenant browsing reads from the public listings view
+      console.log("[useBrowseProperties] public_property_listings rows:", data?.length ?? 0, error ? `error: ${error.message}` : "");
+
       if (error) throw error;
       return ((data as any[]) || []).map((p) => ({
         ...p,
