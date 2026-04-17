@@ -2017,6 +2017,7 @@ export type Database = {
         Row: {
           address: string | null
           amenities: Json | null
+          created_at: string | null
           currency: string | null
           description: string | null
           id: string | null
@@ -2031,6 +2032,7 @@ export type Database = {
         Insert: {
           address?: string | null
           amenities?: Json | null
+          created_at?: string | null
           currency?: string | null
           description?: string | null
           id?: string | null
@@ -2045,6 +2047,7 @@ export type Database = {
         Update: {
           address?: string | null
           amenities?: Json | null
+          created_at?: string | null
           currency?: string | null
           description?: string | null
           id?: string | null
