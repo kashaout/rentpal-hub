@@ -56,7 +56,11 @@ interface PropertyDetailViewProps {
 }
 
 export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: PropertyDetailViewProps) {
-  const { data: property, isLoading } = useProperty(propertyId);
+  const { data: ownedProperty, isLoading: ownedLoading } = useProperty(propertyId);
+  const { data: publicProperty, isLoading: publicLoading } = usePublicProperty(propertyId);
+  // Landlords/admins/consultants get the full record; tenants get the safe public view
+  const property = ownedProperty ?? (publicProperty as any);
+  const isLoading = ownedLoading || (!ownedProperty && publicLoading);
   const { data: bookings } = usePropertyBookings(propertyId);
   const createBooking = useCreateBooking();
   const { user, profile, isLandlord, isAdmin, isConsultant } = useAuth();
