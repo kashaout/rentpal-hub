@@ -770,25 +770,6 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
             )}
           </div>
 
-          {isAirbnb && (
-            <>
-              <Separator />
-              <div>
-                <h2 className="font-display text-xl font-semibold text-foreground mb-4">Availability</h2>
-                <p className="text-sm text-muted-foreground mb-4">Select your check-in and check-out dates.</p>
-                <div className="flex justify-center">
-                  <Calendar
-                    mode="range"
-                    selected={selectedRange as any}
-                    onSelect={(range: any) => setSelectedRange(range || {})}
-                    disabled={(date) => isBefore(date, startOfDay(new Date())) || isDateBooked(date)}
-                    numberOfMonths={2}
-                    className="rounded-lg border p-3 pointer-events-auto"
-                  />
-                </div>
-              </div>
-            </>
-          )}
         </div>
 
         {/* Sidebar */}
