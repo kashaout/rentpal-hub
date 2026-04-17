@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useProperty } from "@/hooks/useProperties";
+import { usePublicProperty } from "@/hooks/usePublicProperty";
 import { usePropertyBookings, useCreateBooking } from "@/hooks/useBookings";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateLeaseAgreement, useSignLeaseAgreement, useLeaseAgreementByProperty } from "@/hooks/useLeaseAgreements";
