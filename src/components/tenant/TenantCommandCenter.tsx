@@ -21,9 +21,9 @@ const TABS = [
   { key: "history", label: "History", icon: History },
 ];
 
-export function TenantCommandCenter() {
+export function TenantCommandCenter({ defaultTab = "overview" }: { defaultTab?: string } = {}) {
   const { data: lease, isLoading } = useTenantLease();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(defaultTab);
 
   if (isLoading) {
     return (
