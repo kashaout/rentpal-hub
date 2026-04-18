@@ -1,13 +1,14 @@
 import { format, differenceInDays } from "date-fns";
 import {
   Building2, Calendar, FileText, CheckCircle2, Loader2,
-  User, Banknote, MapPin, Clock,
+  User, Banknote, MapPin, Clock, Wifi, KeyRound, Lock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useActiveTenant } from "@/hooks/useActiveTenant";
 import { useMyLeaseAgreements } from "@/hooks/useLeaseAgreements";
+import { useLeaseCredentials } from "@/hooks/useLeaseCredentials";
 import { formatCurrency } from "@/lib/formatCurrency";
 
 /**
@@ -17,6 +18,8 @@ import { formatCurrency } from "@/lib/formatCurrency";
 export function TenantLeasePage() {
   const { tenancy, isLoading } = useActiveTenant();
   const { data: leases = [], isLoading: leasesLoading } = useMyLeaseAgreements();
+  // Securely fetch WiFi + door codes via RPC. Returns null until both parties signed.
+  const { data: credentials } = useLeaseCredentials(tenancy?.lease_id);
 
   if (isLoading || leasesLoading) {
     return (
