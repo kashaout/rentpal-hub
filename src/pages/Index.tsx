@@ -223,7 +223,8 @@ const Index = () => {
       case "manage-users":
         return isAdmin ? <AdminPanel defaultTab="users" /> : <LandlordUserManagement />;
       case "worker-performance":
-        return <MaintenancePerformanceDashboard />;
+        // Legacy route — Worker Performance now lives inside the Maintenance area.
+        return <MaintenancePortal showPerformance={isManagerRole} />;
       case "subscription":
         if (!isManagerRole) return isActiveTenant ? <TenantCommandCenter /> : <TenantBrowseProperties />;
         return <SubscriptionPlans />;
@@ -244,7 +245,7 @@ const Index = () => {
       case "tenant-inbox":
         return <TenantRequestsInbox />;
       case "maintenance-portal":
-        return <MaintenancePortal />;
+        return <MaintenancePortal showPerformance={isManagerRole} />;
       case "finance":
         return <FinanceDashboard />;
       case "properties":
