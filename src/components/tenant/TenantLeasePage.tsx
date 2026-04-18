@@ -150,6 +150,49 @@ export function TenantLeasePage() {
         </CardContent>
       </Card>
 
+      {/* Access credentials — only visible after both parties sign + landlord sets them */}
+      <Card className="border-primary/30 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <KeyRound className="h-5 w-5 text-primary" /> Access Codes
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {credentials && (credentials.wifi_password || credentials.keybox_password) ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {credentials.wifi_password && (
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+                    <Wifi className="h-3.5 w-3.5" /> WiFi Password
+                  </p>
+                  <p className="mt-1 font-mono text-sm font-semibold break-all">
+                    {credentials.wifi_password}
+                  </p>
+                </div>
+              )}
+              {credentials.keybox_password && (
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+                    <KeyRound className="h-3.5 w-3.5" /> Door / Keybox Code
+                  </p>
+                  <p className="mt-1 font-mono text-sm font-semibold break-all">
+                    {credentials.keybox_password}
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+              <Lock className="h-4 w-4 mt-0.5 shrink-0" />
+              <p>
+                WiFi and door codes will appear here once your landlord shares them.
+                Codes are released after both parties have signed the lease.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Lease terms */}
       {lease?.terms && (
         <Card>
