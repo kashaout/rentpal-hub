@@ -9,18 +9,33 @@ import { useBrowseProperties, BrowseProperty } from "@/hooks/useBrowseProperties
 import { PropertyDetailView } from "@/components/PropertyDetailView";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
+import { cn } from "@/lib/utils";
 
 function PropertyBrowseCard({ property, onClick }: { property: BrowseProperty; onClick: () => void }) {
   const isAirbnb = property.listing_type === "airbnb";
+  const isOccupied = property.is_paused;
 
   return (
     <Card
-      className="cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-card-hover group"
-      onClick={onClick}
+      className={cn(
+        "overflow-hidden transition-all duration-300 group",
+        isOccupied
+          ? "opacity-60 cursor-not-allowed"
+          : "cursor-pointer hover:shadow-card-hover"
+      )}
+      onClick={isOccupied ? undefined : onClick}
     >
       <div className="relative h-48 overflow-hidden bg-muted">
         {property.image_url ? (
-          <img src={property.image_url} alt={property.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+          <img
+            src={property.image_url}
+            alt={property.name}
+            className={cn(
+              "h-full w-full object-cover transition-transform duration-300",
+              !isOccupied && "group-hover:scale-105",
+              isOccupied && "grayscale"
+            )}
+          />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-slate">
             <Home className="h-12 w-12 text-primary-foreground/30" />
@@ -28,12 +43,19 @@ function PropertyBrowseCard({ property, onClick }: { property: BrowseProperty; o
         )}
         <div className="absolute top-2 left-2 flex gap-1.5">
           {isAirbnb && (
-            <Badge className="bg-accent text-accent-foreground text-xs">Airbnb</Badge>
+            <Badge className="bg-accent text-accent-foreground text-xs">AirBnB</Badge>
           )}
           <Badge variant="outline" className="bg-card/80 backdrop-blur-sm text-xs capitalize">
             {property.property_type}
           </Badge>
         </div>
+        {isOccupied && (
+          <div className="absolute inset-0 flex items-center justify-center bg-foreground/40">
+            <Badge className="bg-destructive text-destructive-foreground text-sm px-3 py-1">
+              Occupied
+            </Badge>
+          </div>
+        )}
       </div>
       <CardContent className="p-4 space-y-2">
         <h3 className="font-semibold text-foreground truncate">{property.name}</h3>
@@ -116,8 +138,8 @@ export function TenantBrowseProperties() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="all">All ({properties?.length || 0})</TabsTrigger>
-          <TabsTrigger value="standard">Long-term ({properties?.filter((p) => p.listing_type === "standard").length || 0})</TabsTrigger>
-          <TabsTrigger value="airbnb">Short Stay ({properties?.filter((p) => p.listing_type === "airbnb").length || 0})</TabsTrigger>
+          <TabsTrigger value="standard">Standard ({properties?.filter((p) => p.listing_type === "standard").length || 0})</TabsTrigger>
+          <TabsTrigger value="airbnb">AirBnB ({properties?.filter((p) => p.listing_type === "airbnb").length || 0})</TabsTrigger>
         </TabsList>
       </Tabs>
 
