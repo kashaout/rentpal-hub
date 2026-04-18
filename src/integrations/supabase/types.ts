@@ -2098,6 +2098,7 @@ export type Database = {
           description: string | null
           id: string | null
           image_url: string | null
+          is_paused: boolean | null
           listing_type: string | null
           monthly_rent: number | null
           name: string | null
@@ -2113,6 +2114,7 @@ export type Database = {
           description?: string | null
           id?: string | null
           image_url?: string | null
+          is_paused?: never
           listing_type?: string | null
           monthly_rent?: number | null
           name?: string | null
@@ -2128,6 +2130,7 @@ export type Database = {
           description?: string | null
           id?: string | null
           image_url?: string | null
+          is_paused?: never
           listing_type?: string | null
           monthly_rent?: number | null
           name?: string | null

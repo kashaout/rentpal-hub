@@ -703,7 +703,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
             <div className="absolute top-3 left-3 flex gap-2">
               {isAirbnb && (
                 <Badge className="bg-primary/90 text-primary-foreground backdrop-blur-sm">
-                  <Home className="mr-1 h-3 w-3" />Airbnb
+                  <Home className="mr-1 h-3 w-3" />AirBnB
                 </Badge>
               )}
               <Badge variant="outline" className="bg-card/80 backdrop-blur-sm">{property.property_type}</Badge>

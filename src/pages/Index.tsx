@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { SessionTimeoutDialog } from "@/components/SessionTimeoutDialog";
 import { Header } from "@/components/Header";
 import { FeedbackButton } from "@/components/FeedbackButton";
+import { TenantHelpWidget } from "@/components/tenant/TenantHelpWidget";
 import { Dashboard } from "@/components/Dashboard";
 import { AdminPanel } from "@/components/admin/AdminPanel";
 import { LandlordUserManagement } from "@/components/admin/LandlordUserManagement";
@@ -297,6 +298,7 @@ const Index = () => {
         {renderContent()}
       </main>
       <FeedbackButton />
+      <TenantHelpWidget />
       <SessionTimeoutDialog />
     </div>
   );
