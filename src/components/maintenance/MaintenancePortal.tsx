@@ -158,7 +158,7 @@ export function MaintenancePortal({ showPerformance = false }: MaintenancePortal
     </Card>
   );
 
-  return (
+  const requestsView = (
     <div className="space-y-6">
       {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-3">
@@ -223,5 +223,26 @@ export function MaintenancePortal({ showPerformance = false }: MaintenancePortal
 
       {selectedRequest && <MaintenanceUpdateDialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen} request={selectedRequest} />}
     </div>
+  );
+
+  if (!showPerformance) return requestsView;
+
+  return (
+    <Tabs value={topTab} onValueChange={(v) => setTopTab(v as "requests" | "performance")} className="space-y-6">
+      <TabsList>
+        <TabsTrigger value="requests" className="gap-2">
+          <Wrench className="h-4 w-4" />
+          Requests
+        </TabsTrigger>
+        <TabsTrigger value="performance" className="gap-2">
+          <TrendingUp className="h-4 w-4" />
+          Worker Performance
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="requests" className="mt-0">{requestsView}</TabsContent>
+      <TabsContent value="performance" className="mt-0">
+        <MaintenancePerformanceDashboard />
+      </TabsContent>
+    </Tabs>
   );
 }
