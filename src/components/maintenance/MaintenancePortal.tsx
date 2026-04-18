@@ -18,6 +18,8 @@ import { MaintenanceUpdateDialog } from "./MaintenanceUpdateDialog";
 import { cn } from "@/lib/utils";
 import { getSignedUrl } from "@/hooks/useSignedUrls";
 import { Badge } from "@/components/ui/badge";
+import { MaintenancePerformanceDashboard } from "@/components/admin/MaintenancePerformanceDashboard";
+import { TrendingUp } from "lucide-react";
 
 const priorityStyles: Record<string, string> = {
   low: "bg-muted text-muted-foreground",
@@ -70,10 +72,16 @@ function MaintenancePhotos({ photoPaths }: { photoPaths: string[] }) {
   );
 }
 
-export function MaintenancePortal() {
+interface MaintenancePortalProps {
+  /** When true, renders a top-level "Requests" / "Worker Performance" tabbed view. */
+  showPerformance?: boolean;
+}
+
+export function MaintenancePortal({ showPerformance = false }: MaintenancePortalProps = {}) {
   const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequestWithDetails | null>(null);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("pending");
+  const [topTab, setTopTab] = useState<"requests" | "performance">("requests");
 
   const { data: requests, isLoading } = useMaintenanceRequests();
   const updateRequest = useUpdateMaintenanceRequest();
@@ -150,7 +158,7 @@ export function MaintenancePortal() {
     </Card>
   );
 
-  return (
+  const requestsView = (
     <div className="space-y-6">
       {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-3">
@@ -215,5 +223,26 @@ export function MaintenancePortal() {
 
       {selectedRequest && <MaintenanceUpdateDialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen} request={selectedRequest} />}
     </div>
+  );
+
+  if (!showPerformance) return requestsView;
+
+  return (
+    <Tabs value={topTab} onValueChange={(v) => setTopTab(v as "requests" | "performance")} className="space-y-6">
+      <TabsList>
+        <TabsTrigger value="requests" className="gap-2">
+          <Wrench className="h-4 w-4" />
+          Requests
+        </TabsTrigger>
+        <TabsTrigger value="performance" className="gap-2">
+          <TrendingUp className="h-4 w-4" />
+          Worker Performance
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="requests" className="mt-0">{requestsView}</TabsContent>
+      <TabsContent value="performance" className="mt-0">
+        <MaintenancePerformanceDashboard />
+      </TabsContent>
+    </Tabs>
   );
 }
