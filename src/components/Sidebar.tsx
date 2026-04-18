@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Building2, Users, Settings, LogOut,
   Home, UserCog, Shield, BarChart3, Wrench,
-  TrendingUp, Wallet, Crown, Plus, MessageSquare, ChevronDown, Loader2,
+  Wallet, Crown, Plus, MessageSquare, ChevronDown, Loader2,
   X, Lock, Star, FileText,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
