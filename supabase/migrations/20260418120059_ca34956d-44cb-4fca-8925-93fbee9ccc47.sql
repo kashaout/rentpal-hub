@@ -1,0 +1,6 @@
+UPDATE public.properties SET image_url = 'https://rsudeyfaoblhrjnbmvuq.supabase.co/storage/v1/object/public/property-images/seed/banana-island.jpg' WHERE id = 'e1769b17-e135-46bd-b2b3-aa1e41792916';
+UPDATE public.properties SET image_url = 'https://rsudeyfaoblhrjnbmvuq.supabase.co/storage/v1/object/public/property-images/seed/lekki-beachfront.jpg' WHERE id = 'ac4e1767-d451-4071-a958-862b47101502';
+UPDATE public.properties SET image_url = 'https://rsudeyfaoblhrjnbmvuq.supabase.co/storage/v1/object/public/property-images/seed/victoria-island.jpg' WHERE id = '93cf38d6-1c43-4a4c-b609-e51115124d36';
+UPDATE public.properties SET image_url = 'https://rsudeyfaoblhrjnbmvuq.supabase.co/storage/v1/object/public/property-images/seed/maitama-duplex.jpg' WHERE id = '78c5258c-c65b-4d4c-956c-0b1fea3467b6';
+UPDATE public.properties SET image_url = 'https://rsudeyfaoblhrjnbmvuq.supabase.co/storage/v1/object/public/property-images/seed/yaba-apartment.jpg' WHERE id = 'e833331b-6960-4306-9bac-b41eff70adab';
+UPDATE public.properties SET image_url = 'https://rsudeyfaoblhrjnbmvuq.supabase.co/storage/v1/object/public/property-images/seed/gra-villa.jpg' WHERE id = '9992985c-04ca-4751-bcda-9accb42880cb';
