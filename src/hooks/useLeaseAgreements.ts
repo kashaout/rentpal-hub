@@ -108,10 +108,10 @@ export function useSignLeaseAgreement() {
         } as any);
         if (error) throw error;
       } else {
-        // Landlord countersign: use timestamp as source of truth.
-        // Landlord can sign whenever landlord_signed_at IS NULL — regardless of
-        // whether the tenant has signed first. Lease becomes "active" only when
-        // BOTH tenant_signed_at and landlord_signed_at are not null.
+        // Landlord countersign — timestamp is the only source of truth.
+        // Landlord can sign whenever landlord_signed_at IS NULL, regardless of
+        // tenant signing order. Lease becomes "active" only when BOTH
+        // tenant_signed_at AND landlord_signed_at are populated.
         const { data: current, error: fetchError } = await supabase
           .from("lease_agreements" as any)
           .select("tenant_signed_at, landlord_signed_at")
@@ -121,13 +121,17 @@ export function useSignLeaseAgreement() {
         if (fetchError) throw fetchError;
         const currentData = current as any;
 
+        // Only block if the LANDLORD has already signed.
+        // Do NOT block when tenant_signed_at is set — that's the normal flow.
         if (currentData?.landlord_signed_at) {
-          throw new Error("Lease already signed by landlord");
+          throw new Error("You have already signed this lease");
         }
 
+        const nowIso = new Date().toISOString();
         const updateData: any = {
           landlord_signed: true,
-          landlord_signed_at: new Date().toISOString(),
+          landlord_signed_at: nowIso,
+          // Active only when both timestamps exist
           status: currentData?.tenant_signed_at ? "active" : "pending_signature",
         };
 
