@@ -18,6 +18,8 @@ import { MaintenanceUpdateDialog } from "./MaintenanceUpdateDialog";
 import { cn } from "@/lib/utils";
 import { getSignedUrl } from "@/hooks/useSignedUrls";
 import { Badge } from "@/components/ui/badge";
+import { MaintenancePerformanceDashboard } from "@/components/admin/MaintenancePerformanceDashboard";
+import { TrendingUp } from "lucide-react";
 
 const priorityStyles: Record<string, string> = {
   low: "bg-muted text-muted-foreground",
@@ -70,10 +72,16 @@ function MaintenancePhotos({ photoPaths }: { photoPaths: string[] }) {
   );
 }
 
-export function MaintenancePortal() {
+interface MaintenancePortalProps {
+  /** When true, renders a top-level "Requests" / "Worker Performance" tabbed view. */
+  showPerformance?: boolean;
+}
+
+export function MaintenancePortal({ showPerformance = false }: MaintenancePortalProps = {}) {
   const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequestWithDetails | null>(null);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("pending");
+  const [topTab, setTopTab] = useState<"requests" | "performance">("requests");
 
   const { data: requests, isLoading } = useMaintenanceRequests();
   const updateRequest = useUpdateMaintenanceRequest();
