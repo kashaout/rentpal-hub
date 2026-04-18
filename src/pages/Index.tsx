@@ -17,7 +17,7 @@ import { PropertiesPage } from "@/components/PropertiesPage";
 import { TenantsPage } from "@/components/TenantsPage";
 import { SettingsPage } from "@/components/SettingsPage";
 import { ReportsPage } from "@/components/ReportsPage";
-import { MaintenancePerformanceDashboard } from "@/components/admin/MaintenancePerformanceDashboard";
+
 import { FinanceDashboard } from "@/components/finance/FinanceDashboard";
 import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
@@ -46,7 +46,7 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   tenants: { title: "Tenants", subtitle: "Tenants linked to each property and their lease/payment status." },
   reports: { title: "Reports", subtitle: "Downloadable reports across finance, maintenance, and reviews." },
   "manage-users": { title: "Manage Users", subtitle: "Add and manage landlords, tenants, maintenance, and consultants." },
-  "worker-performance": { title: "Worker Performance", subtitle: "Track maintenance team metrics and ratings." },
+  
   subscription: { title: "Subscription Plans", subtitle: "Manage your plan and unlock features." },
   settings: { title: "Settings", subtitle: "Your account, subscription, and preferences." },
   "pending-leases": { title: "Pending Leases", subtitle: "Lease agreements awaiting signature." },
