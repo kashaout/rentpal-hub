@@ -208,20 +208,19 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     { icon: BarChart3, label: "Reports", id: "reports", show: isManagerRole, locked: !isAdmin && !hasFeature("reports") },
     { icon: FileText, label: "Pending Leases", id: "pending-leases", show: isManagerRole, locked: false },
 
-    // ── Tenant nav — split by active-lease state ────────────────
-    // Pre-lease (no signed lease yet): Browse + Bookings only
+    // ── Tenant nav ──────────────────────────────────────────────
+    // Pre-lease tenants: Browse + Bookings + Pending Leases
     { icon: Building2, label: "Browse Properties", id: "browse-properties", show: showTenantNav && !isActiveTenant, locked: false },
     { icon: FileText, label: "My Bookings", id: "my-bookings", show: showTenantNav && !isActiveTenant, locked: false },
     { icon: FileText, label: "Pending Leases", id: "pending-leases", show: showTenantNav && !isActiveTenant, locked: false },
 
-    // Active tenant (lease fully signed): full tenant app
+    // Active tenants: simplified nav (My Property / Lease / Payments removed —
+    // those live inside the Dashboard tabs and Documents).
     { icon: LayoutDashboard, label: "Dashboard", id: "tenant-command-center", show: showTenantNav && isActiveTenant, locked: false },
-    { icon: Home, label: "My Property", id: "tenant-portal", show: showTenantNav && isActiveTenant, locked: false },
-    { icon: FileText, label: "Lease", id: "tenant-lease", show: showTenantNav && isActiveTenant, locked: false },
-    { icon: Wrench, label: "Maintenance", id: "tenant-portal", show: showTenantNav && isActiveTenant, locked: false },
-    { icon: MessageSquare, label: "Messages", id: "tenant-inbox", show: showTenantNav && isActiveTenant, locked: false },
+    { icon: Building2, label: "Browse Properties", id: "browse-properties", show: showTenantNav && isActiveTenant, locked: false },
+    { icon: MessageSquare, label: "Requests", id: "tenant-inbox", show: showTenantNav && isActiveTenant, locked: false },
     { icon: FileText, label: "Documents", id: "tenant-documents", show: showTenantNav && isActiveTenant, locked: false },
-    { icon: Wallet, label: "Payments", id: "tenant-payments", show: showTenantNav && isActiveTenant, locked: false },
+    { icon: BarChart3, label: "Reports", id: "tenant-reports", show: showTenantNav && isActiveTenant, locked: false },
   ];
 
   const adminItems = [
