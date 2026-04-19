@@ -24,6 +24,7 @@ import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { PendingLeasesPage } from "@/components/PendingLeasesPage";
 import { PropertyDetailView } from "@/components/PropertyDetailView";
 import { TenantLeasePage } from "@/components/tenant/TenantLeasePage";
+import { TenantReportsPage } from "@/components/tenant/TenantReportsPage";
 import { useAuth } from "@/hooks/useAuth";
 import { useActiveTenant } from "@/hooks/useActiveTenant";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,7 +40,8 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   "tenant-payments": { title: "Payments", subtitle: "Your rent and payment history." },
   "browse-properties": { title: "Browse Properties", subtitle: "Find available properties to rent or book." },
   "my-bookings": { title: "My Bookings", subtitle: "Your reservations and lease agreements." },
-  "tenant-inbox": { title: "Messages", subtitle: "All your requests and communication in one place." },
+  "tenant-inbox": { title: "Requests", subtitle: "All your requests and maintenance issues in one place." },
+  "tenant-reports": { title: "Reports", subtitle: "Your full stay, payment, lease and maintenance history." },
   "maintenance-portal": { title: "Maintenance", subtitle: "Maintenance jobs created from tenant issues and assigned to vendors." },
   finance: { title: "Financial Intelligence", subtitle: "Financial intelligence across rent, expenses, and escrow." },
   properties: { title: "Properties", subtitle: "All your properties and their current status in one place." },
@@ -244,6 +246,8 @@ const Index = () => {
         return <MyBookingsPage />;
       case "tenant-inbox":
         return <TenantRequestsInbox />;
+      case "tenant-reports":
+        return <TenantReportsPage />;
       case "maintenance-portal":
         return <MaintenancePortal showPerformance={isManagerRole} />;
       case "finance":
