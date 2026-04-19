@@ -225,7 +225,8 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
             check_out: format(selectedRange.to, "yyyy-MM-dd"),
             total_price: totalPrice,
             guest_count: guestCount,
-            notes: notes || undefined,
+            // Persist user-selected times alongside any free-form note as JSON
+            notes: encodeBookingNotes({ checkInTime, checkOutTime, note: notes }) ?? undefined,
           });
         } catch (e) {
           console.error("Failed to create booking record:", e);
@@ -391,17 +392,23 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
         {rentalStep === "dates" && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">Select your lease period:</p>
-            <div className="grid grid-cols-2 gap-2">
-              <DatePickerPopover
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <DateTimePicker
                 label="Check-in"
-                value={selectedRange.from}
-                onSelect={(d) => setSelectedRange(prev => ({ ...prev, from: d }))}
+                date={selectedRange.from}
+                onDateChange={(d) => setSelectedRange(prev => ({ ...prev, from: d }))}
+                time={checkInTime}
+                onTimeChange={setCheckInTime}
+                defaultTime="15:00"
                 disabled={(date) => isBefore(date, startOfDay(new Date())) || isDateBooked(date)}
               />
-              <DatePickerPopover
+              <DateTimePicker
                 label="Check-out"
-                value={selectedRange.to}
-                onSelect={(d) => setSelectedRange(prev => ({ ...prev, to: d }))}
+                date={selectedRange.to}
+                onDateChange={(d) => setSelectedRange(prev => ({ ...prev, to: d }))}
+                time={checkOutTime}
+                onTimeChange={setCheckOutTime}
+                defaultTime="11:00"
                 disabled={(date) => {
                   if (!selectedRange.from) return true;
                   return isBefore(date, selectedRange.from) || isDateBooked(date);
@@ -791,18 +798,24 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
               {isAirbnb ? (
                 rentalStep !== "browse" ? renderWizardSteps() : (
                 <>
-                  {/* Airbnb date pickers as popovers */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <DatePickerPopover
+                  {/* Airbnb date+time pickers in sidebar */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <DateTimePicker
                       label="Check-in"
-                      value={selectedRange.from}
-                      onSelect={(d) => setSelectedRange(prev => ({ ...prev, from: d }))}
+                      date={selectedRange.from}
+                      onDateChange={(d) => setSelectedRange(prev => ({ ...prev, from: d }))}
+                      time={checkInTime}
+                      onTimeChange={setCheckInTime}
+                      defaultTime="15:00"
                       disabled={(date) => isBefore(date, startOfDay(new Date())) || isDateBooked(date)}
                     />
-                    <DatePickerPopover
+                    <DateTimePicker
                       label="Check-out"
-                      value={selectedRange.to}
-                      onSelect={(d) => setSelectedRange(prev => ({ ...prev, to: d }))}
+                      date={selectedRange.to}
+                      onDateChange={(d) => setSelectedRange(prev => ({ ...prev, to: d }))}
+                      time={checkOutTime}
+                      onTimeChange={setCheckOutTime}
+                      defaultTime="11:00"
                       disabled={(date) => {
                         if (!selectedRange.from) return true;
                         return isBefore(date, selectedRange.from) || isDateBooked(date);
