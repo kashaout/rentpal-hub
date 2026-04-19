@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { encodeBookingNotes } from "@/lib/bookingTime";
 import { useProperty } from "@/hooks/useProperties";
 import { usePublicProperty } from "@/hooks/usePublicProperty";
 import { usePropertyBookings, useCreateBooking } from "@/hooks/useBookings";
@@ -74,6 +76,8 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   // Rental flow state
   const [rentalStep, setRentalStep] = useState<RentalStep>(paymentSuccess ? "complete" : "browse");
   const [selectedRange, setSelectedRange] = useState<{ from?: Date; to?: Date }>({});
+  const [checkInTime, setCheckInTime] = useState<string>("15:00");
+  const [checkOutTime, setCheckOutTime] = useState<string>("11:00");
   const [guestCount, setGuestCount] = useState(1);
   const [notes, setNotes] = useState("");
   const [fullName, setFullName] = useState("");
