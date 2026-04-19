@@ -1,10 +1,11 @@
 import { format, differenceInDays } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Calendar, Banknote, Clock, Star } from "lucide-react";
+import { Building2, Calendar, Banknote, Clock, Star, CheckCircle2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { TenantLeaseInfo } from "@/hooks/useTenantPortal";
 import { usePaymentsByTenant } from "@/hooks/usePayments";
+import { useTenantPaidStatus } from "@/hooks/useTenantPaidStatus";
 import { NotesSection } from "@/components/NotesSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -21,8 +22,12 @@ const statusStyles: Record<string, string> = {
 
 export function TenantOverviewTab({ lease }: Props) {
   const { data: payments } = usePaymentsByTenant(lease.id);
+  const { data: paid } = useTenantPaidStatus(lease.property_id);
   const daysLeft = differenceInDays(new Date(lease.lease_end), new Date());
   const totalPaid = payments?.filter(p => p.status === "completed").reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+
+  // Effective payment status: paid → from real payment/booking; otherwise tenants flag.
+  const effectiveStatus = paid?.paid ? "paid" : lease.payment_status;
 
   return (
     <div className="space-y-6">
@@ -74,7 +79,16 @@ export function TenantOverviewTab({ lease }: Props) {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Payment Status</p>
-                <Badge variant="outline" className={`text-sm ${statusStyles[lease.payment_status] || ""}`}>{lease.payment_status}</Badge>
+                <Badge variant="outline" className={`text-sm capitalize ${statusStyles[effectiveStatus] || ""}`}>
+                  {effectiveStatus === "paid" && <CheckCircle2 className="h-3 w-3 mr-1" />}
+                  {effectiveStatus}
+                </Badge>
+                {paid?.paid && paid.lastPaymentAmount && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {formatCurrency(paid.lastPaymentAmount, "NGN")}
+                    {paid.lastPaymentDate ? ` · ${format(new Date(paid.lastPaymentDate), "MMM d")}` : ""}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
