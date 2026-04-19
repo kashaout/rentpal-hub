@@ -38,6 +38,7 @@ import { useMaintenanceRequests } from "@/hooks/useMaintenanceRequests";
 import { useAuth } from "@/hooks/useAuth";
 import { MaintenanceRequestDialog } from "./MaintenanceRequestDialog";
 import { RateMaintenanceDialog } from "./RateMaintenanceDialog";
+import { useTenantPaidStatus } from "@/hooks/useTenantPaidStatus";
 import { cn } from "@/lib/utils";
 
 const paymentStatusStyles: Record<string, string> = {
@@ -81,6 +82,7 @@ export function TenantPortal() {
   const { data: payments, isLoading: paymentsLoading } = usePaymentsByTenant(lease?.id || "");
   const { data: requests, isLoading: requestsLoading } = useMaintenanceRequests(lease?.id);
   const { data: myReviews = [] } = useMyReviews();
+  const { data: paidStatus } = useTenantPaidStatus(lease?.property_id);
 
   const isLoading = leaseLoading || paymentsLoading || requestsLoading;
 
@@ -112,7 +114,11 @@ export function TenantPortal() {
   const daysUntilLeaseEnd = differenceInDays(new Date(lease.lease_end), new Date());
   const isLeaseExpired = daysUntilLeaseEnd <= 0;
   const totalPaid = payments?.filter((p) => p.status === "completed").reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-  const isRentPaid = lease.payment_status === "paid";
+  // Treat as paid when ANY payment evidence exists OR the legacy flag is set.
+  // Lock rent button until checkout/active period passes.
+  const isRentPaid =
+    paidStatus?.paid || lease.payment_status === "paid";
+  const lockPayments = !!paidStatus?.paid && paidStatus.withinActivePeriod;
   const hasReviewedProperty = myReviews.some((r) => r.property_id === lease.property_id);
   const showReviewPrompt = isLeaseExpired && !hasReviewedProperty;
   const handleSubmitReview = async () => {
@@ -188,7 +194,7 @@ export function TenantPortal() {
               <Button
                 size="sm"
                 className="mt-2 w-full gap-1"
-                disabled={rentPaymentLoading}
+                disabled={rentPaymentLoading || lockPayments}
                 onClick={() =>
                   payRent({
                     amount: lease.rent_amount,
@@ -204,7 +210,7 @@ export function TenantPortal() {
                 ) : (
                   <Banknote className="h-3 w-3" />
                 )}
-                Pay Rent Online
+                {lockPayments ? "Already Paid" : "Pay Rent Online"}
               </Button>
             )}
           </CardContent>
