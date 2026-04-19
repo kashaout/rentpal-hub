@@ -360,7 +360,7 @@ export function TenantRequestsInbox() {
     <div className="space-y-6 p-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-xl font-semibold text-foreground">Inbox</h2>
+          <h2 className="font-display text-xl font-semibold text-foreground">Requests</h2>
           <p className="text-sm text-muted-foreground">All your requests and maintenance issues in one place</p>
         </div>
         <div className="flex gap-2">
@@ -369,10 +369,11 @@ export function TenantRequestsInbox() {
         </div>
       </div>
 
+      {/* Item #10 — Maintenance is now a sub-tab inside Requests */}
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="all">All ({allItems.length})</TabsTrigger>
-          <TabsTrigger value="requests">Requests ({requests?.length || 0})</TabsTrigger>
+          <TabsTrigger value="requests">General ({requests?.length || 0})</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance ({maintenanceRequests?.length || 0})</TabsTrigger>
         </TabsList>
       </Tabs>

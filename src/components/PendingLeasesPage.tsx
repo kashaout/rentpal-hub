@@ -1,16 +1,28 @@
+import { useState } from "react";
 import { format } from "date-fns";
-import { Loader2, FileText, Pen, CheckCircle2 } from "lucide-react";
+import { Loader2, Pen, CheckCircle2, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useMyLeaseAgreements, useSignLeaseAgreement } from "@/hooks/useLeaseAgreements";
+import {
+  useMyLeaseAgreements,
+  useSignLeaseAgreement,
+  LeaseAgreement,
+} from "@/hooks/useLeaseAgreements";
 import { useAuth } from "@/hooks/useAuth";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { LeaseTemplateViewer } from "@/components/tenant/LeaseTemplateViewer";
 
 export function PendingLeasesPage() {
   const { user } = useAuth();
   const { data: agreements, isLoading } = useMyLeaseAgreements();
   const signLease = useSignLeaseAgreement();
+  const [viewing, setViewing] = useState<LeaseAgreement | null>(null);
+
+  if (viewing) {
+    // Render the full readable lease in-app before signing.
+    return <LeaseTemplateViewer agreement={viewing} onBack={() => setViewing(null)} />;
+  }
 
   if (isLoading) {
     return (
@@ -20,12 +32,10 @@ export function PendingLeasesPage() {
     );
   }
 
-  const pendingLeases = agreements?.filter(a => {
+  const pendingLeases = agreements?.filter((a) => {
     if (a.status === "active") return false;
-    // Show if this user hasn't signed yet
     if (a.tenant_user_id === user?.id && !a.tenant_signed) return true;
     if (a.landlord_user_id === user?.id && !a.landlord_signed) return true;
-    // Also show if waiting for other party signature
     if (a.tenant_user_id === user?.id && a.tenant_signed && !a.landlord_signed) return true;
     if (a.landlord_user_id === user?.id && a.landlord_signed && !a.tenant_signed) return true;
     return false;
@@ -45,47 +55,82 @@ export function PendingLeasesPage() {
       {pendingLeases.map((lease) => {
         const isTenant = lease.tenant_user_id === user?.id;
         const isLandlord = lease.landlord_user_id === user?.id;
-        const needsMySignature = (isTenant && !lease.tenant_signed) || (isLandlord && !lease.landlord_signed);
-        const waitingForOther = (isTenant && lease.tenant_signed && !lease.landlord_signed) || (isLandlord && lease.landlord_signed && !lease.tenant_signed);
+        const needsMySignature =
+          (isTenant && !lease.tenant_signed) || (isLandlord && !lease.landlord_signed);
+        const waitingForOther =
+          (isTenant && lease.tenant_signed && !lease.landlord_signed) ||
+          (isLandlord && lease.landlord_signed && !lease.tenant_signed);
 
         return (
           <Card key={lease.id} className="border-l-4 border-l-accent">
             <CardContent className="p-4 space-y-3">
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-medium text-foreground">Unit {lease.unit_number}</p>
                   <p className="text-sm text-muted-foreground">
-                    {format(new Date(lease.lease_start), "MMM d, yyyy")} – {format(new Date(lease.lease_end), "MMM d, yyyy")}
+                    {format(new Date(lease.lease_start), "MMM d, yyyy")} –{" "}
+                    {format(new Date(lease.lease_end), "MMM d, yyyy")}
                   </p>
                 </div>
-                <Badge variant="outline" className={needsMySignature ? "bg-warning/10 text-warning" : waitingForOther ? "bg-accent/10 text-accent" : "bg-muted text-muted-foreground"}>
-                  {needsMySignature ? "Needs Your Signature" : waitingForOther ? `Pending ${isTenant ? "Landlord" : "Tenant"} Signature` : "Awaiting Counter-Signature"}
+                <Badge
+                  variant="outline"
+                  className={
+                    needsMySignature
+                      ? "bg-warning/10 text-warning"
+                      : waitingForOther
+                      ? "bg-accent/10 text-accent"
+                      : "bg-muted text-muted-foreground"
+                  }
+                >
+                  {needsMySignature
+                    ? "Needs Your Signature"
+                    : waitingForOther
+                    ? `Pending ${isTenant ? "Landlord" : "Tenant"} Signature`
+                    : "Awaiting Counter-Signature"}
                 </Badge>
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Rent: {formatCurrency(Number(lease.rent_amount), lease.currency)}</span>
+                <span className="text-muted-foreground">
+                  Rent: {formatCurrency(Number(lease.rent_amount), lease.currency)}
+                </span>
                 <span className="text-muted-foreground text-xs">
-                  Tenant: {lease.tenant_signed ? "✓" : "✗"} / Landlord: {lease.landlord_signed ? "✓" : "✗"}
+                  Tenant: {lease.tenant_signed ? "✓" : "✗"} / Landlord:{" "}
+                  {lease.landlord_signed ? "✓" : "✗"}
                 </span>
               </div>
 
-              {needsMySignature && (
-                <Button
-                  onClick={() => signLease.mutate({ agreementId: lease.id, role: isTenant ? "tenant" : "landlord" })}
-                  disabled={signLease.isPending}
-                  className="w-full gap-2"
-                >
-                  {signLease.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pen className="h-4 w-4" />}
-                  Sign Lease Agreement
+              <div className="grid gap-2 sm:grid-cols-2">
+                {/* "Open Lease" — landlord/tenant can read full lease before signing */}
+                <Button variant="outline" onClick={() => setViewing(lease)} className="gap-2">
+                  <Eye className="h-4 w-4" />
+                  Open Lease
                 </Button>
-              )}
 
-              {waitingForOther && (
-                <p className="text-xs text-muted-foreground text-center">
-                  Waiting for {isTenant ? "landlord" : "tenant"} to counter-sign.
-                </p>
-              )}
+                {needsMySignature ? (
+                  <Button
+                    onClick={() =>
+                      signLease.mutate({
+                        agreementId: lease.id,
+                        role: isTenant ? "tenant" : "landlord",
+                      })
+                    }
+                    disabled={signLease.isPending}
+                    className="gap-2"
+                  >
+                    {signLease.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Pen className="h-4 w-4" />
+                    )}
+                    Sign Lease
+                  </Button>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center self-center">
+                    Waiting for {isTenant ? "landlord" : "tenant"} to counter-sign.
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
         );
