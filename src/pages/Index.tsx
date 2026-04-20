@@ -265,11 +265,9 @@ const Index = () => {
         return <PendingLeasesPage />;
       case "property-detail":
         if (detailPropertyId) {
-          // For landlords/admins/consultants, open the unified Property Command Center.
-          // For tenants, keep the booking-focused PropertyDetailView.
+          // Landlords/admins/consultants → unified Property Command Center.
+          // Tenants → booking-focused PropertyDetailView.
           if (isManagerRole) {
-            // Lazy import to avoid circular deps; PropertyCommandCenter is self-contained.
-            const { PropertyCommandCenter } = require("@/components/property/PropertyCommandCenter");
             return <PropertyCommandCenter propertyId={detailPropertyId} onBack={goBack} />;
           }
           return (
