@@ -104,6 +104,8 @@ export default function Contact() {
       <footer className="border-t py-8 text-center text-sm text-muted-foreground">
         © {new Date().getFullYear()} RentPal. All rights reserved.
       </footer>
+
+      <PublicHelpWidget />
     </div>
   );
 }
