@@ -23,6 +23,7 @@ import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { PendingLeasesPage } from "@/components/PendingLeasesPage";
 import { PropertyDetailView } from "@/components/PropertyDetailView";
+import { PropertyCommandCenter } from "@/components/property/PropertyCommandCenter";
 import { TenantLeasePage } from "@/components/tenant/TenantLeasePage";
 import { TenantReportsPage } from "@/components/tenant/TenantReportsPage";
 import { useAuth } from "@/hooks/useAuth";
@@ -264,6 +265,13 @@ const Index = () => {
         return <PendingLeasesPage />;
       case "property-detail":
         if (detailPropertyId) {
+          // For landlords/admins/consultants, open the unified Property Command Center.
+          // For tenants, keep the booking-focused PropertyDetailView.
+          if (isManagerRole) {
+            // Lazy import to avoid circular deps; PropertyCommandCenter is self-contained.
+            const { PropertyCommandCenter } = require("@/components/property/PropertyCommandCenter");
+            return <PropertyCommandCenter propertyId={detailPropertyId} onBack={goBack} />;
+          }
           return (
             <PropertyDetailView
               propertyId={detailPropertyId}
