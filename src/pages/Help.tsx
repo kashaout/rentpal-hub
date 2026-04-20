@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowLeft, Building2, Users, Wrench, DollarSign, FileText, Shield } from "lucide-react";
 import logoImg from "@/assets/rentpal-logo.png";
+import { PublicHelpWidget } from "@/components/PublicHelpWidget";
 
 const CATEGORIES = [
   {
@@ -93,6 +94,8 @@ export default function Help() {
       <footer className="border-t py-8 text-center text-sm text-muted-foreground">
         © {new Date().getFullYear()} RentPal. All rights reserved.
       </footer>
+
+      <PublicHelpWidget />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Target, Heart, Globe, Users } from "lucide-react";
 import logoImg from "@/assets/rentpal-logo.png";
+import { PublicHelpWidget } from "@/components/PublicHelpWidget";
 
 export default function About() {
   return (
@@ -45,6 +46,8 @@ export default function About() {
       <footer className="border-t py-8 text-center text-sm text-muted-foreground">
         © {new Date().getFullYear()} RentPal. All rights reserved.
       </footer>
+
+      <PublicHelpWidget />
     </div>
   );
 }

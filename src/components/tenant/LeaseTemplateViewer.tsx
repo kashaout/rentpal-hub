@@ -47,24 +47,64 @@ export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerPr
   const cautionDeposit = agreement.rent_amount * 2;
   const lateCharge = agreement.rent_amount * 0.1;
 
+  const [emailing, setEmailing] = useState(false);
+
+  const buildHtml = () =>
+    buildLeaseHtml({
+      landlordName: agreement.landlord_name,
+      tenantName: agreement.tenant_name,
+      unitNumber: agreement.unit_number,
+      leaseStart: agreement.lease_start,
+      leaseEnd: agreement.lease_end,
+      rentAmount: agreement.rent_amount,
+      currency: agreement.currency,
+      terms: agreement.terms,
+      landlordSignedAt: agreement.landlord_signed_at,
+      tenantSignedAt: agreement.tenant_signed_at,
+    });
+
+  const handleDownload = () => {
+    printLeaseHtml(buildHtml(), `Lease — Unit ${agreement.unit_number}`);
+  };
+
+  const handleEmail = async () => {
+    try {
+      setEmailing(true);
+      const res = await emailLeaseHtml({
+        subject: `Your RentPal lease — Unit ${agreement.unit_number}`,
+        html: buildHtml(),
+      });
+      toast.success(`Lease sent to ${res.recipient}`);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to send lease by email");
+    } finally {
+      setEmailing(false);
+    }
+  };
+
   return (
     <div className="space-y-4 p-6">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-2">
         <Button variant="ghost" size="sm" onClick={onBack} className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Back
         </Button>
-        <a
-          href="/documents/lease-agreement-template.pdf"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ml-auto"
-        >
-          <Button variant="outline" size="sm" className="gap-2">
+        <div className="ml-auto flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={handleDownload} className="gap-2">
             <Download className="h-4 w-4" />
-            Download PDF Template
+            Download PDF
           </Button>
-        </a>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleEmail}
+            disabled={emailing}
+            className="gap-2"
+          >
+            {emailing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+            Email Me a Copy
+          </Button>
+        </div>
       </div>
 
       {/* Lease Document */}

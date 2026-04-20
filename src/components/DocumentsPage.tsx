@@ -16,7 +16,10 @@ import {
   Clock,
   Eye,
   AlertTriangle,
+  Mail,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -121,6 +124,44 @@ export function DocumentsPage() {
     if (file) {
       setSelectedFile(file);
       setUploadDialogOpen(true);
+    }
+  };
+
+  const emailDocument = async (doc: Document) => {
+    try {
+      // Create a short-lived signed URL the recipient can click in their inbox.
+      const { data: signed, error: signedErr } = await supabase.storage
+        .from("documents")
+        .createSignedUrl(doc.file_path, 60 * 60 * 24 * 7); // 7 days
+      if (signedErr || !signed?.signedUrl) throw signedErr || new Error("Could not create link");
+
+      const html = `
+        <h2 style="font-family:system-ui;margin:0 0 12px">${doc.name}</h2>
+        <p style="font-family:system-ui;font-size:14px;color:#444">
+          Here's a secure download link for the document you requested from RentPal.
+          This link expires in 7 days.
+        </p>
+        <p style="margin:18px 0">
+          <a href="${signed.signedUrl}"
+             style="background:#FF385C;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-family:system-ui">
+             Download ${doc.name}
+          </a>
+        </p>
+        <p style="font-family:system-ui;font-size:12px;color:#888">
+          Category: ${doc.category} • Size: ${formatFileSize(doc.file_size)}
+        </p>`;
+
+      const { error } = await supabase.functions.invoke("send-document-email", {
+        body: {
+          subject: `Your document: ${doc.name}`,
+          htmlBody: html,
+          textBody: `Download your document here (link expires in 7 days):\n${signed.signedUrl}`,
+        },
+      });
+      if (error) throw error;
+      toast.success("Document link sent to your email");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to send email");
     }
   };
 
@@ -270,6 +311,10 @@ export function DocumentsPage() {
                         <DropdownMenuItem onClick={() => downloadDocument(doc)}>
                           <Download className="mr-2 h-4 w-4" />
                           Download
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => emailDocument(doc)}>
+                          <Mail className="mr-2 h-4 w-4" />
+                          Send to my email
                         </DropdownMenuItem>
                         {canManage && (
                           <>
