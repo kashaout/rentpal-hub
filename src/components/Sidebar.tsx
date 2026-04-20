@@ -206,13 +206,13 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isManagerRole || isMaintenance || isVendor, locked: isManagerRole && !isAdmin && !hasFeature("maintenance") },
     { icon: Wallet, label: "Financials", id: "finance", show: isManagerRole, locked: !isAdmin && !hasFeature("financials") },
     { icon: BarChart3, label: "Reports", id: "reports", show: isManagerRole, locked: !isAdmin && !hasFeature("reports") },
-    { icon: FileText, label: "Pending Leases", id: "pending-leases", show: isManagerRole, locked: false },
+    { icon: FileText, label: "Leases", id: "pending-leases", show: isManagerRole, locked: false },
 
     // ── Tenant nav ──────────────────────────────────────────────
-    // Pre-lease tenants: Browse + Bookings + Pending Leases
+    // Pre-lease tenants: Browse + Bookings + Leases
     { icon: Building2, label: "Browse Properties", id: "browse-properties", show: showTenantNav && !isActiveTenant, locked: false },
     { icon: FileText, label: "My Bookings", id: "my-bookings", show: showTenantNav && !isActiveTenant, locked: false },
-    { icon: FileText, label: "Pending Leases", id: "pending-leases", show: showTenantNav && !isActiveTenant, locked: false },
+    { icon: FileText, label: "Leases", id: "pending-leases", show: showTenantNav && !isActiveTenant, locked: false },
 
     // Active tenants: simplified nav (My Property / Lease / Payments removed —
     // those live inside the Dashboard tabs and Documents).

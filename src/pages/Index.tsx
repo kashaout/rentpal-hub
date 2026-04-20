@@ -51,7 +51,7 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   
   subscription: { title: "Subscription Plans", subtitle: "Manage your plan and unlock features." },
   settings: { title: "Settings", subtitle: "Your account, subscription, and preferences." },
-  "pending-leases": { title: "Pending Leases", subtitle: "Lease agreements awaiting signature." },
+  "pending-leases": { title: "Leases", subtitle: "All your lease agreements — pending and signed." },
   "property-detail": { title: "Property Details", subtitle: "View property information and booking." },
 };
 
