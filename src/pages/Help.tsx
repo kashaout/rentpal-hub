@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowLeft, Building2, Users, Wrench, DollarSign, FileText, Shield } from "lucide-react";
 import logoImg from "@/assets/rentpal-logo.png";
+import { PublicHelpWidget } from "@/components/PublicHelpWidget";
 
 const CATEGORIES = [
   {

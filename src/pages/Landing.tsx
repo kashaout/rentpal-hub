@@ -15,6 +15,7 @@ import heroImg from "@/assets/hero-property.jpg";
 import dashboardImg from "@/assets/dashboard-preview.jpg";
 import logoImg from "@/assets/rentpal-logo.png";
 import { PLAN_CONFIGS, type SubscriptionPlan } from "@/hooks/useSubscription";
+import { PublicHelpWidget } from "@/components/PublicHelpWidget";
 
 const APP_AUTH_URL = "https://rentpal-hub.lovable.app/auth";
 
@@ -444,6 +445,8 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+
+      <PublicHelpWidget />
     </div>
   );
 }

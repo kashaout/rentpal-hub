@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Mail, Phone, MapPin, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import logoImg from "@/assets/rentpal-logo.png";
+import { PublicHelpWidget } from "@/components/PublicHelpWidget";
 
 export default function Contact() {
   const [sending, setSending] = useState(false);
