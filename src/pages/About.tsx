@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Target, Heart, Globe, Users } from "lucide-react";
 import logoImg from "@/assets/rentpal-logo.png";
+import { PublicHelpWidget } from "@/components/PublicHelpWidget";
 
 export default function About() {
   return (
