@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { format } from "date-fns";
-import { ArrowLeft, Download, Pen, Loader2, FileText, KeyRound, Wifi } from "lucide-react";
+import { ArrowLeft, Download, Pen, Loader2, FileText, KeyRound, Wifi, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { LeaseAgreement, useSignLeaseAgreement } from "@/hooks/useLeaseAgreements";
@@ -8,6 +9,8 @@ import { formatCurrency } from "@/lib/formatCurrency";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { buildLeaseHtml, printLeaseHtml, emailLeaseHtml } from "@/lib/leaseExport";
 
 interface LeaseTemplateViewerProps {
   agreement: LeaseAgreement;

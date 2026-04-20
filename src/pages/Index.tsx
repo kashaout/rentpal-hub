@@ -23,6 +23,7 @@ import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { PendingLeasesPage } from "@/components/PendingLeasesPage";
 import { PropertyDetailView } from "@/components/PropertyDetailView";
+import { PropertyCommandCenter } from "@/components/property/PropertyCommandCenter";
 import { TenantLeasePage } from "@/components/tenant/TenantLeasePage";
 import { TenantReportsPage } from "@/components/tenant/TenantReportsPage";
 import { useAuth } from "@/hooks/useAuth";
@@ -51,7 +52,7 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
   
   subscription: { title: "Subscription Plans", subtitle: "Manage your plan and unlock features." },
   settings: { title: "Settings", subtitle: "Your account, subscription, and preferences." },
-  "pending-leases": { title: "Pending Leases", subtitle: "Lease agreements awaiting signature." },
+  "pending-leases": { title: "Leases", subtitle: "All your lease agreements — pending and signed." },
   "property-detail": { title: "Property Details", subtitle: "View property information and booking." },
 };
 
@@ -264,6 +265,11 @@ const Index = () => {
         return <PendingLeasesPage />;
       case "property-detail":
         if (detailPropertyId) {
+          // Landlords/admins/consultants → unified Property Command Center.
+          // Tenants → booking-focused PropertyDetailView.
+          if (isManagerRole) {
+            return <PropertyCommandCenter propertyId={detailPropertyId} onBack={goBack} />;
+          }
           return (
             <PropertyDetailView
               propertyId={detailPropertyId}

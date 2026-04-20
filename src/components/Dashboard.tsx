@@ -260,7 +260,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           {properties && properties.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {properties.slice(0, 6).map((property) => (
-                <PropertyCard key={property.id} property={property} onEdit={handleEditProperty} onClick={(p) => onNavigate?.("properties")} />
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  onEdit={handleEditProperty}
+                  // Open the unified Property Command Center for this exact property
+                  onClick={(p) => onNavigate?.(`property-detail:${p.id}`)}
+                />
               ))}
             </div>
           ) : (
