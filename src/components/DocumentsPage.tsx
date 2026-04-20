@@ -16,7 +16,10 @@ import {
   Clock,
   Eye,
   AlertTriangle,
+  Mail,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -270,6 +273,10 @@ export function DocumentsPage() {
                         <DropdownMenuItem onClick={() => downloadDocument(doc)}>
                           <Download className="mr-2 h-4 w-4" />
                           Download
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => emailDocument(doc)}>
+                          <Mail className="mr-2 h-4 w-4" />
+                          Send to my email
                         </DropdownMenuItem>
                         {canManage && (
                           <>
