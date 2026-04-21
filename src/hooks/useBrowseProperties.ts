@@ -24,12 +24,11 @@ export function useBrowseProperties() {
   return useQuery({
     queryKey: ["browse-properties"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("public_property_listings" as any)
-        .select("id, name, address, description, image_url, property_type, listing_type, monthly_rent, currency, units, region, amenities, is_paused")
-        .order("name", { ascending: true });
+      const { data, error } = await supabase.rpc("get_public_property_listings" as any, {
+        _property_id: null,
+      });
 
-      console.log("[useBrowseProperties] public_property_listings rows:", data?.length ?? 0, error ? `error: ${error.message}` : "");
+      console.log("[useBrowseProperties] public listings rows:", data?.length ?? 0, error ? `error: ${error.message}` : "");
 
       if (error) throw error;
       return ((data as any[]) || []).map((p) => ({
