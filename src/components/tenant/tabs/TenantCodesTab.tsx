@@ -2,14 +2,32 @@ import { Loader2, Wifi, KeyRound, Lock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLeaseCredentials } from "@/hooks/useLeaseCredentials";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   leaseId?: string;
-  bothSigned: boolean;
 }
 
-export function TenantCodesTab({ leaseId, bothSigned }: Props) {
-  const { data: credentials, isLoading } = useLeaseCredentials(leaseId);
+export function TenantCodesTab({ leaseId }: Props) {
+  const { data: leaseStatus, isLoading: statusLoading } = useQuery({
+    queryKey: ["lease-sign-status", leaseId],
+    queryFn: async () => {
+      if (!leaseId) return null;
+      const { data } = await supabase
+        .from("lease_agreements")
+        .select("tenant_signed_at, landlord_signed_at")
+        .eq("id", leaseId)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!leaseId,
+  });
+
+  const bothSigned = !!leaseStatus?.tenant_signed_at && !!leaseStatus?.landlord_signed_at;
+  const { data: credentials, isLoading: credsLoading } = useLeaseCredentials(bothSigned ? leaseId : undefined);
+
+  const isLoading = statusLoading || credsLoading;
 
   if (isLoading) {
     return (
@@ -55,7 +73,7 @@ export function TenantCodesTab({ leaseId, bothSigned }: Props) {
             <div className="flex items-center gap-2 mb-3">
               <Wifi className="h-5 w-5 text-primary" />
               <p className="text-sm font-semibold uppercase tracking-wider">WiFi Password</p>
-              <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px] ml-auto">
+              <Badge variant="outline" className="text-[10px] ml-auto">
                 Active
               </Badge>
             </div>
@@ -71,7 +89,7 @@ export function TenantCodesTab({ leaseId, bothSigned }: Props) {
             <div className="flex items-center gap-2 mb-3">
               <KeyRound className="h-5 w-5 text-primary" />
               <p className="text-sm font-semibold uppercase tracking-wider">Door / Keybox Code</p>
-              <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 text-[10px] ml-auto">
+              <Badge variant="outline" className="text-[10px] ml-auto">
                 Active
               </Badge>
             </div>

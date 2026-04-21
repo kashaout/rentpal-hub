@@ -201,10 +201,7 @@ export function TenantCommandCenter({ defaultTab = "overview" }: { defaultTab?: 
             <TenantDocumentsTab propertyId={lease.property_id} />
           </TabsContent>
           <TabsContent value="codes">
-            <TenantCodesTab
-              leaseId={lease.lease_id}
-              bothSigned={!!lease.tenant_signed_at && !!lease.landlord_signed_at}
-            />
+            <TenantCodesTab leaseId={lease.lease_id} />
           </TabsContent>
           <TabsContent value="communication">
             <TenantCommunicationTab propertyId={lease.property_id} />
