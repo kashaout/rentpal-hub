@@ -53,7 +53,7 @@ export function TenantLeaseTab({ lease }: Props) {
     if (!activeAgreement || !user?.email) return;
     setEmailLoading(true);
     try {
-      await emailLeaseHtml(activeAgreement.terms || "No terms available", user.email);
+      await emailLeaseHtml({ html: activeAgreement.terms || "No terms available", to: user.email });
       toast({ title: "Email sent", description: "Lease agreement sent to your email." });
     } catch {
       toast({ title: "Email failed", description: "Could not send lease email.", variant: "destructive" });
