@@ -21,7 +21,7 @@ export async function logSecurityEvent(
       _table_name: tableName,
       _action: action,
       _event_type: eventType,
-      _details: details,
+      _details: details as unknown as Record<string, string>,
     });
   } catch {
     // Silent — security logging must never block the main flow
