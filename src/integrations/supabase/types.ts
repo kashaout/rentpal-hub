@@ -2047,27 +2047,18 @@ export type Database = {
       maintenance_tenant_lookup: {
         Row: {
           id: string | null
-          is_archived: boolean | null
-          lease_end: string | null
-          lease_start: string | null
           property_id: string | null
           unit_number: string | null
           user_id: string | null
         }
         Insert: {
           id?: string | null
-          is_archived?: boolean | null
-          lease_end?: string | null
-          lease_start?: string | null
           property_id?: string | null
           unit_number?: string | null
           user_id?: string | null
         }
         Update: {
           id?: string | null
-          is_archived?: boolean | null
-          lease_end?: string | null
-          lease_start?: string | null
           property_id?: string | null
           unit_number?: string | null
           user_id?: string | null
