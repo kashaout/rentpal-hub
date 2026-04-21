@@ -2,6 +2,7 @@
  * Error sanitization utilities to prevent information leakage
  * Maps database/API error messages to user-friendly messages
  */
+import { handleRlsError } from "@/lib/securityLogger";
 
 /**
  * Sanitizes error messages from Supabase/database operations to prevent
