@@ -80,6 +80,8 @@ export function TenantLeasePage() {
     }
   };
 
+  const daysRemaining = differenceInDays(new Date(tenancy.lease_end), new Date());
+
   return (
     <div className="space-y-6">
       {/* Actions */}
