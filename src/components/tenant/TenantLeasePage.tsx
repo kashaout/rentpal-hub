@@ -22,8 +22,9 @@ import { useToast } from "@/hooks/use-toast";
 export function TenantLeasePage() {
   const { tenancy, isLoading } = useActiveTenant();
   const { data: leases = [], isLoading: leasesLoading } = useMyLeaseAgreements();
-  // Securely fetch WiFi + door codes via RPC. Returns null until both parties signed.
   const { data: credentials } = useLeaseCredentials(tenancy?.lease_id);
+  const { toast } = useToast();
+  const [emailing, setEmailing] = useState(false);
 
   if (isLoading || leasesLoading) {
     return (
