@@ -13,15 +13,13 @@ export function usePublicProperty(id: string) {
   return useQuery({
     queryKey: ["public-property", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("public_property_listings" as any)
-        .select("id, name, address, description, image_url, property_type, listing_type, monthly_rent, currency, units, region, amenities")
-        .eq("id", id)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc("get_public_property_listings" as any, {
+        _property_id: id,
+      });
 
       if (error) throw error;
-      if (!data) return null;
-      const d = data as any;
+      const d = ((data as any[]) || [])[0];
+      if (!d) return null;
       return {
         id: d.id,
         name: d.name,
