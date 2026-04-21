@@ -142,8 +142,9 @@ const Index = () => {
         setCurrentView(isActiveTenant ? "tenant-command-center" : "browse-properties");
         return;
       }
-      // Active tenant landed on dashboard or pre-lease views → push into tenant app
-      if (isActiveTenant && (currentView === "dashboard" || preLeaseViews.includes(currentView))) {
+      // Active tenant landed on dashboard → push into tenant app
+      // (browse-properties is always accessible)
+      if (isActiveTenant && currentView === "dashboard") {
         setCurrentView("tenant-command-center");
         return;
       }
