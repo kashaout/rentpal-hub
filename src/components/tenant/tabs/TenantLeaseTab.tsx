@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/formatCurrency";
-import { printLeaseHtml, emailLeaseHtml } from "@/lib/leaseExport";
+import { buildLeaseHtml, printLeaseHtml, emailLeaseHtml } from "@/lib/leaseExport";
 import { TenantLeaseInfo } from "@/hooks/useTenantPortal";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,16 +44,32 @@ export function TenantLeaseTab({ lease }: Props) {
   // Fetch credentials via RPC — only returns data when both signed + within 12h of check-in
   const { data: credentials } = useLeaseCredentials(activeAgreement?.id);
 
+  const buildHtml = () => {
+    if (!activeAgreement) return "";
+    return buildLeaseHtml({
+      landlordName: activeAgreement.landlord_name,
+      tenantName: activeAgreement.tenant_name,
+      unitNumber: activeAgreement.unit_number,
+      leaseStart: activeAgreement.lease_start,
+      leaseEnd: activeAgreement.lease_end,
+      rentAmount: Number(activeAgreement.rent_amount),
+      currency: activeAgreement.currency,
+      terms: activeAgreement.terms,
+      landlordSignedAt: activeAgreement.landlord_signed_at,
+      tenantSignedAt: activeAgreement.tenant_signed_at,
+    });
+  };
+
   const handleDownload = () => {
     if (!activeAgreement) return;
-    printLeaseHtml(activeAgreement.terms || "No terms available");
+    printLeaseHtml(buildHtml(), `Lease — Unit ${activeAgreement.unit_number}`);
   };
 
   const handleEmail = async () => {
     if (!activeAgreement || !user?.email) return;
     setEmailLoading(true);
     try {
-      await emailLeaseHtml({ html: activeAgreement.terms || "No terms available", to: user.email });
+      await emailLeaseHtml({ html: buildHtml(), to: user.email, subject: `Your RentPal lease — Unit ${activeAgreement.unit_number}` });
       toast({ title: "Email sent", description: "Lease agreement sent to your email." });
     } catch {
       toast({ title: "Email failed", description: "Could not send lease email.", variant: "destructive" });

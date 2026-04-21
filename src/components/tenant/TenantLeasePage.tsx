@@ -1,15 +1,19 @@
+import { useState } from "react";
 import { format, differenceInDays } from "date-fns";
 import {
   Building2, Calendar, FileText, CheckCircle2, Loader2,
-  User, Banknote, MapPin, Clock, Wifi, KeyRound, Lock,
+  User, Banknote, MapPin, Clock, Wifi, KeyRound, Lock, Download, Mail,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useActiveTenant } from "@/hooks/useActiveTenant";
 import { useMyLeaseAgreements } from "@/hooks/useLeaseAgreements";
 import { useLeaseCredentials } from "@/hooks/useLeaseCredentials";
 import { formatCurrency } from "@/lib/formatCurrency";
+import { buildLeaseHtml, printLeaseHtml, emailLeaseHtml } from "@/lib/leaseExport";
+import { useToast } from "@/hooks/use-toast";
 
 /**
  * Tenant Lease page — renders the fully-signed lease agreement
