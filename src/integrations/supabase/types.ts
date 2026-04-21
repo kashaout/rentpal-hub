@@ -1534,6 +1534,39 @@ export type Database = {
           },
         ]
       }
+      security_events: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       sla_configs: {
         Row: {
           created_at: string
@@ -2240,8 +2273,58 @@ export type Database = {
       }
       is_verified_landlord: { Args: { _user_id: string }; Returns: boolean }
       is_verified_tenant: { Args: { _user_id: string }; Returns: boolean }
+      log_security_event: {
+        Args: {
+          _action: string
+          _details?: Json
+          _event_type?: string
+          _table_name: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       release_expired_bookings: { Args: never; Returns: undefined }
       release_soft_locks: { Args: never; Returns: undefined }
+      rpc_landlord_maintenance_view: {
+        Args: never
+        Returns: {
+          assigned_to: string
+          assigned_user_email: string
+          assigned_user_name: string
+          created_at: string
+          description: string
+          id: string
+          photo_urls: string[]
+          priority: string
+          property_address: string
+          property_id: string
+          property_name: string
+          rating: number
+          repair_notes: string
+          resolved_at: string
+          status: string
+          tenant_id: string
+          title: string
+          updated_at: string
+        }[]
+      }
+      rpc_tenant_maintenance_view: {
+        Args: never
+        Returns: {
+          created_at: string
+          description: string
+          id: string
+          photo_urls: string[]
+          priority: string
+          property_address: string
+          property_name: string
+          repair_notes: string
+          resolved_at: string
+          status: string
+          title: string
+          updated_at: string
+        }[]
+      }
       sign_lease_as_tenant: { Args: { _lease_id: string }; Returns: undefined }
     }
     Enums: {

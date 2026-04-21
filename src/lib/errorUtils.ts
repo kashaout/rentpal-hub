@@ -2,6 +2,7 @@
  * Error sanitization utilities to prevent information leakage
  * Maps database/API error messages to user-friendly messages
  */
+import { handleRlsError } from "@/lib/securityLogger";
 
 /**
  * Sanitizes error messages from Supabase/database operations to prevent
@@ -29,8 +30,9 @@ export function sanitizeErrorMessage(error: Error | string): string {
     return 'Invalid data provided - please check your input';
   }
   
-  // Row-level security violations
+  // Row-level security violations — log to security_events
   if (lowerMessage.includes('row-level security') || lowerMessage.includes('rls')) {
+    handleRlsError(error, 'unknown', 'unknown');
     return 'You do not have permission to perform this action';
   }
   

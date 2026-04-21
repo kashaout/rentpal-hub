@@ -10,10 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
-  useMaintenanceRequests,
   useUpdateMaintenanceRequest,
   MaintenanceRequestWithDetails,
 } from "@/hooks/useMaintenanceRequests";
+import { useLandlordMaintenanceView, LandlordMaintenanceItem } from "@/hooks/useLandlordMaintenanceView";
 import { MaintenanceUpdateDialog } from "./MaintenanceUpdateDialog";
 import { cn } from "@/lib/utils";
 import { getSignedUrl } from "@/hooks/useSignedUrls";
@@ -83,7 +83,13 @@ export function MaintenancePortal({ showPerformance = false }: MaintenancePortal
   const [activeTab, setActiveTab] = useState("pending");
   const [topTab, setTopTab] = useState<"requests" | "performance">("requests");
 
-  const { data: requests, isLoading } = useMaintenanceRequests();
+  const { data: rpcData, isLoading } = useLandlordMaintenanceView();
+  // Map RPC data to MaintenanceRequestWithDetails shape for compatibility
+  const requests = rpcData?.map((r) => ({
+    ...r,
+    priority: r.priority as MaintenanceRequestWithDetails["priority"],
+    status: r.status as MaintenanceRequestWithDetails["status"],
+  })) as MaintenanceRequestWithDetails[] | undefined;
   const updateRequest = useUpdateMaintenanceRequest();
 
   const pendingRequests = requests?.filter((r) => r.status === "pending") || [];
