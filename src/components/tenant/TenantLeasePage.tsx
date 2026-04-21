@@ -48,10 +48,51 @@ export function TenantLeasePage() {
 
   // Find the full lease record (we're the tenant on this lease)
   const lease = leases.find(l => l.id === tenancy.lease_id);
-  const daysRemaining = differenceInDays(new Date(tenancy.lease_end), new Date());
+  const buildHtml = () => {
+    if (!lease) return "";
+    return buildLeaseHtml({
+      landlordName: lease.landlord_name,
+      tenantName: lease.tenant_name,
+      unitNumber: lease.unit_number,
+      leaseStart: lease.lease_start,
+      leaseEnd: lease.lease_end,
+      rentAmount: lease.rent_amount,
+      currency: lease.currency,
+      terms: lease.terms,
+      landlordSignedAt: lease.landlord_signed_at,
+      tenantSignedAt: lease.tenant_signed_at,
+    });
+  };
+
+  const handleDownload = () => {
+    printLeaseHtml(buildHtml(), `Lease — Unit ${tenancy.unit_number}`);
+  };
+
+  const handleEmail = async () => {
+    setEmailing(true);
+    try {
+      await emailLeaseHtml({ html: buildHtml(), subject: `Your RentPal lease — Unit ${tenancy.unit_number}` });
+      toast({ title: "Email sent", description: "Lease agreement sent to your email." });
+    } catch {
+      toast({ title: "Email failed", description: "Could not send lease email.", variant: "destructive" });
+    } finally {
+      setEmailing(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
+      {/* Actions */}
+      <div className="flex flex-wrap gap-2 justify-end">
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownload}>
+          <Download className="h-4 w-4" /> Download PDF
+        </Button>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={handleEmail} disabled={emailing}>
+          {emailing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+          Email Me a Copy
+        </Button>
+      </div>
+
       {/* Status banner */}
       <Card className="border-success/30 bg-success/5">
         <CardContent className="flex items-center gap-3 py-4">
