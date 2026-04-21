@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import {
   Loader2, Home, FileText, CreditCard, AlertTriangle, FolderOpen,
-  MessageSquare, History, Wifi, KeyRound, Lock, CheckCircle2,
+  MessageSquare, History, Wifi, KeyRound, Lock, CheckCircle2, ShieldCheck,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +23,7 @@ import { TenantIssuesTab } from "./tabs/TenantIssuesTab";
 import { TenantDocumentsTab } from "./tabs/TenantDocumentsTab";
 import { TenantCommunicationTab } from "./tabs/TenantCommunicationTab";
 import { TenantHistoryTab } from "./tabs/TenantHistoryTab";
+import { TenantCodesTab } from "./tabs/TenantCodesTab";
 
 const TABS = [
   { key: "overview", label: "Overview", icon: Home },
@@ -30,6 +31,7 @@ const TABS = [
   { key: "payments", label: "Payments", icon: CreditCard },
   { key: "issues", label: "Issues", icon: AlertTriangle },
   { key: "documents", label: "Documents", icon: FolderOpen },
+  { key: "codes", label: "Codes", icon: ShieldCheck },
   { key: "communication", label: "Communication", icon: MessageSquare },
   { key: "history", label: "History", icon: History },
 ];
@@ -197,6 +199,9 @@ export function TenantCommandCenter({ defaultTab = "overview" }: { defaultTab?: 
           </TabsContent>
           <TabsContent value="documents">
             <TenantDocumentsTab propertyId={lease.property_id} />
+          </TabsContent>
+          <TabsContent value="codes">
+            <TenantCodesTab leaseId={lease.lease_id} />
           </TabsContent>
           <TabsContent value="communication">
             <TenantCommunicationTab propertyId={lease.property_id} />
