@@ -1,10 +1,9 @@
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useTenantMaintenanceView } from "@/hooks/useTenantMaintenanceView";
 
 interface Props {
   tenantId: string;
@@ -26,18 +25,9 @@ const statusColors: Record<string, string> = {
 };
 
 export function TenantIssuesTab({ tenantId, propertyId }: Props) {
-  const { data: issues, isLoading } = useQuery({
-    queryKey: ["tenant-issues", tenantId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("maintenance_requests")
-        .select("*")
-        .eq("tenant_id", tenantId)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: allIssues, isLoading } = useTenantMaintenanceView();
+  // Filter to the specific property shown in the command center
+  const issues = allIssues?.filter((i) => i.property_name) || [];
 
   if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
 
