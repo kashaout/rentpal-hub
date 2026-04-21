@@ -2197,6 +2197,24 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_public_property_listings: {
+        Args: { _property_id?: string }
+        Returns: {
+          address: string
+          amenities: Json
+          currency: string
+          description: string
+          id: string
+          image_url: string
+          is_paused: boolean
+          listing_type: string
+          monthly_rent: number
+          name: string
+          property_type: string
+          region: string
+          units: number
+        }[]
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
