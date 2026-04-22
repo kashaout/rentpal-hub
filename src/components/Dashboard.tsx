@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useProperties, PropertyWithStats } from "@/hooks/useProperties";
-import { useTenants } from "@/hooks/useTenants";
+import { useLandlordTenants } from "@/hooks/useLandlordTenants";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
 import { useMaintenanceRequests } from "@/hooks/useMaintenanceRequests";
@@ -32,7 +32,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const [editingProperty, setEditingProperty] = useState<PropertyWithStats | undefined>();
 
   const { data: properties, isLoading: propertiesLoading } = useProperties();
-  const { data: tenants, isLoading: tenantsLoading } = useTenants();
+  const { data: tenants = [], isLoading: tenantsLoading } = useLandlordTenants();
   const { data: maintenanceRequests } = useMaintenanceRequests();
   const { data: agreements } = useMyLeaseAgreements();
   const { data: myBookings } = useMyBookings();
@@ -41,9 +41,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   const isTenantOnly = isTenant && !isAdmin && !isConsultant && !isLandlord && !isMaintenance && !isVendor;
 
   const totalProperties = properties?.length || 0;
-  const totalTenants = tenants?.length || 0;
+  const totalTenants = tenants.length;
   const monthlyRevenue = properties?.reduce((sum, p) => sum + Number(p.monthly_rent), 0) || 0;
-  const overduePayments = tenants?.filter((t) => t.payment_status === "overdue").length || 0;
+  const overduePayments = tenants.filter((t) => t.payment_status === "overdue").length;
   const pendingMaintenance = maintenanceRequests?.filter((r) => r.status === "pending" || r.status === "in_progress").length || 0;
 
   // Pending leases needing signature

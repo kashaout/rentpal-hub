@@ -116,8 +116,8 @@ export function TenantPortal() {
   const totalPaid = payments?.filter((p) => p.status === "completed").reduce((sum, p) => sum + Number(p.amount), 0) || 0;
   // Treat as paid when ANY payment evidence exists OR the legacy flag is set.
   // Lock rent button until checkout/active period passes.
-  const isRentPaid =
-    paidStatus?.paid || lease.payment_status === "paid";
+  // Derive payment status entirely from the payments/bookings chain
+  const isRentPaid = !!paidStatus?.paid;
   const lockPayments = !!paidStatus?.paid && paidStatus.withinActivePeriod;
   const hasReviewedProperty = myReviews.some((r) => r.property_id === lease.property_id);
   const showReviewPrompt = isLeaseExpired && !hasReviewedProperty;
@@ -181,9 +181,9 @@ export function TenantPortal() {
             <p className="text-2xl font-bold">₦{lease.rent_amount.toLocaleString()}</p>
             <Badge
               variant="outline"
-              className={cn("mt-1", paymentStatusStyles[lease.payment_status])}
+              className={cn("mt-1", paymentStatusStyles[isRentPaid ? "paid" : "pending"])}
             >
-              {lease.payment_status}
+              {isRentPaid ? "paid" : "pending"}
             </Badge>
             {isRentPaid ? (
               <Badge variant="outline" className="mt-2 w-full justify-center gap-1 bg-success/10 text-success border-success/20">

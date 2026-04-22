@@ -26,8 +26,8 @@ export function TenantOverviewTab({ lease }: Props) {
   const daysLeft = differenceInDays(new Date(lease.lease_end), new Date());
   const totalPaid = payments?.filter(p => p.status === "completed").reduce((sum, p) => sum + Number(p.amount), 0) || 0;
 
-  // Effective payment status: paid → from real payment/booking; otherwise tenants flag.
-  const effectiveStatus = paid?.paid ? "paid" : lease.payment_status;
+  // Derive payment status entirely from payments/bookings chain — no legacy fallback
+  const effectiveStatus = paid?.paid ? "paid" : "pending";
 
   return (
     <div className="space-y-6">

@@ -18,7 +18,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { encodeBookingNotes } from "@/lib/bookingTime";
-import { useProperty } from "@/hooks/useProperties";
 import { usePublicProperty } from "@/hooks/usePublicProperty";
 import { usePropertyBookings, useCreateBooking } from "@/hooks/useBookings";
 import { useAuth } from "@/hooks/useAuth";
@@ -58,11 +57,10 @@ interface PropertyDetailViewProps {
 }
 
 export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: PropertyDetailViewProps) {
-  const { data: ownedProperty, isLoading: ownedLoading } = useProperty(propertyId);
   const { data: publicProperty, isLoading: publicLoading } = usePublicProperty(propertyId);
-  // Landlords/admins/consultants get the full record; tenants get the safe public view
-  const property = ownedProperty ?? (publicProperty as any);
-  const isLoading = ownedLoading || (!ownedProperty && publicLoading);
+  // Tenant detail view always reads from the public listing (safe columns only)
+  const property = publicProperty as any;
+  const isLoading = publicLoading;
   const { data: bookings } = usePropertyBookings(propertyId);
   const createBooking = useCreateBooking();
   const { user, profile, isLandlord, isAdmin, isConsultant } = useAuth();
