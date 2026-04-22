@@ -326,6 +326,12 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
                 active={currentView === "manage-users"}
                 onClick={() => handleNavigate("manage-users")}
               />
+              <NavItem
+                icon={Crown}
+                label="Upgrade Plan"
+                active={currentView === "subscription"}
+                onClick={() => handleNavigate("subscription")}
+              />
             </>
           )}
 
