@@ -20,6 +20,7 @@ import { PublicHelpWidget } from "@/components/PublicHelpWidget";
 const APP_AUTH_URL = "https://rentpal-hub.lovable.app/auth";
 
 const NAV_LINKS = [
+  { label: "Properties", href: "/properties" },
   { label: "Features", href: "#features" },
   { label: "How it Works", href: "#how-it-works" },
   { label: "Pricing", href: "#pricing" },
