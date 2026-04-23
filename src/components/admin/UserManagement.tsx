@@ -278,7 +278,13 @@ export function UserManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {availableRoles.length > 0 && (
+                        <DropdownMenuItem
+                          onClick={() => setSelectedUserId(user.user_id)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                           <>
                             {availableRoles.map((role) => (
                               <DropdownMenuItem
