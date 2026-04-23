@@ -66,6 +66,7 @@ function useUserAction() {
 
 export function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<{
     user: UserWithRoles;
     role: string;
