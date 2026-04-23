@@ -49,12 +49,13 @@ const profileSchema = z.object({
   full_name: z.string().min(1, "Name is required").max(100),
   email: z.string().email("Invalid email"),
   phone: z.string().max(20).optional(),
+  business_name: z.string().max(100).optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export function SettingsPage() {
-  const { profile, user } = useAuth();
+  const { profile, user, isLandlord, isAdmin } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [notifications, setNotifications] = useState({
     email: true,
@@ -69,6 +70,7 @@ export function SettingsPage() {
       full_name: profile?.full_name || "",
       email: profile?.email || user?.email || "",
       phone: profile?.phone || "",
+      business_name: (profile as any)?.business_name || "",
     },
   });
 
@@ -82,7 +84,8 @@ export function SettingsPage() {
         .update({
           full_name: data.full_name,
           phone: data.phone,
-        })
+          business_name: data.business_name,
+        } as any)
         .eq("user_id", user.id);
 
       if (error) throw error;
