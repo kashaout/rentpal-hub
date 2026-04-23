@@ -209,6 +209,29 @@ export function SettingsPage() {
                 )}
               />
 
+              {/* Business Name - landlords only */}
+              {(isLandlord || isAdmin) && (
+                <FormField
+                  control={form.control}
+                  name="business_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Business Name</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input placeholder="Your Company Ltd." className="pl-10" {...field} />
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Displayed on your public property listings.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
               <div className="flex justify-end pt-2">
                 <Button type="submit" disabled={isSaving} className="gap-2">
                   {isSaving ? (
