@@ -181,4 +181,6 @@ const Properties = forwardRef<HTMLDivElement>(function Properties(_props, _ref) 
       </footer>
     </div>
   );
-}
+});
+
+export default Properties;
