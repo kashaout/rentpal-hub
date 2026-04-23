@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { Link } from "react-router-dom";
 import { Building2, Search, MapPin, Loader2, Home, ArrowRight, Bed, Bath } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ function usePublicProperties() {
   });
 }
 
-function Properties() {
+const Properties = forwardRef<HTMLDivElement>(function Properties(_props, _ref) {
   const [search, setSearch] = useState("");
   const { data: properties = [], isLoading } = usePublicProperties();
 
