@@ -284,7 +284,7 @@ export function UserManagement() {
                           <Eye className="mr-2 h-4 w-4" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                        {availableRoles.length > 0 && (
                           <>
                             {availableRoles.map((role) => (
                               <DropdownMenuItem
