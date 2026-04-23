@@ -1,10 +1,13 @@
-import { useState } from "react";
-import { Building2, MapPin, Home, Search, Loader2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Building2, MapPin, Home, Search, Loader2, Filter, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { useBrowseProperties, BrowseProperty } from "@/hooks/useBrowseProperties";
 import { PropertyDetailView } from "@/components/PropertyDetailView";
 import { formatCurrency } from "@/lib/formatCurrency";
@@ -63,6 +66,11 @@ function PropertyBrowseCard({ property, onClick }: { property: BrowseProperty; o
           <MapPin className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{property.address}</span>
         </p>
+        {property.landlord_business_name && (
+          <p className="text-xs text-muted-foreground">
+            by <span className="font-medium text-foreground">{property.landlord_business_name}</span>
+          </p>
+        )}
         <div className="flex items-center justify-between pt-1">
           <span className="text-lg font-bold text-foreground">
             {formatCurrency(property.monthly_rent, property.currency, true)}
@@ -91,6 +99,33 @@ export function TenantBrowseProperties() {
   const [search, setSearch] = useState("");
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [tab, setTab] = useState("all");
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Derive unique property types and company names
+  const { propertyTypes, companyNames } = useMemo(() => {
+    const types = new Set<string>();
+    const companies = new Set<string>();
+    (properties || []).forEach((p) => {
+      types.add(p.property_type);
+      if (p.landlord_business_name) companies.add(p.landlord_business_name);
+    });
+    return {
+      propertyTypes: Array.from(types).sort(),
+      companyNames: Array.from(companies).sort(),
+    };
+  }, [properties]);
+
+  const activeFilterCount = [
+    propertyTypeFilter !== "all",
+    companyFilter !== "all",
+  ].filter(Boolean).length;
+
+  const clearFilters = () => {
+    setPropertyTypeFilter("all");
+    setCompanyFilter("all");
+  };
 
   if (selectedPropertyId) {
     return (
@@ -110,9 +145,16 @@ export function TenantBrowseProperties() {
   }
 
   const filtered = (properties || []).filter((p) => {
-    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.address.toLowerCase().includes(search.toLowerCase());
+    const matchSearch =
+      !search ||
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.address.toLowerCase().includes(search.toLowerCase()) ||
+      (p.landlord_business_name || "").toLowerCase().includes(search.toLowerCase());
     const matchTab = tab === "all" || p.listing_type === tab;
-    return matchSearch && matchTab;
+    const matchType = propertyTypeFilter === "all" || p.property_type === propertyTypeFilter;
+    const matchCompany =
+      companyFilter === "all" || p.landlord_business_name === companyFilter;
+    return matchSearch && matchTab && matchType && matchCompany;
   });
 
   return (
@@ -124,16 +166,70 @@ export function TenantBrowseProperties() {
           <h2 className="font-display text-xl font-semibold text-foreground">Browse Properties</h2>
           <p className="text-sm text-muted-foreground">Find your next home or short stay</p>
         </div>
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search properties..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search properties, companies..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Button
+            variant={showFilters ? "default" : "outline"}
+            size="icon"
+            onClick={() => setShowFilters(!showFilters)}
+            className="relative shrink-0"
+          >
+            <Filter className="h-4 w-4" />
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-accent text-accent-foreground text-[10px] flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
         </div>
       </div>
+
+      {showFilters && (
+        <div className="flex flex-wrap gap-3 items-end p-4 rounded-lg border bg-muted/30">
+          <div className="space-y-1.5 min-w-[160px]">
+            <label className="text-xs font-medium text-muted-foreground">Property Type</label>
+            <Select value={propertyTypeFilter} onValueChange={setPropertyTypeFilter}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {propertyTypes.map((t) => (
+                  <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5 min-w-[200px]">
+            <label className="text-xs font-medium text-muted-foreground">Company</label>
+            <Select value={companyFilter} onValueChange={setCompanyFilter}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Companies</SelectItem>
+                {companyNames.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {activeFilterCount > 0 && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-muted-foreground">
+              <X className="h-3.5 w-3.5" />
+              Clear filters
+            </Button>
+          )}
+        </div>
+      )}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
@@ -157,6 +253,11 @@ export function TenantBrowseProperties() {
         <div className="flex flex-col items-center justify-center py-16">
           <Building2 className="h-12 w-12 text-muted-foreground/50" />
           <p className="mt-4 text-muted-foreground">No properties found.</p>
+          {activeFilterCount > 0 && (
+            <Button variant="link" onClick={clearFilters} className="mt-2 text-accent">
+              Clear all filters
+            </Button>
+          )}
         </div>
       )}
     </div>
