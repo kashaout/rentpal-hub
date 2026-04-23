@@ -4,8 +4,9 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
-  Loader2, Plus, X, Search, RotateCcw, Trash2, Ban, CheckCircle, UserPlus,
+  Loader2, Plus, X, Search, RotateCcw, Trash2, Ban, CheckCircle, UserPlus, Eye,
 } from "lucide-react";
+import { AdminUserDetail } from "./AdminUserDetail";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +66,7 @@ function useUserAction() {
 
 export function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<{
     user: UserWithRoles;
     role: string;
@@ -153,6 +155,10 @@ export function UserManagement() {
       btn: "Unblock Account",
     },
   };
+
+  if (selectedUserId) {
+    return <AdminUserDetail userId={selectedUserId} onBack={() => setSelectedUserId(null)} />;
+  }
 
   if (isLoading) {
     return (
@@ -272,6 +278,12 @@ export function UserManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => setSelectedUserId(user.user_id)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
                         {availableRoles.length > 0 && (
                           <>
                             {availableRoles.map((role) => (
