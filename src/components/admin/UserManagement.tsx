@@ -156,6 +156,10 @@ export function UserManagement() {
     },
   };
 
+  if (selectedUserId) {
+    return <AdminUserDetail userId={selectedUserId} onBack={() => setSelectedUserId(null)} />;
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
