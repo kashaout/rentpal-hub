@@ -42,7 +42,7 @@ function usePublicProperties() {
   });
 }
 
-export default function Properties() {
+function Properties() {
   const [search, setSearch] = useState("");
   const { data: properties = [], isLoading } = usePublicProperties();
 
