@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Building2, MapPin, Banknote, Hash, ImageIcon, Home, Upload, X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -54,6 +55,7 @@ const propertySchema = z.object({
   listing_type: z.enum(["standard", "airbnb"]),
   description: z.string().optional().or(z.literal("")),
   amenities: z.array(z.string()).optional(),
+  is_public: z.boolean().optional(),
 });
 
 type PropertyFormData = z.infer<typeof propertySchema>;
@@ -84,6 +86,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
       listing_type: (property?.listing_type as "standard" | "airbnb") || "standard",
       description: property?.description || "",
       amenities: (property?.amenities as string[]) || [],
+      is_public: (property as any)?.is_public ?? true,
     },
   });
 
@@ -151,6 +154,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
           listing_type: data.listing_type,
           description: data.description || undefined,
           amenities: data.amenities || [],
+          is_public: data.is_public,
         });
       } else {
         await createProperty.mutateAsync({
@@ -162,6 +166,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
           listing_type: data.listing_type,
           description: data.description || undefined,
           amenities: data.amenities || [],
+          is_public: data.is_public,
         });
       }
       onOpenChange(false);
@@ -444,6 +449,26 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
                 )}
               />
             )}
+
+            {/* Public/Private Toggle */}
+            <FormField
+              control={form.control}
+              name="is_public"
+              render={({ field }) => (
+                <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <FormLabel className="text-sm font-medium">Public Listing</FormLabel>
+                    <FormDescription className="text-xs">
+                      Public properties appear on the marketplace and are visible to tenants.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value ?? true} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel

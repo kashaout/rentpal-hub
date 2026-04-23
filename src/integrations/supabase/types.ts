@@ -2465,20 +2465,27 @@ export type Database = {
       get_public_property_listings: {
         Args: { _property_id?: string }
         Returns: {
-          address: string
-          amenities: Json
-          currency: string
-          description: string
-          id: string
-          image_url: string
-          is_paused: boolean
-          listing_type: string
-          monthly_rent: number
-          name: string
-          property_type: string
-          region: string
-          units: number
+          address: string | null
+          amenities: Json | null
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          id: string | null
+          image_url: string | null
+          is_paused: boolean | null
+          listing_type: string | null
+          monthly_rent: number | null
+          name: string | null
+          property_type: string | null
+          region: string | null
+          units: number | null
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "public_property_listings"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_user_roles: {
         Args: { _user_id: string }
