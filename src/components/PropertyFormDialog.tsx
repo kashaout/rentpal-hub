@@ -448,7 +448,26 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
                 )}
               />
             )}
-            <div className="flex justify-end gap-3 pt-4">
+
+            {/* Public/Private Toggle */}
+            <FormField
+              control={form.control}
+              name="is_public"
+              render={({ field }) => (
+                <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <FormLabel className="text-sm font-medium">Public Listing</FormLabel>
+                    <FormDescription className="text-xs">
+                      Public properties appear on the marketplace and are visible to tenants.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch checked={field.value ?? true} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
