@@ -16,6 +16,8 @@ export interface BrowseProperty {
   region: string;
   amenities: string[];
   is_paused: boolean;
+  landlord_business_name: string | null;
+  landlord_name: string | null;
 }
 
 export function useBrowseProperties() {

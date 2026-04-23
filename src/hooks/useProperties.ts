@@ -23,6 +23,7 @@ export interface Property {
   acquisition_cost: number | null;
   current_value: number | null;
   annual_expenses: number | null;
+  is_public: boolean;
 }
 
 export interface PropertyWithStats extends Property {
@@ -38,6 +39,7 @@ export interface CreatePropertyData {
   listing_type?: string;
   description?: string;
   amenities?: string[];
+  is_public?: boolean;
 }
 
 export interface UpdatePropertyData extends Partial<CreatePropertyData> {
