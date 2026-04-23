@@ -4,8 +4,9 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
-  Loader2, Plus, X, Search, RotateCcw, Trash2, Ban, CheckCircle, UserPlus,
+  Loader2, Plus, X, Search, RotateCcw, Trash2, Ban, CheckCircle, UserPlus, Eye,
 } from "lucide-react";
+import { AdminUserDetail } from "./AdminUserDetail";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
