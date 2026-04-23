@@ -153,6 +153,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
           listing_type: data.listing_type,
           description: data.description || undefined,
           amenities: data.amenities || [],
+          is_public: data.is_public,
         });
       } else {
         await createProperty.mutateAsync({
@@ -164,6 +165,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
           listing_type: data.listing_type,
           description: data.description || undefined,
           amenities: data.amenities || [],
+          is_public: data.is_public,
         });
       }
       onOpenChange(false);
