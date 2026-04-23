@@ -468,6 +468,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
               )}
             />
 
+            <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
