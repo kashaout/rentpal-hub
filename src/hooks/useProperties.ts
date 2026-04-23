@@ -72,6 +72,7 @@ export function useProperties() {
             ...property,
             amenities: (property.amenities as unknown as string[]) || [],
             description: property.description as string | null,
+            is_public: (property as any).is_public ?? true,
             occupied_units: count || 0,
           } as PropertyWithStats;
         })
@@ -101,6 +102,7 @@ export function useProperty(id: string) {
         ...data,
         amenities: (data.amenities as unknown as string[]) || [],
         description: data.description as string | null,
+        is_public: (data as any).is_public ?? true,
       } as Property;
     },
     enabled: !!user && !!id,
