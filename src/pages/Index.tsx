@@ -129,28 +129,25 @@ const Index = () => {
     setCurrentView(defaultView);
   }, [defaultView]);
 
-  // Tenant routing is driven entirely by lease state (active_tenants).
-  // - Active tenant landing on a non-tenant view → command center
-  // - Pre-lease user landing on a tenant-only view → browse properties
+  // Tenant routing — browse-properties and my-bookings are ALWAYS accessible
+  // to any authenticated tenant. No lease/payment/subscription guard may
+  // redirect away from them.
   useEffect(() => {
-    const tenantViews = ["tenant-command-center", "tenant-portal", "tenant-lease", "tenant-inbox", "tenant-documents", "tenant-payments"];
-    const preLeaseViews = ["browse-properties", "my-bookings"];
+    const alwaysAccessibleForTenants = ["browse-properties", "my-bookings", "pending-leases", "settings"];
 
     if (!isManagerRole && !isMaintenanceOnly) {
-      // Block access to subscription for tenants
+      // Tenants cannot access subscription page
       if (currentView === "subscription") {
         setCurrentView(isActiveTenant ? "tenant-command-center" : "browse-properties");
         return;
       }
-      // Active tenant landed on dashboard → push into tenant app
-      // (browse-properties is always accessible)
-      if (isActiveTenant && currentView === "dashboard") {
-        setCurrentView("tenant-command-center");
+      // Never redirect away from always-accessible tenant pages
+      if (alwaysAccessibleForTenants.includes(currentView)) {
         return;
       }
-      // Pre-lease user landed on a tenant-only view → push to browse
-      if (!isActiveTenant && tenantViews.includes(currentView)) {
-        setCurrentView("browse-properties");
+      // Active tenant landed on landlord dashboard → push into tenant app
+      if (isActiveTenant && currentView === "dashboard") {
+        setCurrentView("tenant-command-center");
         return;
       }
     }
