@@ -2,32 +2,14 @@ import { Loader2, Wifi, KeyRound, Lock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLeaseCredentials } from "@/hooks/useLeaseCredentials";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   leaseId?: string;
 }
 
 export function TenantCodesTab({ leaseId }: Props) {
-  const { data: leaseStatus, isLoading: statusLoading } = useQuery({
-    queryKey: ["lease-sign-status", leaseId],
-    queryFn: async () => {
-      if (!leaseId) return null;
-      const { data } = await supabase
-        .from("lease_agreements")
-        .select("tenant_signed_at, landlord_signed_at")
-        .eq("id", leaseId)
-        .maybeSingle();
-      return data;
-    },
-    enabled: !!leaseId,
-  });
-
-  const bothSigned = !!leaseStatus?.tenant_signed_at && !!leaseStatus?.landlord_signed_at;
-  const { data: credentials, isLoading: credsLoading } = useLeaseCredentials(bothSigned ? leaseId : undefined);
-
-  const isLoading = statusLoading || credsLoading;
+  // Always call the hook — let the RPC decide whether codes are released.
+  const { data: credentials, isLoading } = useLeaseCredentials(leaseId);
 
   if (isLoading) {
     return (
@@ -37,68 +19,56 @@ export function TenantCodesTab({ leaseId }: Props) {
     );
   }
 
-  if (!bothSigned) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <Lock className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
-          <p className="font-medium">Lease not fully signed</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Both you and your landlord must sign the lease before access codes are released.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!credentials || (!credentials.wifi_password && !credentials.keybox_password)) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <Lock className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
-          <p className="font-medium">Codes not yet available</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Access codes will appear here 12 hours before your check-in time.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const hasWifi = !!credentials?.wifi_password;
+  const hasKey = !!credentials?.keybox_password;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      {credentials.wifi_password && (
-        <Card className="border-primary/20 bg-primary/5">
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Card className={hasWifi ? "border-primary/20 bg-primary/5" : "border-dashed"}>
           <CardContent className="py-6">
             <div className="flex items-center gap-2 mb-3">
-              <Wifi className="h-5 w-5 text-primary" />
+              <Wifi className={`h-5 w-5 ${hasWifi ? "text-primary" : "text-muted-foreground/50"}`} />
               <p className="text-sm font-semibold uppercase tracking-wider">WiFi Password</p>
-              <Badge variant="outline" className="text-[10px] ml-auto">
-                Active
-              </Badge>
+              {hasWifi && (
+                <Badge variant="outline" className="text-[10px] ml-auto">Active</Badge>
+              )}
             </div>
-            <p className="font-mono text-lg font-bold break-all select-all">
-              {credentials.wifi_password}
-            </p>
+            {hasWifi ? (
+              <p className="font-mono text-lg font-bold break-all select-all">
+                {credentials!.wifi_password}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                Available 12 hours before check-in.
+              </p>
+            )}
           </CardContent>
         </Card>
-      )}
-      {credentials.keybox_password && (
-        <Card className="border-primary/20 bg-primary/5">
+
+        <Card className={hasKey ? "border-primary/20 bg-primary/5" : "border-dashed"}>
           <CardContent className="py-6">
             <div className="flex items-center gap-2 mb-3">
-              <KeyRound className="h-5 w-5 text-primary" />
+              <KeyRound className={`h-5 w-5 ${hasKey ? "text-primary" : "text-muted-foreground/50"}`} />
               <p className="text-sm font-semibold uppercase tracking-wider">Door / Keybox Code</p>
-              <Badge variant="outline" className="text-[10px] ml-auto">
-                Active
-              </Badge>
+              {hasKey && (
+                <Badge variant="outline" className="text-[10px] ml-auto">Active</Badge>
+              )}
             </div>
-            <p className="font-mono text-lg font-bold break-all select-all">
-              {credentials.keybox_password}
-            </p>
+            {hasKey ? (
+              <p className="font-mono text-lg font-bold break-all select-all">
+                {credentials!.keybox_password}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                Available 12 hours before check-in.
+              </p>
+            )}
           </CardContent>
         </Card>
-      )}
+      </div>
     </div>
   );
 }

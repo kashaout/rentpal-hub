@@ -209,18 +209,16 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     { icon: FileText, label: "Leases", id: "pending-leases", show: isManagerRole, locked: false },
 
     // ── Tenant nav ──────────────────────────────────────────────
-    // Pre-lease tenants: Browse + Bookings + Leases
-    { icon: Building2, label: "Browse Properties", id: "browse-properties", show: showTenantNav && !isActiveTenant, locked: false },
-    { icon: FileText, label: "My Bookings", id: "my-bookings", show: showTenantNav && !isActiveTenant, locked: false },
-    { icon: FileText, label: "Leases", id: "pending-leases", show: showTenantNav && !isActiveTenant, locked: false },
-
-    // Active tenants: simplified nav (My Property / Lease / Payments removed —
-    // those live inside the Dashboard tabs and Documents).
-    { icon: LayoutDashboard, label: "Dashboard", id: "tenant-command-center", show: showTenantNav && isActiveTenant, locked: false },
-    { icon: Building2, label: "Browse Properties", id: "browse-properties", show: showTenantNav && isActiveTenant, locked: false },
-    { icon: MessageSquare, label: "Requests", id: "tenant-inbox", show: showTenantNav && isActiveTenant, locked: false },
-    { icon: FileText, label: "Documents", id: "tenant-documents", show: showTenantNav && isActiveTenant, locked: false },
-    { icon: BarChart3, label: "Reports", id: "tenant-reports", show: showTenantNav && isActiveTenant, locked: false },
+    // Visibility depends ONLY on auth (showTenantNav). Lease state does not gate
+    // navigation — tenants always see Dashboard, Browse, Bookings, Requests,
+    // Documents, Reports, and Leases.
+    { icon: LayoutDashboard, label: "Dashboard", id: "tenant-command-center", show: showTenantNav, locked: false },
+    { icon: Building2, label: "Browse Properties", id: "browse-properties", show: showTenantNav, locked: false },
+    { icon: FileText, label: "My Bookings", id: "my-bookings", show: showTenantNav, locked: false },
+    { icon: MessageSquare, label: "Requests", id: "tenant-inbox", show: showTenantNav, locked: false },
+    { icon: FileText, label: "Documents", id: "tenant-documents", show: showTenantNav, locked: false },
+    { icon: BarChart3, label: "Reports", id: "tenant-reports", show: showTenantNav, locked: false },
+    { icon: FileText, label: "Leases", id: "pending-leases", show: showTenantNav, locked: false },
   ];
 
   const adminItems = [
