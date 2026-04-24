@@ -1,11 +1,14 @@
-import { useState, forwardRef } from "react";
+import { useState, useMemo, forwardRef } from "react";
 import { Link } from "react-router-dom";
-import { Building2, Search, MapPin, Loader2, Home, ArrowRight, Bed, Bath } from "lucide-react";
+import { Building2, Search, MapPin, Loader2, ArrowRight, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/formatCurrency";
@@ -24,6 +27,7 @@ interface PublicProperty {
   units: number;
   region: string;
   amenities: any[];
+  landlord_business_name?: string | null;
 }
 
 function usePublicProperties() {
@@ -36,24 +40,53 @@ function usePublicProperties() {
       if (error) throw error;
       return ((data as any[]) || []) as PublicProperty[];
     },
-    // Public page — no auth required for the RPC but it checks auth.uid()
-    // So we attempt the call; unauthenticated users will see empty
     staleTime: 60_000,
   });
 }
 
 const Properties = forwardRef<HTMLDivElement>(function Properties(_props, _ref) {
   const [search, setSearch] = useState("");
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState("all");
+  const [companyFilter, setCompanyFilter] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
   const { data: properties = [], isLoading } = usePublicProperties();
+
+  // Derive unique values for filters
+  const { propertyTypes, companyNames } = useMemo(() => {
+    const types = new Set<string>();
+    const companies = new Set<string>();
+    properties.forEach((p) => {
+      if (p.property_type) types.add(p.property_type);
+      if (p.landlord_business_name) companies.add(p.landlord_business_name);
+    });
+    return {
+      propertyTypes: Array.from(types).sort(),
+      companyNames: Array.from(companies).sort(),
+    };
+  }, [properties]);
+
+  const activeFilterCount = [
+    propertyTypeFilter !== "all",
+    companyFilter !== "all",
+  ].filter(Boolean).length;
+
+  const clearFilters = () => {
+    setPropertyTypeFilter("all");
+    setCompanyFilter("all");
+  };
 
   const filtered = properties.filter((p) => {
     const q = search.toLowerCase();
-    return (
+    const matchSearch =
       !q ||
       p.name.toLowerCase().includes(q) ||
       p.address.toLowerCase().includes(q) ||
-      p.property_type.toLowerCase().includes(q)
-    );
+      p.property_type.toLowerCase().includes(q) ||
+      (p.landlord_business_name || "").toLowerCase().includes(q);
+    const matchType = propertyTypeFilter === "all" || p.property_type === propertyTypeFilter;
+    const matchCompany =
+      companyFilter === "all" || p.landlord_business_name === companyFilter;
+    return matchSearch && matchType && matchCompany;
   });
 
   return (
@@ -87,17 +120,70 @@ const Properties = forwardRef<HTMLDivElement>(function Properties(_props, _ref) 
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
             Browse verified properties across Nigeria. Sign up to book your next home.
           </p>
-          <div className="mx-auto mt-6 max-w-md">
-            <div className="relative">
+          <div className="mx-auto mt-6 flex max-w-xl gap-2">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by name, location, or type..."
+                placeholder="Search by name, location, type, or company..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10"
               />
             </div>
+            <Button
+              variant={showFilters ? "default" : "outline"}
+              size="icon"
+              onClick={() => setShowFilters(!showFilters)}
+              className="relative shrink-0"
+              aria-label="Toggle filters"
+            >
+              <Filter className="h-4 w-4" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-accent text-accent-foreground text-[10px] flex items-center justify-center font-semibold">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
           </div>
+
+          {showFilters && (
+            <div className="mx-auto mt-4 flex max-w-xl flex-wrap items-end gap-3 rounded-lg border bg-card p-4 text-left">
+              <div className="space-y-1.5 min-w-[160px] flex-1">
+                <label className="text-xs font-medium text-muted-foreground">Property Type</label>
+                <Select value={propertyTypeFilter} onValueChange={setPropertyTypeFilter}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {propertyTypes.map((t) => (
+                      <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5 min-w-[180px] flex-1">
+                <label className="text-xs font-medium text-muted-foreground">Company</label>
+                <Select value={companyFilter} onValueChange={setCompanyFilter}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Companies</SelectItem>
+                    {companyNames.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {activeFilterCount > 0 && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-muted-foreground">
+                  <X className="h-3.5 w-3.5" />
+                  Clear
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -111,7 +197,7 @@ const Properties = forwardRef<HTMLDivElement>(function Properties(_props, _ref) 
           <EmptyState
             icon={Building2}
             title="No properties available"
-            description={search ? "Try a different search term." : "Check back soon for new listings."}
+            description={search || activeFilterCount > 0 ? "Try a different search or clear filters." : "Check back soon for new listings."}
           />
         ) : (
           <>
@@ -144,6 +230,11 @@ const Properties = forwardRef<HTMLDivElement>(function Properties(_props, _ref) 
                       <MapPin className="h-3.5 w-3.5 shrink-0" />
                       <span className="line-clamp-1">{property.address}</span>
                     </div>
+                    {property.landlord_business_name && (
+                      <p className="text-xs text-muted-foreground">
+                        by <span className="font-medium text-foreground">{property.landlord_business_name}</span>
+                      </p>
+                    )}
                     <div className="flex items-center justify-between pt-1">
                       <p className="text-lg font-bold text-foreground">
                         {formatCurrency(property.monthly_rent, property.currency)}
