@@ -1321,6 +1321,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          business_name: string | null
           created_at: string
           email: string
           full_name: string | null
@@ -1337,6 +1338,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          business_name?: string | null
           created_at?: string
           email: string
           full_name?: string | null
@@ -1353,6 +1355,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          business_name?: string | null
           created_at?: string
           email?: string
           full_name?: string | null
@@ -1387,6 +1390,7 @@ export type Database = {
           image_url: string | null
           is_archived: boolean
           is_paused: boolean | null
+          is_public: boolean
           landlord_id: string | null
           listing_type: string
           monthly_rent: number
@@ -1415,6 +1419,7 @@ export type Database = {
           image_url?: string | null
           is_archived?: boolean
           is_paused?: boolean | null
+          is_public?: boolean
           landlord_id?: string | null
           listing_type?: string
           monthly_rent?: number
@@ -1443,6 +1448,7 @@ export type Database = {
           image_url?: string | null
           is_archived?: boolean
           is_paused?: boolean | null
+          is_public?: boolean
           landlord_id?: string | null
           listing_type?: string
           monthly_rent?: number
@@ -2364,44 +2370,15 @@ export type Database = {
           id: string | null
           image_url: string | null
           is_paused: boolean | null
+          is_public: boolean | null
+          landlord_business_name: string | null
+          landlord_id: string | null
           listing_type: string | null
           monthly_rent: number | null
           name: string | null
           property_type: string | null
           region: string | null
           units: number | null
-        }
-        Insert: {
-          address?: string | null
-          amenities?: Json | null
-          created_at?: string | null
-          currency?: string | null
-          description?: string | null
-          id?: string | null
-          image_url?: string | null
-          is_paused?: never
-          listing_type?: string | null
-          monthly_rent?: number | null
-          name?: string | null
-          property_type?: string | null
-          region?: string | null
-          units?: number | null
-        }
-        Update: {
-          address?: string | null
-          amenities?: Json | null
-          created_at?: string | null
-          currency?: string | null
-          description?: string | null
-          id?: string | null
-          image_url?: string | null
-          is_paused?: never
-          listing_type?: string | null
-          monthly_rent?: number | null
-          name?: string | null
-          property_type?: string | null
-          region?: string | null
-          units?: number | null
         }
         Relationships: []
       }
@@ -2473,6 +2450,9 @@ export type Database = {
           id: string | null
           image_url: string | null
           is_paused: boolean | null
+          is_public: boolean | null
+          landlord_business_name: string | null
+          landlord_id: string | null
           listing_type: string | null
           monthly_rent: number | null
           name: string | null
