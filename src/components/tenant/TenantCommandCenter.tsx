@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import {
   Loader2, Home, FileText, CreditCard, AlertTriangle, FolderOpen,
-  MessageSquare, History, Wifi, KeyRound, Lock, CheckCircle2, ShieldCheck,
+  MessageSquare, History, ShieldCheck,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,8 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { useTenantLease } from "@/hooks/useTenantPortal";
 import { useTenantBookedProperties } from "@/hooks/useTenantBookedProperties";
 import { useTenantLeaseByProperty } from "@/hooks/useTenantLeaseByProperty";
-import { useLeaseCredentials } from "@/hooks/useLeaseCredentials";
-import { isWithinCredentialWindow } from "@/lib/bookingTime";
 import {
   TenantPropertySelector,
   pickDefaultProperty,
@@ -63,17 +61,6 @@ export function TenantCommandCenter({ defaultTab = "overview" }: { defaultTab?: 
 
   const selectedProperty = (properties ?? []).find((p) => p.property_id === effectivePropertyId);
 
-  // Credentials gate — only show within 12h of check-in (item #6).
-  const credentialsAllowed = selectedProperty
-    ? isWithinCredentialWindow(
-        selectedProperty.check_in ?? selectedProperty.lease_start ?? "",
-        selectedProperty.check_in_time
-      )
-    : false;
-  const { data: credentials } = useLeaseCredentials(
-    credentialsAllowed ? lease?.lease_id : undefined
-  );
-
   const isLoading = activeLoading || propsLoading || scopedLoading;
 
   if (isLoading) {
@@ -111,55 +98,6 @@ export function TenantCommandCenter({ defaultTab = "overview" }: { defaultTab?: 
       />
 
       <PropertyHeaderInfo property={selectedProperty} />
-
-      {/* Access credentials reveal — gated by the 12-hour window before check-in.
-          We only render this card when we can actually display codes. */}
-      {credentialsAllowed && credentials && (credentials.wifi_password || credentials.keybox_password) && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardContent className="py-4">
-            <div className="flex items-center gap-2 mb-3">
-              <CheckCircle2 className="h-4 w-4 text-success" />
-              <p className="text-sm font-semibold">Access Codes Released</p>
-              <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-[10px]">
-                Within 12 hours of check-in
-              </Badge>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {credentials.wifi_password && (
-                <div className="rounded-lg border bg-background p-3">
-                  <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-                    <Wifi className="h-3 w-3" /> WiFi Password
-                  </p>
-                  <p className="mt-1 font-mono text-sm font-semibold break-all">
-                    {credentials.wifi_password}
-                  </p>
-                </div>
-              )}
-              {credentials.keybox_password && (
-                <div className="rounded-lg border bg-background p-3">
-                  <p className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-                    <KeyRound className="h-3 w-3" /> Door / Keybox Code
-                  </p>
-                  <p className="mt-1 font-mono text-sm font-semibold break-all">
-                    {credentials.keybox_password}
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* When the user has selected a property but credentials aren't released yet,
-          give them a clear explanation so they know what to expect. */}
-      {selectedProperty?.status === "current" && !credentialsAllowed && lease?.lease_id && (
-        <Card className="border-dashed">
-          <CardContent className="py-3 flex items-center gap-2 text-sm text-muted-foreground">
-            <Lock className="h-4 w-4" />
-            WiFi & door codes will appear here 12 hours before your check-in time.
-          </CardContent>
-        </Card>
-      )}
 
       {!lease ? (
         <Card>
