@@ -7,9 +7,7 @@ import {
   X, Lock, Star, FileText,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
 import { useTenantLease } from "@/hooks/useTenantPortal";
-import { useActiveTenant } from "@/hooks/useActiveTenant";
 import { useCreateMaintenanceRequest } from "@/hooks/useMaintenanceRequests";
 import { useCreateTenantRequest } from "@/hooks/useTenantRequests";
 import { Badge } from "@/components/ui/badge";
@@ -187,7 +185,6 @@ interface SidebarProps {
 
 export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarProps) {
   const { signOut, isAdmin, isConsultant, isLandlord, isMaintenance, isVendor, profile } = useAuth();
-  const { hasFeature } = useSubscriptionContext();
 
   const isManagerRole = isAdmin || isConsultant || isLandlord;
   const showLandlordAdmin = isLandlord && !isAdmin;
