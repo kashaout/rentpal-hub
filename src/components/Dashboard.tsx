@@ -264,8 +264,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   key={property.id}
                   property={property}
                   onEdit={handleEditProperty}
-                  // Open the unified Property Command Center for this exact property
-                  onClick={(p) => onNavigate?.(`property-detail:${p.id}`)}
+                  onClick={(p) => onNavigate?.(`property-command:${p.id}`)}
                 />
               ))}
             </div>
