@@ -129,33 +129,12 @@ const Index = () => {
     setCurrentView(defaultView);
   }, [defaultView]);
 
-  // Tenant routing — browse-properties and my-bookings are ALWAYS accessible
-  // to any authenticated tenant. No lease/payment/subscription guard may
-  // redirect away from them.
+  // Landlord-only users skip the general dashboard.
   useEffect(() => {
-    const alwaysAccessibleForTenants = ["browse-properties", "my-bookings", "pending-leases", "settings"];
-
-    if (!isManagerRole && !isMaintenanceOnly) {
-      // Tenants cannot access subscription page
-      if (currentView === "subscription") {
-        setCurrentView(isActiveTenant ? "tenant-command-center" : "browse-properties");
-        return;
-      }
-      // Never redirect away from always-accessible tenant pages
-      if (alwaysAccessibleForTenants.includes(currentView)) {
-        return;
-      }
-      // Active tenant landed on landlord dashboard → push into tenant app
-      if (isActiveTenant && currentView === "dashboard") {
-        setCurrentView("tenant-command-center");
-        return;
-      }
-    }
-    // Landlord-only users skip dashboard, go to properties
     if (isLandlordOnly && currentView === "dashboard") {
       setCurrentView("properties");
     }
-  }, [isActiveTenant, isManagerRole, isMaintenanceOnly, isLandlordOnly, currentView]);
+  }, [isLandlordOnly, currentView]);
 
   // Auto-verify rent payment on success redirect
   useEffect(() => {
@@ -227,7 +206,7 @@ const Index = () => {
         // Legacy route — Worker Performance now lives inside the Maintenance area.
         return <MaintenancePortal showPerformance={isManagerRole} />;
       case "subscription":
-        if (!isManagerRole) return isActiveTenant ? <TenantCommandCenter /> : <TenantBrowseProperties />;
+        if (!isManagerRole) return <TenantBrowseProperties />;
         return <SubscriptionPlans />;
       case "tenant-portal":
         return <TenantPortal />;
