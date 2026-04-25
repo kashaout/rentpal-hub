@@ -27,7 +27,6 @@ import { PropertyCommandCenter } from "@/components/property/PropertyCommandCent
 import { TenantLeasePage } from "@/components/tenant/TenantLeasePage";
 import { TenantReportsPage } from "@/components/tenant/TenantReportsPage";
 import { useAuth } from "@/hooks/useAuth";
-import { useActiveTenant } from "@/hooks/useActiveTenant";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -58,7 +57,6 @@ const viewTitles: Record<string, { title: string; subtitle: string }> = {
 
 const Index = () => {
   const { profile, isAdmin, isConsultant, isLandlord, isMaintenance, isVendor, user } = useAuth();
-  const { isActiveTenant } = useActiveTenant();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const verifiedRef = useRef(false);
@@ -73,14 +71,10 @@ const Index = () => {
   const isMaintenanceOnly = (isMaintenance || isVendor) && !isManagerRole;
   const isLandlordOnly = isLandlord && !isAdmin && !isConsultant;
 
-  // Tenant-side default view is driven entirely by lease state (active_tenants).
-  // Active tenant → command center; otherwise → browse properties.
   const defaultView = isManagerRole
     ? (isLandlordOnly ? "properties" : "dashboard")
     : isMaintenanceOnly
     ? "maintenance-portal"
-    : isActiveTenant
-    ? "tenant-command-center"
     : "browse-properties";
   const [currentView, setCurrentView] = useState(defaultView);
 
@@ -93,14 +87,15 @@ const Index = () => {
 
   const navigateTo = useCallback((view: string) => {
     // Handle property detail navigation: "property-detail:uuid"
-    if (view.startsWith("property-detail:")) {
+    if (view.startsWith("property-detail:") || view.startsWith("property-command:")) {
       const propId = view.split(":")[1];
       setDetailPropertyId(propId);
       setCurrentView(prev => {
-        if (prev !== "property-detail") {
+        const targetView = view.startsWith("property-command:") ? "property-command" : "property-detail";
+        if (prev !== targetView) {
           viewHistoryRef.current.push(prev);
         }
-        return "property-detail";
+        return targetView;
       });
       return;
     }
@@ -241,10 +236,9 @@ const Index = () => {
       case "pending-leases":
         return <PendingLeasesPage />;
       case "property-detail":
+      case "property-command":
         if (detailPropertyId) {
-          // Landlords/admins/consultants → unified Property Command Center.
-          // Tenants → booking-focused PropertyDetailView.
-          if (isManagerRole) {
+          if (currentView === "property-command" || isManagerRole) {
             return <PropertyCommandCenter propertyId={detailPropertyId} onBack={goBack} />;
           }
           return (
