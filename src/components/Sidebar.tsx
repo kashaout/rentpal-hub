@@ -7,9 +7,7 @@ import {
   X, Lock, Star, FileText,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
 import { useTenantLease } from "@/hooks/useTenantPortal";
-import { useActiveTenant } from "@/hooks/useActiveTenant";
 import { useCreateMaintenanceRequest } from "@/hooks/useMaintenanceRequests";
 import { useCreateTenantRequest } from "@/hooks/useTenantRequests";
 import { Badge } from "@/components/ui/badge";
@@ -56,7 +54,6 @@ function NavItem({ icon: Icon, label, active, onClick, badge, locked }: NavItemP
 
 function QuickIssueButton({ onViewChange }: { onViewChange: (view: string) => void }) {
   const { user } = useAuth();
-  const { isActiveTenant, tenancy } = useActiveTenant();
   const { data: lease } = useTenantLease();
   const createMaintenanceRequest = useCreateMaintenanceRequest();
   const createTenantRequest = useCreateTenantRequest();
@@ -67,8 +64,7 @@ function QuickIssueButton({ onViewChange }: { onViewChange: (view: string) => vo
   const [priority, setPriority] = useState("medium");
   const [category, setCategory] = useState("general");
 
-  // Quick-issue is only for active tenants (signed lease on both sides)
-  if (!isActiveTenant || !tenancy || !lease) return null;
+  if (!lease) return null;
 
   const handleSubmit = async () => {
     if (!title.trim() || !description.trim() || !user) return;
@@ -189,8 +185,6 @@ interface SidebarProps {
 
 export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarProps) {
   const { signOut, isAdmin, isConsultant, isLandlord, isMaintenance, isVendor, profile } = useAuth();
-  const { hasFeature } = useSubscriptionContext();
-  const { isActiveTenant } = useActiveTenant();
 
   const isManagerRole = isAdmin || isConsultant || isLandlord;
   const showLandlordAdmin = isLandlord && !isAdmin;
@@ -203,9 +197,9 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isManagerRole && !showLandlordAdmin, locked: false },
     { icon: Building2, label: "Properties", id: "properties", show: isManagerRole, locked: false },
     { icon: Users, label: "Tenants", id: "tenants", show: isManagerRole, locked: false },
-    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isManagerRole || isMaintenance || isVendor, locked: isManagerRole && !isAdmin && !hasFeature("maintenance") },
-    { icon: Wallet, label: "Financials", id: "finance", show: isManagerRole, locked: !isAdmin && !hasFeature("financials") },
-    { icon: BarChart3, label: "Reports", id: "reports", show: isManagerRole, locked: !isAdmin && !hasFeature("reports") },
+    { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isManagerRole || isMaintenance || isVendor, locked: false },
+    { icon: Wallet, label: "Financials", id: "finance", show: isManagerRole, locked: false },
+    { icon: BarChart3, label: "Reports", id: "reports", show: isManagerRole, locked: false },
     { icon: FileText, label: "Leases", id: "pending-leases", show: isManagerRole, locked: false },
 
     // ── Tenant nav ──────────────────────────────────────────────
@@ -234,8 +228,7 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     if (isLandlord) return { label: "Landlord", className: "bg-success/10 text-success" };
     if (isMaintenance) return { label: "Maintenance", className: "bg-warning/10 text-warning" };
     if (isVendor) return { label: "Vendor", className: "bg-secondary text-secondary-foreground" };
-    if (isActiveTenant) return { label: "Tenant", className: "bg-primary/10 text-primary" };
-    return { label: "New User", className: "bg-muted text-muted-foreground" };
+    return { label: "Tenant", className: "bg-primary/10 text-primary" };
   };
 
   const roleBadge = getRoleBadge();

@@ -1,4 +1,4 @@
-import { Loader2, Wifi, KeyRound, Lock } from "lucide-react";
+import { Wifi, KeyRound, Lock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLeaseCredentials } from "@/hooks/useLeaseCredentials";
@@ -10,14 +10,6 @@ interface Props {
 export function TenantCodesTab({ leaseId }: Props) {
   // Always call the hook — let the RPC decide whether codes are released.
   const { data: credentials, isLoading } = useLeaseCredentials(leaseId);
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
 
   const hasWifi = !!credentials?.wifi_password;
   const hasKey = !!credentials?.keybox_password;
@@ -41,7 +33,7 @@ export function TenantCodesTab({ leaseId }: Props) {
             ) : (
               <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <Lock className="h-4 w-4" />
-                Available 12 hours before check-in.
+                {isLoading ? "Checking access..." : "Not released yet"}
               </p>
             )}
           </CardContent>
@@ -63,7 +55,7 @@ export function TenantCodesTab({ leaseId }: Props) {
             ) : (
               <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <Lock className="h-4 w-4" />
-                Available 12 hours before check-in.
+                {isLoading ? "Checking access..." : "Not released yet"}
               </p>
             )}
           </CardContent>
