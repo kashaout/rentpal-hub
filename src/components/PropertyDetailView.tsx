@@ -626,7 +626,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
               ) : (
                 <CreditCard className="h-4 w-4" />
               )}
-              Pay {formatCurrency(totalPrice, currency)}
+              {booking?.status === "confirmed" ? "Paid" : `Pay ${formatCurrency(totalPrice, currency)}`}
             </Button>
 
             <p className="text-center text-xs text-muted-foreground">
@@ -884,8 +884,8 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
                     <span className="text-foreground">
                       {format(parseISO(booking.check_in), "MMM d")} - {format(parseISO(booking.check_out), "MMM d")}
                     </span>
-                    <Badge variant="outline" className={cn("text-xs", booking.payment_status === "paid" ? "bg-success/10 text-success" : "bg-warning/10 text-warning")}>
-                      {booking.payment_status === "paid" ? "Confirmed" : "Pending"}
+                    <Badge variant="outline" className={cn("text-xs", booking.status === "confirmed" ? "bg-success/10 text-success" : "bg-warning/10 text-warning")}>
+                      {booking.status === "confirmed" ? "Confirmed" : "Pending"}
                     </Badge>
                   </div>
                 ))}
