@@ -324,6 +324,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const durationLabel = isAirbnb
     ? `${nightCount} night${nightCount > 1 ? "s" : ""}`
     : `${monthCount} month${monthCount > 1 ? "s" : ""}`;
+  const booking = bookings?.find((b) => b.user_id === user?.id && b.status === "confirmed") ?? null;
 
   // Date picker popover component
   const DatePickerPopover = ({ label, value, onSelect, disabled }: { label: string; value?: Date; onSelect: (d: Date | undefined) => void; disabled?: (date: Date) => boolean }) => (
@@ -617,7 +618,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
 
             <Button
               onClick={handlePayment}
-              disabled={paymentLoading}
+              disabled={booking?.status === "confirmed"}
               className="w-full h-12 text-base gap-2 bg-gradient-warm text-accent-foreground hover:opacity-90"
             >
               {paymentLoading ? (

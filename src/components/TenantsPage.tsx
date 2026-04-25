@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Users, Search, Filter, Loader2, CheckCircle2, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -8,8 +9,23 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useLandlordTenants, LandlordTenantRow } from "@/hooks/useLandlordTenants";
+import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/formatCurrency";
+
+interface LandlordTenantRow {
+  id: string;
+  tenant_name: string;
+  tenant_email: string | null;
+  property_id: string;
+  property_name: string;
+  unit_number: string;
+  rent_amount: number;
+  currency: string;
+  lease_start: string;
+  lease_end: string;
+  payment_status: "paid" | "pending" | "overdue";
+  fully_signed: boolean;
+}
 
 const statusStyle: Record<string, string> = {
   paid: "bg-success/10 text-success border-success/20",
@@ -22,8 +38,54 @@ export function TenantsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterProperty, setFilterProperty] = useState<string>("all");
 
-  // Tenants are now driven by lease_agreements (both signatures), not the legacy tenants table.
-  const { data: tenants = [], isLoading } = useLandlordTenants();
+  const { data: tenants = [], isLoading } = useQuery({
+    queryKey: ["landlord-tenants-page"],
+    queryFn: async (): Promise<LandlordTenantRow[]> => {
+      const { data: authData } = await supabase.auth.getUser();
+      const landlordId = authData.user?.id;
+      if (!landlordId) return [];
+
+      const { data, error } = await (supabase as any)
+        .from("lease_agreements")
+        .select(`
+          id,
+          tenant_name,
+          tenant_user_id,
+          property_id,
+          unit_number,
+          rent_amount,
+          currency,
+          lease_start,
+          lease_end,
+          tenant_signed,
+          landlord_signed,
+          status,
+          properties!inner(name, landlord_id)
+        `)
+        .eq("landlord_user_id", landlordId)
+        .eq("properties.landlord_id", landlordId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return (data || []).map((row: any) => {
+        const fullySigned = !!row.tenant_signed && !!row.landlord_signed;
+        return {
+          id: row.id,
+          tenant_name: row.tenant_name,
+          tenant_email: null,
+          property_id: row.property_id,
+          property_name: row.properties?.name ?? "Property",
+          unit_number: row.unit_number,
+          rent_amount: Number(row.rent_amount || 0),
+          currency: row.currency || "NGN",
+          lease_start: row.lease_start,
+          lease_end: row.lease_end,
+          payment_status: fullySigned ? "paid" : "pending",
+          fully_signed: fullySigned,
+        };
+      });
+    },
+  });
 
   const propertyOptions = Array.from(
     new Map(tenants.map((t) => [t.property_id, t.property_name])).entries()

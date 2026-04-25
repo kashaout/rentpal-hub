@@ -18,7 +18,8 @@ interface LeaseTemplateViewerProps {
 }
 
 export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerProps) {
-  // Fetch credentials securely via RPC instead of reading from agreement object
+  // Fetch credentials securely via RPC instead of reading from agreement object.
+  // The RPC decides whether values are released; the UI always renders the section.
   const { data: credentials } = useQuery({
     queryKey: ["lease-credentials", agreement.id],
     queryFn: async () => {
@@ -26,9 +27,8 @@ export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerPr
         _lease_id: agreement.id,
       } as any);
       if (error) return null;
-      return (data as any)?.[0] ?? null;
+      return Array.isArray(data) ? (data as any)[0] ?? null : data ?? null;
     },
-    enabled: !!agreement.credentials_sent_at && agreement.tenant_signed && agreement.landlord_signed,
   });
   const { user, isTenant, isLandlord } = useAuth();
   const signAgreement = useSignLeaseAgreement();
@@ -385,43 +385,40 @@ export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerPr
         </div>
 
         {/* Access Credentials Section */}
-        {agreement.credentials_sent_at && credentials?.wifi_password && credentials?.keybox_password && (
-          <div className="mt-8">
-            <Separator className="my-6" />
-            <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-6 space-y-4">
-              <div className="flex items-center gap-2">
-                <KeyRound className="h-5 w-5 text-primary" />
-                <h2 className="font-bold text-foreground text-lg">Access Credentials</h2>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                These credentials were automatically generated and sent 12 hours before your check-in.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="rounded-lg bg-card border p-4 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Wifi className="h-4 w-4 text-primary" />
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">WiFi Password</p>
-                  </div>
-                  <p className="font-mono text-lg font-bold text-foreground tracking-wider select-all">
-                    {credentials.wifi_password}
-                  </p>
+        <div className="mt-8">
+          <Separator className="my-6" />
+          <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-primary" />
+              <h2 className="font-bold text-foreground text-lg">Access Credentials</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-lg bg-card border p-4 space-y-1">
+                <div className="flex items-center gap-2">
+                  <Wifi className="h-4 w-4 text-primary" />
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">WiFi Password</p>
                 </div>
-                <div className="rounded-lg bg-card border p-4 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <KeyRound className="h-4 w-4 text-primary" />
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Key Box Code</p>
-                  </div>
-                  <p className="font-mono text-lg font-bold text-foreground tracking-wider select-all">
-                    {credentials.keybox_password}
-                  </p>
-                </div>
+                <p className="font-mono text-lg font-bold text-foreground tracking-wider select-all">
+                  {credentials?.wifi_password ?? "Not released yet"}
+                </p>
               </div>
+              <div className="rounded-lg bg-card border p-4 space-y-1">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="h-4 w-4 text-primary" />
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Key Box Code</p>
+                </div>
+                <p className="font-mono text-lg font-bold text-foreground tracking-wider select-all">
+                  {credentials?.keybox_password ?? "Not released yet"}
+                </p>
+              </div>
+            </div>
+            {agreement.credentials_sent_at && (
               <p className="text-xs text-muted-foreground">
                 Sent on: {format(new Date(agreement.credentials_sent_at), "MMMM d, yyyy 'at' h:mm a")}
               </p>
-            </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Sign button */}
