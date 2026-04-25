@@ -14,6 +14,7 @@ import {
   MaintenanceRequestWithDetails,
 } from "@/hooks/useMaintenanceRequests";
 import { useLandlordMaintenanceView, LandlordMaintenanceItem } from "@/hooks/useLandlordMaintenanceView";
+import { useWorkOrders } from "@/hooks/useWorkOrders";
 import { MaintenanceUpdateDialog } from "./MaintenanceUpdateDialog";
 import { cn } from "@/lib/utils";
 import { getSignedUrl } from "@/hooks/useSignedUrls";
@@ -84,12 +85,42 @@ export function MaintenancePortal({ showPerformance = false }: MaintenancePortal
   const [topTab, setTopTab] = useState<"requests" | "performance">("requests");
 
   const { data: rpcData, isLoading } = useLandlordMaintenanceView();
+  const { data: workOrders = [], isLoading: workOrdersLoading } = useWorkOrders();
   // Map RPC data to MaintenanceRequestWithDetails shape for compatibility
-  const requests = rpcData?.map((r) => ({
+  const directRequests = rpcData?.map((r) => ({
     ...r,
     priority: r.priority as MaintenanceRequestWithDetails["priority"],
     status: r.status as MaintenanceRequestWithDetails["status"],
   })) as MaintenanceRequestWithDetails[] | undefined;
+
+  const directIds = new Set((directRequests || []).map((request) => request.id));
+  const workOrderRequests = workOrders
+    .filter((wo) => !directIds.has(wo.maintenance_request_id))
+    .map((wo) => ({
+      id: wo.maintenance_request_id,
+      title: wo.request_title || "Work Order",
+      description: wo.request_description || wo.notes || "Work order created for this property.",
+      priority: (wo.severity === "urgent" ? "urgent" : wo.severity === "high" ? "high" : "medium") as MaintenanceRequestWithDetails["priority"],
+      status: (["completed", "verified", "closed"].includes(wo.status)
+        ? "completed"
+        : ["in_progress", "en_route", "on_site"].includes(wo.status)
+        ? "in_progress"
+        : "pending") as MaintenanceRequestWithDetails["status"],
+      created_at: wo.created_at,
+      updated_at: wo.updated_at,
+      resolved_at: wo.completed_at,
+      repair_notes: wo.notes,
+      photo_urls: [...(wo.before_photos || []), ...(wo.after_photos || [])],
+      assigned_to: wo.assigned_to,
+      rating: null,
+      tenant_id: "",
+      property_id: wo.property_id,
+      property_name: wo.property_name || "Property",
+      property_address: wo.property_address || "",
+      assigned_user_name: wo.assigned_user_name || wo.vendor_name || null,
+      assigned_user_email: null,
+    })) as MaintenanceRequestWithDetails[];
+  const requests = [...(directRequests || []), ...workOrderRequests];
   const updateRequest = useUpdateMaintenanceRequest();
 
   const pendingRequests = requests?.filter((r) => r.status === "pending") || [];
@@ -108,7 +139,7 @@ export function MaintenancePortal({ showPerformance = false }: MaintenancePortal
     setUpdateDialogOpen(true);
   };
 
-  if (isLoading) {
+  if (isLoading || workOrdersLoading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
