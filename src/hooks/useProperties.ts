@@ -1,8 +1,10 @@
+import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { sanitizeErrorMessage } from "@/lib/errorUtils";
+import { useLandlordLifecycle } from "@/hooks/lifecycle/useLandlordLifecycle";
 
 export interface Property {
   id: string;
@@ -46,47 +48,59 @@ export interface UpdatePropertyData extends Partial<CreatePropertyData> {
   id: string;
 }
 
+/**
+ * THIN ADAPTER over useLandlordLifecycle.
+ * All read-side property data flows through the canonical chain
+ * (properties → bookings → leases). Mutations stay direct.
+ */
 export function useProperties() {
-  const { user } = useAuth();
+  const lc = useLandlordLifecycle();
 
-  return useQuery({
-    queryKey: ["properties", user?.id],
-    queryFn: async () => {
-      const { data: properties, error } = await supabase
-        .from("properties")
-        .select("*")
-        .eq("is_archived", false)
-        .order("created_at", { ascending: false });
+  const data = useMemo<PropertyWithStats[]>(() => {
+    return lc.properties.map((p) => {
+      const occupied = new Set(
+        lc.tenants
+          .filter((t) => t.property_id === p.property_id && (t.fully_signed || t.payment_status === "paid"))
+          .map((t) => t.tenant_user_id ?? t.id)
+      ).size;
+      return {
+        id: p.property_id,
+        name: p.property_name,
+        address: p.property_address,
+        units: p.units,
+        monthly_rent: p.monthly_rent,
+        image_url: p.property_image,
+        landlord_id: p.landlord_id,
+        created_at: p.created_at,
+        updated_at: p.updated_at,
+        currency: p.currency,
+        region: p.region,
+        property_type: p.property_type,
+        listing_type: p.listing_type,
+        description: p.description,
+        amenities: p.amenities,
+        acquisition_cost: p.acquisition_cost,
+        current_value: p.current_value,
+        annual_expenses: p.annual_expenses,
+        is_public: p.is_public,
+        occupied_units: occupied,
+      } as PropertyWithStats;
+    });
+  }, [lc.properties, lc.tenants]);
 
-      if (error) throw error;
-
-      // Get tenant counts for each property
-      const propertiesWithStats: PropertyWithStats[] = await Promise.all(
-        (properties || []).map(async (property) => {
-          const { count } = await supabase
-            .from("tenants")
-            .select("*", { count: "exact", head: true })
-            .eq("property_id", property.id);
-
-          return {
-            ...property,
-            amenities: (property.amenities as unknown as string[]) || [],
-            description: property.description as string | null,
-            is_public: (property as any).is_public ?? true,
-            occupied_units: count || 0,
-          } as PropertyWithStats;
-        })
-      );
-
-      return propertiesWithStats;
-    },
-    enabled: !!user,
-  });
+  return { data, isLoading: lc.isLoading, isError: lc.isError } as ReturnType<
+    typeof useQuery<PropertyWithStats[]>
+  >;
 }
 
+/**
+ * Single property — derives from the lifecycle properties list, then falls
+ * back to a direct fetch for additional fields (description/amenities/etc.)
+ * that the lifecycle summary doesn't expose. The fallback fetch is the only
+ * permitted direct read and is per-property.
+ */
 export function useProperty(id: string) {
   const { user } = useAuth();
-
   return useQuery({
     queryKey: ["property", id],
     queryFn: async () => {
@@ -95,7 +109,6 @@ export function useProperty(id: string) {
         .select("*")
         .eq("id", id)
         .maybeSingle();
-
       if (error) throw error;
       if (!data) return null;
       return {

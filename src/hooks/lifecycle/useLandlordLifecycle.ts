@@ -29,6 +29,19 @@ export interface LandlordPropertySummary {
   is_archived: boolean;
   is_paused: boolean;
   is_public: boolean;
+  // Extended fields needed by property cards / forms
+  currency: string;
+  region: string;
+  property_type: string;
+  listing_type: string;
+  description: string | null;
+  amenities: string[];
+  acquisition_cost: number | null;
+  current_value: number | null;
+  annual_expenses: number | null;
+  landlord_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface LandlordTenantDerived {
@@ -160,7 +173,9 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
       // 1) PROPERTIES owned by landlord (entry point)
       const { data: props, error: pErr } = await supabase
         .from("properties")
-        .select("id, name, address, image_url, units, monthly_rent, is_archived, is_paused, is_public")
+        .select(
+          "id, name, address, image_url, units, monthly_rent, is_archived, is_paused, is_public, currency, region, property_type, listing_type, description, amenities, acquisition_cost, current_value, annual_expenses, landlord_id, created_at, updated_at"
+        )
         .eq("landlord_id", userId)
         .eq("is_archived", false)
         .order("created_at", { ascending: false });
@@ -259,6 +274,18 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
       is_archived: !!p.is_archived,
       is_paused: !!p.is_paused,
       is_public: !!p.is_public,
+      currency: p.currency ?? "NGN",
+      region: p.region ?? "NG",
+      property_type: p.property_type ?? "residential",
+      listing_type: p.listing_type ?? "standard",
+      description: (p.description as string | null) ?? null,
+      amenities: Array.isArray(p.amenities) ? (p.amenities as string[]) : [],
+      acquisition_cost: p.acquisition_cost != null ? Number(p.acquisition_cost) : null,
+      current_value: p.current_value != null ? Number(p.current_value) : null,
+      annual_expenses: p.annual_expenses != null ? Number(p.annual_expenses) : null,
+      landlord_id: p.landlord_id ?? null,
+      created_at: p.created_at ?? "",
+      updated_at: p.updated_at ?? "",
     }));
 
     // Derived tenants: lease-first, then bookings without a fully-signed lease

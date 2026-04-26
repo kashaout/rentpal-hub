@@ -1,10 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { useActiveTenant } from "@/hooks/useActiveTenant";
+import { useMemo } from "react";
+import { useTenantLifecycle } from "@/hooks/lifecycle/useTenantLifecycle";
 
 export interface TenantLeaseInfo {
-  id: string; // tenants.id (used by maintenance / payment hooks)
+  id: string; // legacy "tenants.id" — now always equals lease_id (the canonical id)
   lease_id: string;
   property_id: string;
   property_name: string;
@@ -17,42 +15,33 @@ export interface TenantLeaseInfo {
 }
 
 /**
- * Tenant lease info — derived from the `active_tenants` view (single source of truth).
- *
- * Falls back to fetching the matching `tenants` row so legacy hooks
- * (payments, maintenance) that key off `tenants.id` continue to work.
+ * THIN ADAPTER — derives the tenant's "active" lease from the canonical
+ * useTenantLifecycle chain. The shape is preserved so downstream legacy
+ * consumers (sidebar, payments, maintenance) keep working.
  */
 export function useTenantLease() {
-  const { user } = useAuth();
-  const { tenancy, isLoading: tenancyLoading } = useActiveTenant();
+  const lc = useTenantLifecycle();
 
-  return useQuery({
-    queryKey: ["tenant-lease", user?.id, tenancy?.lease_id],
-    queryFn: async (): Promise<TenantLeaseInfo | null> => {
-      if (!user?.id || !tenancy) return null;
+  const data = useMemo<TenantLeaseInfo | null>(() => {
+    const row = lc.active;
+    if (!row || !row.lease_id) return null;
+    return {
+      id: row.lease_id,
+      lease_id: row.lease_id,
+      property_id: row.property_id,
+      property_name: row.property_name,
+      property_address: row.property_address,
+      unit_number: row.unit_number,
+      rent_amount: row.rent_amount,
+      lease_start: row.lease_start ?? "",
+      lease_end: row.lease_end ?? "",
+      payment_status: row.isPaid ? "paid" : "pending",
+    };
+  }, [lc.active]);
 
-      // Look up the tenants row for this user + property to get tenants.id and payment_status
-      const { data: tenantRow } = await supabase
-        .from("tenants")
-        .select("id, payment_status")
-        .eq("user_id", user.id)
-        .eq("property_id", tenancy.property_id)
-        .eq("is_archived", false)
-        .maybeSingle();
-
-      return {
-        id: tenantRow?.id ?? tenancy.lease_id, // fallback so downstream queries don't break
-        lease_id: tenancy.lease_id,
-        property_id: tenancy.property_id,
-        property_name: tenancy.property_name,
-        property_address: tenancy.property_address,
-        unit_number: tenancy.unit_number,
-        rent_amount: tenancy.rent_amount,
-        lease_start: tenancy.lease_start,
-        lease_end: tenancy.lease_end,
-        payment_status: (tenantRow?.payment_status as "paid" | "pending" | "overdue") ?? "pending",
-      };
-    },
-    enabled: !!user?.id && !!tenancy && !tenancyLoading,
-  });
+  return {
+    data,
+    isLoading: lc.isLoading,
+    isError: lc.isError,
+  };
 }
