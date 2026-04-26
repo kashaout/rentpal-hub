@@ -274,6 +274,18 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
       is_archived: !!p.is_archived,
       is_paused: !!p.is_paused,
       is_public: !!p.is_public,
+      currency: p.currency ?? "NGN",
+      region: p.region ?? "NG",
+      property_type: p.property_type ?? "residential",
+      listing_type: p.listing_type ?? "standard",
+      description: (p.description as string | null) ?? null,
+      amenities: Array.isArray(p.amenities) ? (p.amenities as string[]) : [],
+      acquisition_cost: p.acquisition_cost != null ? Number(p.acquisition_cost) : null,
+      current_value: p.current_value != null ? Number(p.current_value) : null,
+      annual_expenses: p.annual_expenses != null ? Number(p.annual_expenses) : null,
+      landlord_id: p.landlord_id ?? null,
+      created_at: p.created_at ?? "",
+      updated_at: p.updated_at ?? "",
     }));
 
     // Derived tenants: lease-first, then bookings without a fully-signed lease
