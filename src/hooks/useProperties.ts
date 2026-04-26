@@ -58,7 +58,6 @@ export function useProperties() {
 
   const data = useMemo<PropertyWithStats[]>(() => {
     return lc.properties.map((p) => {
-      // Occupied units = unique tenants attached to this property via the chain
       const occupied = new Set(
         lc.tenants
           .filter((t) => t.property_id === p.property_id && (t.fully_signed || t.payment_status === "paid"))
@@ -71,18 +70,18 @@ export function useProperties() {
         units: p.units,
         monthly_rent: p.monthly_rent,
         image_url: p.property_image,
-        landlord_id: null,
-        created_at: "",
-        updated_at: "",
-        currency: "NGN",
-        region: "NG",
-        property_type: "residential",
-        listing_type: "standard",
-        description: null,
-        amenities: [],
-        acquisition_cost: null,
-        current_value: null,
-        annual_expenses: null,
+        landlord_id: p.landlord_id,
+        created_at: p.created_at,
+        updated_at: p.updated_at,
+        currency: p.currency,
+        region: p.region,
+        property_type: p.property_type,
+        listing_type: p.listing_type,
+        description: p.description,
+        amenities: p.amenities,
+        acquisition_cost: p.acquisition_cost,
+        current_value: p.current_value,
+        annual_expenses: p.annual_expenses,
         is_public: p.is_public,
         occupied_units: occupied,
       } as PropertyWithStats;
