@@ -29,6 +29,19 @@ export interface LandlordPropertySummary {
   is_archived: boolean;
   is_paused: boolean;
   is_public: boolean;
+  // Extended fields needed by property cards / forms
+  currency: string;
+  region: string;
+  property_type: string;
+  listing_type: string;
+  description: string | null;
+  amenities: string[];
+  acquisition_cost: number | null;
+  current_value: number | null;
+  annual_expenses: number | null;
+  landlord_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface LandlordTenantDerived {
