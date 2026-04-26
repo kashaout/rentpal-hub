@@ -173,7 +173,9 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
       // 1) PROPERTIES owned by landlord (entry point)
       const { data: props, error: pErr } = await supabase
         .from("properties")
-        .select("id, name, address, image_url, units, monthly_rent, is_archived, is_paused, is_public")
+        .select(
+          "id, name, address, image_url, units, monthly_rent, is_archived, is_paused, is_public, currency, region, property_type, listing_type, description, amenities, acquisition_cost, current_value, annual_expenses, landlord_id, created_at, updated_at"
+        )
         .eq("landlord_id", userId)
         .eq("is_archived", false)
         .order("created_at", { ascending: false });
