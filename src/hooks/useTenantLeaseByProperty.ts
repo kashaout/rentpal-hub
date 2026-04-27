@@ -46,23 +46,43 @@ export function useTenantLeaseByProperty(propertyId: string | null | undefined) 
         .limit(1)
         .maybeSingle();
 
-      // We need *something* — either a signed lease or a tenants row
-      if (!lease && !tenantRow) return null;
+      // Also check for a paid/confirmed booking — a tenant who paid but
+      // hasn't gotten a signed lease yet must still see their tenancy.
+      const { data: booking } = await supabase
+        .from("bookings")
+        .select("id, check_in, check_out, total_price, status, payment_status")
+        .eq("user_id", user.id)
+        .eq("property_id", propertyId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      // Render as long as we have ANY proof of tenancy
+      if (!lease && !tenantRow && !booking) return null;
 
       const leaseAny: any = lease;
       const tenantAny: any = tenantRow;
+      const bookingAny: any = booking;
+
+      // Use lease.id as the canonical id whenever a lease exists; this
+      // matches useTenantPortal so QuickIssueButton sends a usable id to
+      // the maintenance RLS policy via active_tenants.
+      const canonicalId = leaseAny?.id ?? tenantAny?.id ?? bookingAny?.id ?? "";
 
       return {
-        id: tenantAny?.id ?? leaseAny?.id ?? "",
+        id: canonicalId,
         lease_id: leaseAny?.id ?? "",
         property_id: propertyId,
         property_name: (prop as any).name ?? "Property",
         property_address: (prop as any).address ?? "",
         unit_number: leaseAny?.unit_number ?? tenantAny?.unit_number ?? "—",
-        rent_amount: Number(leaseAny?.rent_amount ?? tenantAny?.rent_amount ?? 0),
-        lease_start: leaseAny?.lease_start ?? tenantAny?.lease_start ?? "",
-        lease_end: leaseAny?.lease_end ?? tenantAny?.lease_end ?? "",
-        payment_status: (tenantAny?.payment_status as "paid" | "pending" | "overdue") ?? "pending",
+        rent_amount: Number(leaseAny?.rent_amount ?? tenantAny?.rent_amount ?? bookingAny?.total_price ?? 0),
+        lease_start: leaseAny?.lease_start ?? tenantAny?.lease_start ?? bookingAny?.check_in ?? "",
+        lease_end: leaseAny?.lease_end ?? tenantAny?.lease_end ?? bookingAny?.check_out ?? "",
+        payment_status:
+          bookingAny?.payment_status === "paid" || bookingAny?.status === "confirmed"
+            ? "paid"
+            : (tenantAny?.payment_status as "paid" | "pending" | "overdue") ?? "pending",
       };
     },
   });
