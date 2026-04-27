@@ -22,6 +22,7 @@ import { TenantDocumentsTab } from "./tabs/TenantDocumentsTab";
 import { TenantCommunicationTab } from "./tabs/TenantCommunicationTab";
 import { TenantHistoryTab } from "./tabs/TenantHistoryTab";
 import { TenantCodesTab } from "./tabs/TenantCodesTab";
+import { LifecycleBadge } from "@/components/dev/LifecycleBadge";
 
 const TABS = [
   { key: "overview", label: "Overview", icon: Home },
@@ -71,14 +72,16 @@ export function TenantCommandCenter({ defaultTab = "overview" }: { defaultTab?: 
     );
   }
 
-  // Brand-new user with no bookings or leases at all
+  // Brand-new user with no bookings or leases at all — show a clear CTA
+  // (no UI guard hides Browse Properties from the sidebar; this is a
+  // dashboard fallback so the user knows what to do next).
   if (!properties?.length && !lease) {
     return (
       <Card>
-        <CardContent className="py-16 text-center">
+        <CardContent className="py-16 text-center space-y-2">
           <p className="text-lg font-medium">No tenancy yet</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Browse properties to make your first booking.
+          <p className="text-sm text-muted-foreground">
+            Use <strong>Browse Properties</strong> in the sidebar to make your first booking.
           </p>
         </CardContent>
       </Card>
@@ -87,6 +90,7 @@ export function TenantCommandCenter({ defaultTab = "overview" }: { defaultTab?: 
 
   return (
     <div className="space-y-6">
+      <LifecycleBadge hook="useTenantLifecycle" />
       <TenantPropertySelector
         selectedPropertyId={effectivePropertyId}
         onChange={setSelectedPropertyId}
@@ -110,10 +114,15 @@ export function TenantCommandCenter({ defaultTab = "overview" }: { defaultTab?: 
           <TabsList className="w-full overflow-x-auto flex-nowrap sm:flex-wrap h-auto gap-1 bg-muted/50 p-1 justify-start">
             {TABS.map((tab) => {
               const Icon = tab.icon;
+              // Disable Lease/Codes when no signed lease exists, but never hide
+              // the tab — users need to see what's coming.
+              const disabled =
+                (tab.key === "lease" || tab.key === "codes") && !lease.lease_id;
               return (
                 <TabsTrigger
                   key={tab.key}
                   value={tab.key}
+                  disabled={disabled}
                   className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-background shrink-0"
                 >
                   <Icon className="h-4 w-4" />

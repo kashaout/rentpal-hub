@@ -20,6 +20,7 @@ import { getSignedUrl } from "@/hooks/useSignedUrls";
 import { Badge } from "@/components/ui/badge";
 import { MaintenancePerformanceDashboard } from "@/components/admin/MaintenancePerformanceDashboard";
 import { TrendingUp } from "lucide-react";
+import { LifecycleBadge } from "@/components/dev/LifecycleBadge";
 
 const priorityStyles: Record<string, string> = {
   low: "bg-muted text-muted-foreground",
@@ -182,6 +183,7 @@ export function MaintenancePortal({ showPerformance = false }: MaintenancePortal
 
   const requestsView = (
     <div className="space-y-6">
+      <LifecycleBadge hook="useLandlordLifecycle" />
       {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>

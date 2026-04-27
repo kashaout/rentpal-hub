@@ -20,6 +20,7 @@ import { useSubscriptionContext } from "@/hooks/useSubscriptionContext";
 import { useVerificationStatus } from "@/hooks/useVerification";
 import { LandlordVerificationFlow } from "@/components/verification/LandlordVerificationFlow";
 import { VerificationStatusBanner } from "@/components/verification/VerificationStatusBanner";
+import { LifecycleBadge } from "@/components/dev/LifecycleBadge";
 
 export function PropertiesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -124,6 +125,7 @@ export function PropertiesPage() {
 
   return (
     <div className="space-y-6">
+      <LifecycleBadge hook="useLandlordLifecycle" />
       <VerificationStatusBanner />
 
       {showVerification && (
