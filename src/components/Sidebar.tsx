@@ -194,8 +194,9 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
 
   const navItems = [
     // ── Manager / staff nav ─────────────────────────────────────
-    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isManagerRole && !showLandlordAdmin, locked: false },
-    { icon: Building2, label: "Properties", id: "properties", show: isManagerRole, locked: false },
+    // Single Dashboard entry for all manager roles (landlord/admin/consultant).
+    // Properties view is unified under Dashboard to avoid duplicate entry points.
+    { icon: LayoutDashboard, label: "Dashboard", id: "dashboard", show: isManagerRole, locked: false },
     { icon: Users, label: "Tenants", id: "tenants", show: isManagerRole, locked: false },
     { icon: Wrench, label: "Maintenance", id: "maintenance-portal", show: isManagerRole || isMaintenance || isVendor, locked: false },
     { icon: Wallet, label: "Financials", id: "finance", show: isManagerRole, locked: false },
@@ -203,14 +204,12 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
     { icon: FileText, label: "Leases", id: "pending-leases", show: isManagerRole, locked: false },
 
     // ── Tenant nav ──────────────────────────────────────────────
-    // Visibility depends ONLY on auth (showTenantNav). Lease state does not gate
-    // navigation — tenants always see Dashboard, Browse, Bookings, Requests,
-    // Documents, Reports, and Leases.
+    // Single Dashboard entry — TenantCommandCenter contains Lease, Codes,
+    // Requests, Documents, and History as internal tabs.
     { icon: LayoutDashboard, label: "Dashboard", id: "tenant-command-center", show: showTenantNav, locked: false },
     { icon: Building2, label: "Browse Properties", id: "browse-properties", show: showTenantNav, locked: false },
     { icon: FileText, label: "My Bookings", id: "my-bookings", show: showTenantNav, locked: false },
     { icon: MessageSquare, label: "Requests", id: "tenant-inbox", show: showTenantNav, locked: false },
-    { icon: FileText, label: "Documents", id: "tenant-documents", show: showTenantNav, locked: false },
     { icon: BarChart3, label: "Reports", id: "tenant-reports", show: showTenantNav, locked: false },
     { icon: FileText, label: "Leases", id: "pending-leases", show: showTenantNav, locked: false },
   ];
