@@ -110,10 +110,15 @@ export function TenantCommandCenter({ defaultTab = "overview" }: { defaultTab?: 
           <TabsList className="w-full overflow-x-auto flex-nowrap sm:flex-wrap h-auto gap-1 bg-muted/50 p-1 justify-start">
             {TABS.map((tab) => {
               const Icon = tab.icon;
+              // Disable Lease/Codes when no signed lease exists, but never hide
+              // the tab — users need to see what's coming.
+              const disabled =
+                (tab.key === "lease" || tab.key === "codes") && !lease.lease_id;
               return (
                 <TabsTrigger
                   key={tab.key}
                   value={tab.key}
+                  disabled={disabled}
                   className="gap-1.5 text-xs sm:text-sm data-[state=active]:bg-background shrink-0"
                 >
                   <Icon className="h-4 w-4" />
