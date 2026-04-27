@@ -90,6 +90,7 @@ export function TenantCommandCenter({ defaultTab = "overview" }: { defaultTab?: 
 
   return (
     <div className="space-y-6">
+      <LifecycleBadge hook="useTenantLifecycle" />
       <TenantPropertySelector
         selectedPropertyId={effectivePropertyId}
         onChange={setSelectedPropertyId}
