@@ -72,10 +72,10 @@ const Index = () => {
   const isLandlordOnly = isLandlord && !isAdmin && !isConsultant;
 
   const defaultView = isManagerRole
-    ? (isLandlordOnly ? "properties" : "dashboard")
+    ? "dashboard"
     : isMaintenanceOnly
     ? "maintenance-portal"
-    : "browse-properties";
+    : "tenant-command-center";
   const [currentView, setCurrentView] = useState(defaultView);
 
   // Check onboarding status
