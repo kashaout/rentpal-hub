@@ -208,8 +208,9 @@ const Index = () => {
         return <TenantPortal />;
       case "tenant-command-center":
         return <TenantCommandCenter />;
+      // Legacy ids: Documents and Lease are now tabs inside TenantCommandCenter.
       case "tenant-lease":
-        return <TenantLeasePage />;
+        return <TenantCommandCenter defaultTab="lease" />;
       case "tenant-documents":
         return <TenantCommandCenter defaultTab="documents" />;
       case "tenant-payments":
@@ -226,8 +227,9 @@ const Index = () => {
         return <MaintenancePortal showPerformance={isManagerRole} />;
       case "finance":
         return <FinanceDashboard />;
+      // Legacy id: Properties is unified under Dashboard for managers.
       case "properties":
-        return <PropertiesPage />;
+        return isLandlordOnly ? <PropertiesPage /> : <Dashboard onNavigate={navigateTo} />;
       case "tenants":
         return <TenantsPage />;
       case "reports":
