@@ -22,6 +22,7 @@ import { TenantDocumentsTab } from "./tabs/TenantDocumentsTab";
 import { TenantCommunicationTab } from "./tabs/TenantCommunicationTab";
 import { TenantHistoryTab } from "./tabs/TenantHistoryTab";
 import { TenantCodesTab } from "./tabs/TenantCodesTab";
+import { LifecycleBadge } from "@/components/dev/LifecycleBadge";
 
 const TABS = [
   { key: "overview", label: "Overview", icon: Home },
