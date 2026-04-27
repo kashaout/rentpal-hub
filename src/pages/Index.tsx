@@ -100,12 +100,17 @@ const Index = () => {
       return;
     }
 
+    // Redirect deprecated/duplicate view ids to the unified entry views.
+    let nextView = view;
+    if (view === "properties") nextView = "dashboard";
+    if (view === "tenant-documents" || view === "tenant-lease") nextView = "tenant-command-center";
+
     setDetailPropertyId(null);
     setCurrentView(prev => {
-      if (prev !== view) {
+      if (prev !== nextView) {
         viewHistoryRef.current.push(prev);
       }
-      return view;
+      return nextView;
     });
   }, []);
 
