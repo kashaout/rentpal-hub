@@ -183,6 +183,7 @@ export function MaintenancePortal({ showPerformance = false }: MaintenancePortal
 
   const requestsView = (
     <div className="space-y-6">
+      <LifecycleBadge hook="useLandlordLifecycle" />
       {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
