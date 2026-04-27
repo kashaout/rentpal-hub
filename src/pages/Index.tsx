@@ -129,12 +129,8 @@ const Index = () => {
     setCurrentView(defaultView);
   }, [defaultView]);
 
-  // Landlord-only users skip the general dashboard.
-  useEffect(() => {
-    if (isLandlordOnly && currentView === "dashboard") {
-      setCurrentView("properties");
-    }
-  }, [isLandlordOnly, currentView]);
+  // (Landlord/manager unification: Dashboard is the single entry point. The
+  // legacy redirect from "dashboard" → "properties" has been removed.)
 
   // Auto-verify rent payment on success redirect
   useEffect(() => {
