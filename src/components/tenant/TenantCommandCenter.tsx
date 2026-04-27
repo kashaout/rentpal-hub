@@ -71,14 +71,16 @@ export function TenantCommandCenter({ defaultTab = "overview" }: { defaultTab?: 
     );
   }
 
-  // Brand-new user with no bookings or leases at all
+  // Brand-new user with no bookings or leases at all — show a clear CTA
+  // (no UI guard hides Browse Properties from the sidebar; this is a
+  // dashboard fallback so the user knows what to do next).
   if (!properties?.length && !lease) {
     return (
       <Card>
-        <CardContent className="py-16 text-center">
+        <CardContent className="py-16 text-center space-y-2">
           <p className="text-lg font-medium">No tenancy yet</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Browse properties to make your first booking.
+          <p className="text-sm text-muted-foreground">
+            Use <strong>Browse Properties</strong> in the sidebar to make your first booking.
           </p>
         </CardContent>
       </Card>
