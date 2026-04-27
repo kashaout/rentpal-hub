@@ -49,7 +49,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
 
     properties?.forEach((p) => {
       if (p.name.toLowerCase().includes(q) || p.address.toLowerCase().includes(q)) {
-        r.push({ type: "property", id: p.id, title: p.name, subtitle: p.address, icon: Building2, view: "properties" });
+        r.push({ type: "property", id: p.id, title: p.name, subtitle: p.address, icon: Building2, view: `property-command:${p.id}` });
       }
     });
 

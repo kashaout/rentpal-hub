@@ -24,7 +24,7 @@ import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { PendingLeasesPage } from "@/components/PendingLeasesPage";
 import { PropertyDetailView } from "@/components/PropertyDetailView";
 import { PropertyCommandCenter } from "@/components/property/PropertyCommandCenter";
-import { TenantLeasePage } from "@/components/tenant/TenantLeasePage";
+
 import { TenantReportsPage } from "@/components/tenant/TenantReportsPage";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,10 +72,10 @@ const Index = () => {
   const isLandlordOnly = isLandlord && !isAdmin && !isConsultant;
 
   const defaultView = isManagerRole
-    ? (isLandlordOnly ? "properties" : "dashboard")
+    ? "dashboard"
     : isMaintenanceOnly
     ? "maintenance-portal"
-    : "browse-properties";
+    : "tenant-command-center";
   const [currentView, setCurrentView] = useState(defaultView);
 
   // Check onboarding status
@@ -100,12 +100,17 @@ const Index = () => {
       return;
     }
 
+    // Redirect deprecated/duplicate view ids to the unified entry views.
+    let nextView = view;
+    if (view === "properties") nextView = "dashboard";
+    if (view === "tenant-documents" || view === "tenant-lease") nextView = "tenant-command-center";
+
     setDetailPropertyId(null);
     setCurrentView(prev => {
-      if (prev !== view) {
+      if (prev !== nextView) {
         viewHistoryRef.current.push(prev);
       }
-      return view;
+      return nextView;
     });
   }, []);
 
@@ -124,12 +129,8 @@ const Index = () => {
     setCurrentView(defaultView);
   }, [defaultView]);
 
-  // Landlord-only users skip the general dashboard.
-  useEffect(() => {
-    if (isLandlordOnly && currentView === "dashboard") {
-      setCurrentView("properties");
-    }
-  }, [isLandlordOnly, currentView]);
+  // (Landlord/manager unification: Dashboard is the single entry point. The
+  // legacy redirect from "dashboard" → "properties" has been removed.)
 
   // Auto-verify rent payment on success redirect
   useEffect(() => {
@@ -207,8 +208,9 @@ const Index = () => {
         return <TenantPortal />;
       case "tenant-command-center":
         return <TenantCommandCenter />;
+      // Legacy ids: Documents and Lease are now tabs inside TenantCommandCenter.
       case "tenant-lease":
-        return <TenantLeasePage />;
+        return <TenantCommandCenter defaultTab="lease" />;
       case "tenant-documents":
         return <TenantCommandCenter defaultTab="documents" />;
       case "tenant-payments":
@@ -225,8 +227,9 @@ const Index = () => {
         return <MaintenancePortal showPerformance={isManagerRole} />;
       case "finance":
         return <FinanceDashboard />;
+      // Legacy id: Properties is unified under Dashboard for managers.
       case "properties":
-        return <PropertiesPage />;
+        return isLandlordOnly ? <PropertiesPage /> : <Dashboard onNavigate={navigateTo} />;
       case "tenants":
         return <TenantsPage />;
       case "reports":
@@ -252,7 +255,10 @@ const Index = () => {
         return <Dashboard onNavigate={navigateTo} />;
       case "dashboard":
       default:
-        return <Dashboard onNavigate={navigateTo} />;
+        // Landlord-only users land on the property hub (which opens the
+        // PropertyCommandCenter on click). Admins/consultants see the
+        // analytics Dashboard.
+        return isLandlordOnly ? <PropertiesPage /> : <Dashboard onNavigate={navigateTo} />;
     }
   };
 
