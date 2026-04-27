@@ -24,7 +24,7 @@ import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { PendingLeasesPage } from "@/components/PendingLeasesPage";
 import { PropertyDetailView } from "@/components/PropertyDetailView";
 import { PropertyCommandCenter } from "@/components/property/PropertyCommandCenter";
-import { TenantLeasePage } from "@/components/tenant/TenantLeasePage";
+
 import { TenantReportsPage } from "@/components/tenant/TenantReportsPage";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
