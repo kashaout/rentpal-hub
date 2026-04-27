@@ -255,7 +255,10 @@ const Index = () => {
         return <Dashboard onNavigate={navigateTo} />;
       case "dashboard":
       default:
-        return <Dashboard onNavigate={navigateTo} />;
+        // Landlord-only users land on the property hub (which opens the
+        // PropertyCommandCenter on click). Admins/consultants see the
+        // analytics Dashboard.
+        return isLandlordOnly ? <PropertiesPage /> : <Dashboard onNavigate={navigateTo} />;
     }
   };
 
