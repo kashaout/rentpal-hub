@@ -125,6 +125,7 @@ export function PropertiesPage() {
 
   return (
     <div className="space-y-6">
+      <LifecycleBadge hook="useLandlordLifecycle" />
       <VerificationStatusBanner />
 
       {showVerification && (
