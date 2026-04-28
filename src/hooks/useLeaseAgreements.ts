@@ -2,6 +2,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import {
+  assertUuidFks,
+  assertAuthUser,
+  MutationSafetyError,
+} from "@/lib/mutationSafety";
 
 export interface LeaseAgreement {
   id: string;
