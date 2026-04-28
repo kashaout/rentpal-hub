@@ -119,7 +119,10 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
         .from("property-images")
         .upload(fileName, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("[property-images] upload failed", { uploadError, fileName, userId: user.id });
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from("property-images")
@@ -129,7 +132,11 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
       setPreviewUrl(publicUrl);
       toast.success("Image uploaded successfully");
     } catch (error: any) {
-      toast.error("Upload failed: " + (error.message || "Unknown error"));
+      const msg = error?.message || "Unknown error";
+      const friendly = /row-level security|not authorized|permission/i.test(msg)
+        ? "You need landlord access to upload property images. Please verify your landlord account."
+        : msg;
+      toast.error("Upload failed: " + friendly);
     } finally {
       setUploading(false);
     }
