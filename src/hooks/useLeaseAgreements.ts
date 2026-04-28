@@ -70,11 +70,27 @@ export function useLeaseAgreementByProperty(propertyId: string, tenantUserId?: s
   });
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export function useCreateLeaseAgreement() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: Omit<LeaseAgreement, "id" | "created_at" | "updated_at" | "tenant_signed" | "landlord_signed" | "tenant_signed_at" | "landlord_signed_at" | "document_id" | "status" | "credentials_sent_at" | "check_in_time">) => {
+      // Defensive UUID validation — never let "" reach Postgres
+      if (!data.property_id || !UUID_RE.test(data.property_id)) {
+        console.error("[lease] Invalid property_id passed to createLeaseAgreement:", data.property_id);
+        throw new Error("Invalid property selected");
+      }
+      if (!data.tenant_user_id || !UUID_RE.test(data.tenant_user_id)) {
+        console.error("[lease] Invalid tenant_user_id:", data.tenant_user_id);
+        throw new Error("Invalid tenant user");
+      }
+      if (!data.landlord_user_id || !UUID_RE.test(data.landlord_user_id)) {
+        console.error("[lease] Invalid landlord_user_id:", data.landlord_user_id);
+        throw new Error("This property is missing a landlord owner. Please contact support.");
+      }
+
       const { data: result, error } = await supabase
         .from("lease_agreements" as any)
         .insert(data as any)
