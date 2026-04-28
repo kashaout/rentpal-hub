@@ -82,18 +82,40 @@ export function useCreateLeaseAgreement() {
 
   return useMutation({
     mutationFn: async (data: Omit<LeaseAgreement, "id" | "created_at" | "updated_at" | "tenant_signed" | "landlord_signed" | "tenant_signed_at" | "landlord_signed_at" | "document_id" | "status" | "credentials_sent_at" | "check_in_time">) => {
-      // Defensive UUID validation — never let "" reach Postgres
-      if (!data.property_id || !UUID_RE.test(data.property_id)) {
-        console.error("[lease] Invalid property_id passed to createLeaseAgreement:", data.property_id);
-        throw new Error("Invalid property selected");
+      // 1) Mutation safety layer — validate all FKs before hitting Supabase
+      assertUuidFks(data as unknown as Record<string, unknown>, [
+        { key: "property_id", label: "Property" },
+        { key: "tenant_user_id", label: "Tenant" },
+        { key: "landlord_user_id", label: "Property owner (landlord)" },
+      ]);
+
+      // 2) Verify auth session matches the tenant user on the lease
+      const { data: sessionData } = await supabase.auth.getUser();
+      assertAuthUser(sessionData?.user?.id, data.tenant_user_id);
+
+      // 3) Verify landlord_id actually exists on the property
+      const { data: prop, error: propErr } = await supabase
+        .from("properties")
+        .select("id, landlord_id")
+        .eq("id", data.property_id)
+        .maybeSingle();
+
+      if (propErr) {
+        console.error("[lease] Property lookup failed:", propErr);
+        throw new MutationSafetyError("Could not verify the selected property.");
       }
-      if (!data.tenant_user_id || !UUID_RE.test(data.tenant_user_id)) {
-        console.error("[lease] Invalid tenant_user_id:", data.tenant_user_id);
-        throw new Error("Invalid tenant user");
+      if (!prop) {
+        throw new MutationSafetyError("Selected property no longer exists.");
       }
-      if (!data.landlord_user_id || !UUID_RE.test(data.landlord_user_id)) {
-        console.error("[lease] Invalid landlord_user_id:", data.landlord_user_id);
-        throw new Error("This property is missing a landlord owner. Please contact support.");
+      if (!prop.landlord_id) {
+        throw new MutationSafetyError(
+          "This property is missing a landlord owner. Please contact support."
+        );
+      }
+      if (prop.landlord_id !== data.landlord_user_id) {
+        throw new MutationSafetyError(
+          "Landlord on this lease does not match the property owner."
+        );
       }
 
       const { data: result, error } = await supabase
