@@ -129,16 +129,22 @@ export function useCreateProperty() {
 
   return useMutation({
     mutationFn: async (data: CreatePropertyData) => {
+      if (!user?.id) {
+        throw new Error("You must be signed in to create a property");
+      }
       const { data: property, error } = await supabase
         .from("properties")
         .insert({
           ...data,
-          landlord_id: user?.id,
+          landlord_id: user.id,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("[properties] insert failed", { error, landlord_id: user.id });
+        throw error;
+      }
       return property;
     },
     onSuccess: () => {

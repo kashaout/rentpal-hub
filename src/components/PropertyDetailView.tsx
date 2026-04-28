@@ -172,6 +172,18 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const handleCreateAndSignContract = async () => {
     if (!property || !user || !selectedRange.from || !selectedRange.to) return;
 
+    // Hard guards — never pass empty strings to a UUID column
+    if (!property.id) {
+      console.error("[lease] Missing property.id", property);
+      sonnerToast.error("Invalid property selected");
+      return;
+    }
+    if (!property.landlord_id) {
+      console.error("[lease] Property has no landlord_id", property);
+      sonnerToast.error("This property is missing an owner. Please contact support.");
+      return;
+    }
+
     try {
       setUploading(true);
 
@@ -182,7 +194,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
       const agreement = await createAgreement.mutateAsync({
         property_id: property.id,
         tenant_user_id: user.id,
-        landlord_user_id: property.landlord_id || "",
+        landlord_user_id: property.landlord_id,
         tenant_name: fullName || profile?.full_name || user.email || "Tenant",
         landlord_name: "Landlord",
         unit_number: unitNumber,

@@ -33,7 +33,8 @@ export function usePublicProperty(id: string) {
         units: d.units,
         region: d.region,
         amenities: (d.amenities as string[]) || [],
-      } as BrowseProperty;
+        landlord_id: d.landlord_id,
+      } as BrowseProperty & { landlord_id: string | null };
     },
     enabled: !!user && !!id,
   });
