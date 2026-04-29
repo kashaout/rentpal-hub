@@ -97,6 +97,7 @@ const Index = () => {
   }, [profile]);
 
   const navigateTo = useCallback((view: string) => {
+    hasNavigatedRef.current = true;
     // Handle property detail navigation: "property-detail:uuid"
     if (view.startsWith("property-detail:") || view.startsWith("property-command:")) {
       const propId = view.split(":")[1];
