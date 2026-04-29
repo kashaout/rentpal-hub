@@ -76,7 +76,7 @@ const tenantSteps: OnboardingStep[] = [
 ];
 
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
-  const { user } = useAuth();
+  const { user, refreshRoles } = useAuth();
   const [phase, setPhase] = useState<"role" | "tips">("role");
   const [uxRole, setUxRole] = useState<UxRole | null>(null);
   const [step, setStep] = useState(0);
