@@ -37,7 +37,8 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    const origin = req.headers.get("origin") || "https://id-preview--171329c0-0821-4377-b783-24da77ae62c5.lovable.app";
+    const origin = req.headers.get("origin") || Deno.env.get("APP_BASE_URL");
+    if (!origin) throw new Error("Missing origin");
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

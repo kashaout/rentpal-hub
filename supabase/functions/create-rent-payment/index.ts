@@ -45,7 +45,8 @@ serve(async (req) => {
     const validCurrency = (currency || "ngn").toLowerCase();
     const amountInMinorUnits = Math.round(amount * 100);
 
-    const origin = req.headers.get("origin") || "https://id-preview--171329c0-0821-4377-b783-24da77ae62c5.lovable.app";
+    const origin = req.headers.get("origin") || Deno.env.get("APP_BASE_URL");
+    if (!origin) throw new Error("Missing origin");
 
     // Include property_id in success URL so we can redirect back to the property
     const successUrl = propertyId

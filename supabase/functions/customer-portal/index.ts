@@ -37,7 +37,8 @@ serve(async (req) => {
       throw new Error("No Stripe customer found for this user");
     }
 
-    const origin = req.headers.get("origin") || "https://id-preview--171329c0-0821-4377-b783-24da77ae62c5.lovable.app";
+    const origin = req.headers.get("origin") || Deno.env.get("APP_BASE_URL");
+    if (!origin) throw new Error("Missing origin");
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customers.data[0].id,
       return_url: `${origin}/`,
