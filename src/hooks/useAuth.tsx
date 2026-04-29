@@ -20,9 +20,11 @@ interface AuthContextType {
   roles: AppRole[];
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, role?: "landlord" | "tenant") => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
+  /** Re-fetch the current user's profile + roles from the server. Use after onboarding/role changes. */
+  refreshRoles: () => Promise<void>;
   /**
    * UI-ONLY FLAG: For conditional rendering of admin UI elements.
    * DO NOT use for authorization decisions - all data access is protected by RLS policies.
