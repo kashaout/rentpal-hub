@@ -135,19 +135,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? new Error(error.message) : null };
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, role?: "landlord" | "tenant") => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { full_name: fullName },
+        data: role
+          ? { full_name: fullName, role }
+          : { full_name: fullName },
       },
     });
 
     if (error) return { error: new Error(error.message) };
-
-    // No role assignment at signup — roles are assigned after verification
     return { error: null };
   };
 
