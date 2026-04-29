@@ -20,9 +20,11 @@ interface AuthContextType {
   roles: AppRole[];
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, role?: "landlord" | "tenant") => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
+  /** Re-fetch the current user's profile + roles from the server. Use after onboarding/role changes. */
+  refreshRoles: () => Promise<void>;
   /**
    * UI-ONLY FLAG: For conditional rendering of admin UI elements.
    * DO NOT use for authorization decisions - all data access is protected by RLS policies.
@@ -133,19 +135,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? new Error(error.message) : null };
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, role?: "landlord" | "tenant") => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { full_name: fullName },
+        data: role
+          ? { full_name: fullName, role }
+          : { full_name: fullName },
       },
     });
 
     if (error) return { error: new Error(error.message) };
-
-    // No role assignment at signup — roles are assigned after verification
     return { error: null };
   };
 
@@ -159,6 +161,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const hasRole = (role: AppRole) => roles.includes(role);
 
+  const refreshRoles = async () => {
+    if (!user?.id) return;
+    const [profileData, rolesData] = await Promise.all([
+      fetchProfile(user.id),
+      fetchRoles(user.id),
+    ]);
+    setProfile(profileData);
+    setRoles(rolesData);
+  };
+
   const value: AuthContextType = {
     user,
     session,
@@ -169,6 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signOut,
     hasRole,
+    refreshRoles,
     isAdmin: hasRole("admin"),
     isConsultant: hasRole("consultant"),
     isLandlord: hasRole("landlord"),

@@ -77,6 +77,17 @@ const Index = () => {
     ? "maintenance-portal"
     : "tenant-command-center";
   const [currentView, setCurrentView] = useState(defaultView);
+  // Track whether the user has explicitly navigated. While they have not,
+  // keep the current view in sync with the role-derived default so that
+  // roles arriving asynchronously (e.g. just after signup/login) do not
+  // leave the user staring at a blank tenant view when they are actually
+  // a landlord/admin.
+  const hasNavigatedRef = useRef(false);
+  useEffect(() => {
+    if (!hasNavigatedRef.current) {
+      setCurrentView(defaultView);
+    }
+  }, [defaultView]);
 
   // Check onboarding status
   useEffect(() => {
@@ -86,6 +97,7 @@ const Index = () => {
   }, [profile]);
 
   const navigateTo = useCallback((view: string) => {
+    hasNavigatedRef.current = true;
     // Handle property detail navigation: "property-detail:uuid"
     if (view.startsWith("property-detail:") || view.startsWith("property-command:")) {
       const propId = view.split(":")[1];
