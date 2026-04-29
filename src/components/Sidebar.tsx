@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { assertSidebarShape } from "@/lib/sidebarGuard";
 
 interface NavItemProps {
   icon: React.ElementType;
@@ -220,6 +221,13 @@ export function Sidebar({ currentView, onViewChange, open, onClose }: SidebarPro
   ];
 
   const filteredNavItems = navItems.filter((item) => item.show);
+
+  // Dev-only sidebar correctness guard — surfaces RLS-style violations of the
+  // "Dashboard owns properties/documents/lease" rule as a console error.
+  if (import.meta.env.DEV) {
+    if (isManagerRole) assertSidebarShape("landlord", navItems);
+    if (showTenantNav) assertSidebarShape("tenant", navItems);
+  }
 
   const getRoleBadge = () => {
     if (isAdmin) return { label: "Admin", className: "bg-destructive/10 text-destructive" };
