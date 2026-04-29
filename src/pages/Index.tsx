@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { SessionTimeoutDialog } from "@/components/SessionTimeoutDialog";
 import { Header } from "@/components/Header";
 import { FeedbackButton } from "@/components/FeedbackButton";
+import { DevSecurityPanel } from "@/components/dev/DevSecurityPanel";
 import { TenantHelpWidget } from "@/components/tenant/TenantHelpWidget";
 import { Dashboard } from "@/components/Dashboard";
 import { AdminPanel } from "@/components/admin/AdminPanel";
@@ -300,6 +301,7 @@ const Index = () => {
       <FeedbackButton />
       <TenantHelpWidget />
       <SessionTimeoutDialog />
+      <DevSecurityPanel />
     </div>
   );
 };
