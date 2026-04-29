@@ -161,6 +161,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const hasRole = (role: AppRole) => roles.includes(role);
 
+  const refreshRoles = async () => {
+    if (!user?.id) return;
+    const [profileData, rolesData] = await Promise.all([
+      fetchProfile(user.id),
+      fetchRoles(user.id),
+    ]);
+    setProfile(profileData);
+    setRoles(rolesData);
+  };
+
   const value: AuthContextType = {
     user,
     session,
@@ -171,6 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signOut,
     hasRole,
+    refreshRoles,
     isAdmin: hasRole("admin"),
     isConsultant: hasRole("consultant"),
     isLandlord: hasRole("landlord"),
