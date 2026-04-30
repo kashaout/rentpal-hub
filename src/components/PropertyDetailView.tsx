@@ -467,7 +467,27 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
                   <span className="text-muted-foreground">
                     {formatCurrency(Number(property.monthly_rent), currency)} × {durationLabel}
                   </span>
-                  <span className="text-foreground font-medium">{formatCurrency(totalPrice, currency)}</span>
+                  <span className={cn("font-medium", hasDiscount ? "text-muted-foreground line-through" : "text-foreground")}>
+                    {formatCurrency(totalPrice, currency)}
+                  </span>
+                </div>
+                {hasDiscount && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-accent">
+                      {pricingPreview?.rule_name ?? "Discount"} (−{formatCurrency(pricingPreview!.discount_amount, currency)})
+                    </span>
+                    <span className="text-foreground font-semibold">{formatCurrency(finalPrice, currency)}</span>
+                  </div>
+                )}
+                <div className="pt-2">
+                  <Label htmlFor="promo" className="text-xs text-muted-foreground">Promo code (optional)</Label>
+                  <Input
+                    id="promo"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    placeholder="Enter code"
+                    className="h-9 mt-1"
+                  />
                 </div>
               </div>
             )}
