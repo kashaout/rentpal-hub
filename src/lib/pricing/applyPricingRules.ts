@@ -104,9 +104,24 @@ export async function applyPricingRules(input: PricingInput): Promise<PricingRes
   );
   if (candidates.length === 0) return noDiscount(base);
 
-  // Pick the rule that gives the BEST (largest) discount for the tenant
+  // Sort deterministically so equal-discount ties resolve predictably:
+  //   1) property-scoped rule beats global (property_id NOT NULL first)
+  //   2) earlier start_date wins (NULL treated as very old)
+  //   3) lower id wins as final tie-breaker
+  const sorted = [...candidates].sort((a, b) => {
+    const aScoped = a.property_id ? 0 : 1;
+    const bScoped = b.property_id ? 0 : 1;
+    if (aScoped !== bScoped) return aScoped - bScoped;
+    const aDate = a.start_date ?? "1900-01-01";
+    const bDate = b.start_date ?? "1900-01-01";
+    if (aDate !== bDate) return aDate < bDate ? -1 : 1;
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  });
+
+  // Pick BEST (largest) discount. Strictly greater wins, so deterministic
+  // sort order naturally breaks ties (first match keeps the win).
   let best: { rule: PricingRuleRow; discount: number } | null = null;
-  for (const r of candidates) {
+  for (const r of sorted) {
     const d = computeDiscount(r, base);
     if (!best || d > best.discount) best = { rule: r, discount: d };
   }
