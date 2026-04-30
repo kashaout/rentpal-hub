@@ -25,6 +25,7 @@ const TABS = [
   { key: "tenants", label: "Tenants", icon: Users },
   { key: "lease", label: "Lease", icon: FileText },
   { key: "payments", label: "Payments", icon: CreditCard },
+  { key: "pricing", label: "Pricing", icon: Tag },
   { key: "issues", label: "Issues", icon: AlertTriangle },
   { key: "work-orders", label: "Work Orders", icon: Wrench },
   { key: "documents", label: "Documents", icon: FolderOpen },
