@@ -266,6 +266,10 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
             check_out: format(selectedRange.to, "yyyy-MM-dd"),
             total_price: totalPrice,
             guest_count: guestCount,
+            landlord_id: property.landlord_id || undefined,
+            promo_code: promoCode || null,
+            months: monthCount,
+            nights: nightCount,
             // Persist user-selected times alongside any free-form note as JSON
             notes: encodeBookingNotes({ checkInTime, checkOutTime, note: notes }) ?? undefined,
           });
