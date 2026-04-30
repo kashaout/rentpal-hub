@@ -2602,6 +2602,21 @@ export type Database = {
           updated_at: string
         }[]
       }
+      rpc_preview_pricing: {
+        Args: {
+          p_end_date: string
+          p_promo_code?: string
+          p_property_id: string
+          p_start_date: string
+        }
+        Returns: {
+          discount_amount: number
+          final_price: number
+          original_price: number
+          rule_id: string
+          rule_name: string
+        }[]
+      }
       rpc_tenant_maintenance_view: {
         Args: never
         Returns: {

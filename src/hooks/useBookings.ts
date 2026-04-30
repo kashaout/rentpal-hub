@@ -24,6 +24,10 @@ export interface Booking {
   payout_status: string | null;
   payout_released_at: string | null;
   cancellation_reason: string | null;
+  original_price?: number | null;
+  discount_amount?: number | null;
+  final_price?: number | null;
+  pricing_rule_id?: string | null;
 }
 
 export interface CreateBookingData {

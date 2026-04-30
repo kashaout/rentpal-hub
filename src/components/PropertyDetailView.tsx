@@ -26,7 +26,7 @@ import { formatCurrency } from "@/lib/formatCurrency";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { toast as sonnerToast } from "sonner";
-import { applyPricingRules, type PricingResult } from "@/lib/pricing/applyPricingRules";
+import { usePricingPreview } from "@/hooks/usePricingPreview";
 
 const AMENITY_ICONS: Record<string, any> = {
   wifi: Wifi, parking: Car, coffee: Coffee, kitchen: Utensils,
@@ -102,7 +102,6 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [promoCode, setPromoCode] = useState("");
-  const [pricingPreview, setPricingPreview] = useState<PricingResult | null>(null);
 
   const uploadFileToStorage = async (file: File, folder: string): Promise<string | null> => {
     if (!user) return null;
@@ -172,30 +171,16 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const airbnbTotal = property ? nightCount * Number(property.monthly_rent) : 0;
   const totalPrice = isAirbnb ? airbnbTotal : standardTotal;
 
-  // Pricing engine preview — runs on date/promo changes. Tenant may not be
-  // able to read pricing_rules due to RLS; in that case preview stays null
-  // and only the base price renders. Authoritative computation happens at
-  // booking insert time.
-  useEffect(() => {
-    let cancelled = false;
-    if (!property?.id || !property?.landlord_id || totalPrice <= 0) {
-      setPricingPreview(null);
-      return;
-    }
-    applyPricingRules({
-      property_id: property.id,
-      landlord_id: property.landlord_id,
-      base_price: totalPrice,
-      months: monthCount,
-      nights: nightCount,
-      promo_code: promoCode || null,
-    }).then((result) => {
-      if (!cancelled) setPricingPreview(result);
-    }).catch(() => {
-      if (!cancelled) setPricingPreview(null);
-    });
-    return () => { cancelled = true; };
-  }, [property?.id, property?.landlord_id, totalPrice, monthCount, nightCount, promoCode]);
+  // Tenant-safe pricing preview via SECURITY DEFINER RPC.
+  // React Query caches per (property + dates + promo) so changing inputs
+  // doesn't refetch the full rules list — only the RPC is called.
+  const { data: pricingPreview } = usePricingPreview({
+    propertyId: property?.id,
+    startDate: selectedRange.from ? format(selectedRange.from, "yyyy-MM-dd") : null,
+    endDate: selectedRange.to ? format(selectedRange.to, "yyyy-MM-dd") : null,
+    promoCode: promoCode || null,
+    enabled: Boolean(property?.id && selectedRange.from && selectedRange.to && totalPrice > 0),
+  });
 
   const finalPrice = pricingPreview?.final_price ?? totalPrice;
   const hasDiscount = (pricingPreview?.discount_amount ?? 0) > 0;

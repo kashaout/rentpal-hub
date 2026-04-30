@@ -101,7 +101,32 @@ export function MyBookingsPage() {
                     <Calendar className="h-3.5 w-3.5" />
                     {format(new Date(booking.check_in), "MMM d, yyyy")} – {format(new Date(booking.check_out), "MMM d, yyyy")}
                   </div>
-                  <p className="font-medium">₦{Number(booking.total_price).toLocaleString()}</p>
+                  {(() => {
+                    // Read ONLY the booking snapshot — never recompute pricing here.
+                    const original = Number(booking.original_price ?? 0);
+                    const discount = Number(booking.discount_amount ?? 0);
+                    const final = Number(booking.final_price ?? booking.total_price);
+                    const showBreakdown = original > 0 && discount > 0 && original !== final;
+                    if (!showBreakdown) {
+                      return <p className="font-medium">₦{Number(booking.total_price).toLocaleString()}</p>;
+                    }
+                    return (
+                      <div className="space-y-0.5">
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Original</span>
+                          <span className="line-through">₦{original.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-success">
+                          <span>Discount{booking.pricing_rule_id ? " applied" : ""}</span>
+                          <span>− ₦{discount.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between font-medium text-foreground pt-0.5 border-t">
+                          <span>Total</span>
+                          <span>₦{final.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   <Badge variant="outline" className="capitalize text-xs">{booking.payment_status}</Badge>
                   {booking.status === "pending" && (
                     <Button
