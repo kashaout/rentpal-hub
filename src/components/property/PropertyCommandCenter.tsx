@@ -98,6 +98,9 @@ export function PropertyCommandCenter({ propertyId, onBack }: PropertyCommandCen
         <TabsContent value="payments">
           <PropertyPaymentsTab propertyId={propertyId} />
         </TabsContent>
+        <TabsContent value="pricing">
+          <PropertyPricingRulesTab propertyId={propertyId} />
+        </TabsContent>
         <TabsContent value="issues">
           <PropertyIssuesTab propertyId={propertyId} />
         </TabsContent>
