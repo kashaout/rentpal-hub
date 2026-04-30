@@ -119,11 +119,18 @@ export function useSoftLockBooking() {
   return useMutation({
     mutationFn: async (data: CreateBookingData) => {
       const softLockExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      const snap = await buildPricingSnapshot(data);
+      const { landlord_id, promo_code, months, nights, ...insertData } = data;
 
       const { data: booking, error } = await supabase
         .from("bookings")
         .insert({
-          ...data,
+          ...insertData,
+          total_price: snap.final_price,
+          original_price: snap.original_price,
+          discount_amount: snap.discount_amount,
+          final_price: snap.final_price,
+          pricing_rule_id: snap.pricing_rule_id,
           user_id: user!.id,
           is_soft_lock: true,
           soft_lock_expires_at: softLockExpires,
