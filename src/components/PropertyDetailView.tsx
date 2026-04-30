@@ -26,6 +26,7 @@ import { formatCurrency } from "@/lib/formatCurrency";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { toast as sonnerToast } from "sonner";
+import { applyPricingRules, type PricingResult } from "@/lib/pricing/applyPricingRules";
 
 const AMENITY_ICONS: Record<string, any> = {
   wifi: Wifi, parking: Car, coffee: Coffee, kitchen: Utensils,
@@ -100,6 +101,8 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [pricingPreview, setPricingPreview] = useState<PricingResult | null>(null);
 
   const uploadFileToStorage = async (file: File, folder: string): Promise<string | null> => {
     if (!user) return null;
@@ -169,6 +172,34 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const airbnbTotal = property ? nightCount * Number(property.monthly_rent) : 0;
   const totalPrice = isAirbnb ? airbnbTotal : standardTotal;
 
+  // Pricing engine preview — runs on date/promo changes. Tenant may not be
+  // able to read pricing_rules due to RLS; in that case preview stays null
+  // and only the base price renders. Authoritative computation happens at
+  // booking insert time.
+  useEffect(() => {
+    let cancelled = false;
+    if (!property?.id || !property?.landlord_id || totalPrice <= 0) {
+      setPricingPreview(null);
+      return;
+    }
+    applyPricingRules({
+      property_id: property.id,
+      landlord_id: property.landlord_id,
+      base_price: totalPrice,
+      months: monthCount,
+      nights: nightCount,
+      promo_code: promoCode || null,
+    }).then((result) => {
+      if (!cancelled) setPricingPreview(result);
+    }).catch(() => {
+      if (!cancelled) setPricingPreview(null);
+    });
+    return () => { cancelled = true; };
+  }, [property?.id, property?.landlord_id, totalPrice, monthCount, nightCount, promoCode]);
+
+  const finalPrice = pricingPreview?.final_price ?? totalPrice;
+  const hasDiscount = (pricingPreview?.discount_amount ?? 0) > 0;
+
   const handleCreateAndSignContract = async () => {
     if (!property || !user || !selectedRange.from || !selectedRange.to) return;
 
@@ -235,6 +266,10 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
             check_out: format(selectedRange.to, "yyyy-MM-dd"),
             total_price: totalPrice,
             guest_count: guestCount,
+            landlord_id: property.landlord_id || undefined,
+            promo_code: promoCode || null,
+            months: monthCount,
+            nights: nightCount,
             // Persist user-selected times alongside any free-form note as JSON
             notes: encodeBookingNotes({ checkInTime, checkOutTime, note: notes }) ?? undefined,
           });
@@ -432,7 +467,27 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
                   <span className="text-muted-foreground">
                     {formatCurrency(Number(property.monthly_rent), currency)} × {durationLabel}
                   </span>
-                  <span className="text-foreground font-medium">{formatCurrency(totalPrice, currency)}</span>
+                  <span className={cn("font-medium", hasDiscount ? "text-muted-foreground line-through" : "text-foreground")}>
+                    {formatCurrency(totalPrice, currency)}
+                  </span>
+                </div>
+                {hasDiscount && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-accent">
+                      {pricingPreview?.rule_name ?? "Discount"} (−{formatCurrency(pricingPreview!.discount_amount, currency)})
+                    </span>
+                    <span className="text-foreground font-semibold">{formatCurrency(finalPrice, currency)}</span>
+                  </div>
+                )}
+                <div className="pt-2">
+                  <Label htmlFor="promo" className="text-xs text-muted-foreground">Promo code (optional)</Label>
+                  <Input
+                    id="promo"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    placeholder="Enter code"
+                    className="h-9 mt-1"
+                  />
                 </div>
               </div>
             )}

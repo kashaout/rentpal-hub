@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { sanitizeErrorMessage } from "@/lib/errorUtils";
+import { applyPricingRules } from "@/lib/pricing/applyPricingRules";
 
 export interface Booking {
   id: string;
@@ -32,6 +33,40 @@ export interface CreateBookingData {
   total_price: number;
   guest_count?: number;
   notes?: string;
+  /** Optional pricing-engine inputs. If landlord_id is provided, pricing rules
+   *  are evaluated server-side at insert time and a write-once snapshot
+   *  (original_price/discount_amount/final_price/pricing_rule_id) is recorded. */
+  landlord_id?: string;
+  promo_code?: string | null;
+  months?: number | null;
+  nights?: number | null;
+}
+
+/** Internal: compute pricing snapshot for a booking insert. Falls back to
+ *  no-discount if landlord_id is missing or rules cannot be read. */
+async function buildPricingSnapshot(data: CreateBookingData) {
+  if (!data.landlord_id) {
+    return {
+      original_price: data.total_price,
+      discount_amount: 0,
+      final_price: data.total_price,
+      pricing_rule_id: null as string | null,
+    };
+  }
+  const result = await applyPricingRules({
+    property_id: data.property_id,
+    landlord_id: data.landlord_id,
+    base_price: data.total_price,
+    promo_code: data.promo_code ?? null,
+    months: data.months ?? null,
+    nights: data.nights ?? null,
+  });
+  return {
+    original_price: result.original_price,
+    discount_amount: result.discount_amount,
+    final_price: result.final_price,
+    pricing_rule_id: result.rule_id,
+  };
 }
 
 export function usePropertyBookings(propertyId: string) {
@@ -84,11 +119,18 @@ export function useSoftLockBooking() {
   return useMutation({
     mutationFn: async (data: CreateBookingData) => {
       const softLockExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      const snap = await buildPricingSnapshot(data);
+      const { landlord_id, promo_code, months, nights, ...insertData } = data;
 
       const { data: booking, error } = await supabase
         .from("bookings")
         .insert({
-          ...data,
+          ...insertData,
+          total_price: snap.final_price,
+          original_price: snap.original_price,
+          discount_amount: snap.discount_amount,
+          final_price: snap.final_price,
+          pricing_rule_id: snap.pricing_rule_id,
           user_id: user!.id,
           is_soft_lock: true,
           soft_lock_expires_at: softLockExpires,
@@ -123,10 +165,17 @@ export function useCreateBooking() {
 
   return useMutation({
     mutationFn: async (data: CreateBookingData) => {
+      const snap = await buildPricingSnapshot(data);
+      const { landlord_id, promo_code, months, nights, ...insertData } = data;
       const { data: booking, error } = await supabase
         .from("bookings")
         .insert({
-          ...data,
+          ...insertData,
+          total_price: snap.final_price,
+          original_price: snap.original_price,
+          discount_amount: snap.discount_amount,
+          final_price: snap.final_price,
+          pricing_rule_id: snap.pricing_rule_id,
           user_id: user!.id,
         } as any)
         .select()
