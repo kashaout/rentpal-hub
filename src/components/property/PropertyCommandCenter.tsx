@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Loader2, Building2, Users, FileText, CreditCard, AlertTriangle, Wrench, FolderOpen, ShieldCheck, Activity, Star } from "lucide-react";
+import { ArrowLeft, Loader2, Building2, Users, FileText, CreditCard, AlertTriangle, Wrench, FolderOpen, ShieldCheck, Activity, Star, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProperty } from "@/hooks/useProperties";
@@ -13,6 +13,7 @@ import { PropertyDocumentsTab } from "./tabs/PropertyDocumentsTab";
 import { PropertyComplianceTab } from "./tabs/PropertyComplianceTab";
 import { PropertyActivityTab } from "./tabs/PropertyActivityTab";
 import { PropertyReviewsTab } from "./tabs/PropertyReviewsTab";
+import { PropertyPricingRulesTab } from "./tabs/PropertyPricingRulesTab";
 
 interface PropertyCommandCenterProps {
   propertyId: string;
