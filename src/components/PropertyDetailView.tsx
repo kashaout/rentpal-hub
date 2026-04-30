@@ -26,6 +26,7 @@ import { formatCurrency } from "@/lib/formatCurrency";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { toast as sonnerToast } from "sonner";
+import { applyPricingRules, type PricingResult } from "@/lib/pricing/applyPricingRules";
 
 const AMENITY_ICONS: Record<string, any> = {
   wifi: Wifi, parking: Car, coffee: Coffee, kitchen: Utensils,
