@@ -172,6 +172,34 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const airbnbTotal = property ? nightCount * Number(property.monthly_rent) : 0;
   const totalPrice = isAirbnb ? airbnbTotal : standardTotal;
 
+  // Pricing engine preview — runs on date/promo changes. Tenant may not be
+  // able to read pricing_rules due to RLS; in that case preview stays null
+  // and only the base price renders. Authoritative computation happens at
+  // booking insert time.
+  useEffect(() => {
+    let cancelled = false;
+    if (!property?.id || !property?.landlord_id || totalPrice <= 0) {
+      setPricingPreview(null);
+      return;
+    }
+    applyPricingRules({
+      property_id: property.id,
+      landlord_id: property.landlord_id,
+      base_price: totalPrice,
+      months: monthCount,
+      nights: nightCount,
+      promo_code: promoCode || null,
+    }).then((result) => {
+      if (!cancelled) setPricingPreview(result);
+    }).catch(() => {
+      if (!cancelled) setPricingPreview(null);
+    });
+    return () => { cancelled = true; };
+  }, [property?.id, property?.landlord_id, totalPrice, monthCount, nightCount, promoCode]);
+
+  const finalPrice = pricingPreview?.final_price ?? totalPrice;
+  const hasDiscount = (pricingPreview?.discount_amount ?? 0) > 0;
+
   const handleCreateAndSignContract = async () => {
     if (!property || !user || !selectedRange.from || !selectedRange.to) return;
 
