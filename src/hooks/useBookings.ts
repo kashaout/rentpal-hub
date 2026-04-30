@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { sanitizeErrorMessage } from "@/lib/errorUtils";
+import { applyPricingRules } from "@/lib/pricing/applyPricingRules";
 
 export interface Booking {
   id: string;
