@@ -169,15 +169,19 @@ export type Database = {
           check_in: string
           check_out: string
           created_at: string
+          discount_amount: number
           dispute_id: string | null
           expires_at: string
+          final_price: number | null
           guest_count: number
           id: string
           is_soft_lock: boolean | null
           notes: string | null
+          original_price: number | null
           payment_status: string
           payout_released_at: string | null
           payout_status: string | null
+          pricing_rule_id: string | null
           property_id: string
           soft_lock_expires_at: string | null
           status: string
@@ -191,15 +195,19 @@ export type Database = {
           check_in: string
           check_out: string
           created_at?: string
+          discount_amount?: number
           dispute_id?: string | null
           expires_at?: string
+          final_price?: number | null
           guest_count?: number
           id?: string
           is_soft_lock?: boolean | null
           notes?: string | null
+          original_price?: number | null
           payment_status?: string
           payout_released_at?: string | null
           payout_status?: string | null
+          pricing_rule_id?: string | null
           property_id: string
           soft_lock_expires_at?: string | null
           status?: string
@@ -213,15 +221,19 @@ export type Database = {
           check_in?: string
           check_out?: string
           created_at?: string
+          discount_amount?: number
           dispute_id?: string | null
           expires_at?: string
+          final_price?: number | null
           guest_count?: number
           id?: string
           is_soft_lock?: boolean | null
           notes?: string | null
+          original_price?: number | null
           payment_status?: string
           payout_released_at?: string | null
           payout_status?: string | null
+          pricing_rule_id?: string | null
           property_id?: string
           soft_lock_expires_at?: string | null
           status?: string
@@ -1317,6 +1329,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pricing_rules: {
+        Row: {
+          active: boolean
+          auto_apply: boolean
+          created_at: string
+          end_date: string | null
+          id: string
+          landlord_id: string
+          min_months: number | null
+          min_nights: number | null
+          name: string
+          promo_code: string | null
+          property_id: string | null
+          rule_type: string
+          start_date: string | null
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          auto_apply?: boolean
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          landlord_id: string
+          min_months?: number | null
+          min_nights?: number | null
+          name: string
+          promo_code?: string | null
+          property_id?: string | null
+          rule_type: string
+          start_date?: string | null
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          active?: boolean
+          auto_apply?: boolean
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          landlord_id?: string
+          min_months?: number | null
+          min_nights?: number | null
+          name?: string
+          promo_code?: string | null
+          property_id?: string | null
+          rule_type?: string
+          start_date?: string | null
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
