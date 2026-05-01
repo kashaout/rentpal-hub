@@ -35,9 +35,12 @@ const TABS = [
   { key: "activity", label: "Activity", icon: Activity },
 ];
 
+type Mode = "view" | "edit-property";
+
 export function PropertyCommandCenter({ propertyId, onBack }: PropertyCommandCenterProps) {
   const { data: property, isLoading } = useProperty(propertyId);
   const [activeTab, setActiveTab] = useState("overview");
+  const [mode, setMode] = useState<Mode>("view");
 
   if (isLoading) {
     return (
