@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { ArrowLeft, Loader2, Building2, Users, FileText, CreditCard, AlertTriangle, Wrench, FolderOpen, ShieldCheck, Activity, Star, Tag } from "lucide-react";
+import { ArrowLeft, Loader2, Building2, Users, FileText, CreditCard, AlertTriangle, Wrench, FolderOpen, ShieldCheck, Activity, Star, Tag, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProperty } from "@/hooks/useProperties";
+import { PropertyFormDialog } from "@/components/PropertyFormDialog";
 import { PropertyOverviewTab } from "./tabs/PropertyOverviewTab";
 import { PropertyTenantsTab } from "./tabs/PropertyTenantsTab";
 import { PropertyLeaseTab } from "./tabs/PropertyLeaseTab";
@@ -34,9 +35,12 @@ const TABS = [
   { key: "activity", label: "Activity", icon: Activity },
 ];
 
+type Mode = "view" | "edit-property";
+
 export function PropertyCommandCenter({ propertyId, onBack }: PropertyCommandCenterProps) {
   const { data: property, isLoading } = useProperty(propertyId);
   const [activeTab, setActiveTab] = useState("overview");
+  const [mode, setMode] = useState<Mode>("view");
 
   if (isLoading) {
     return (
@@ -66,7 +70,16 @@ export function PropertyCommandCenter({ propertyId, onBack }: PropertyCommandCen
           <h1 className="text-2xl font-bold truncate">{property.name}</h1>
           <p className="text-sm text-muted-foreground truncate">{property.address}</p>
         </div>
+        <Button variant="outline" size="sm" onClick={() => setMode("edit-property")} className="gap-2 shrink-0">
+          <Pencil className="h-4 w-4" /> Edit Property
+        </Button>
       </div>
+
+      <PropertyFormDialog
+        open={mode === "edit-property"}
+        onOpenChange={(open) => setMode(open ? "edit-property" : "view")}
+        property={property as any}
+      />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
