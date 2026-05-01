@@ -70,7 +70,16 @@ export function PropertyCommandCenter({ propertyId, onBack }: PropertyCommandCen
           <h1 className="text-2xl font-bold truncate">{property.name}</h1>
           <p className="text-sm text-muted-foreground truncate">{property.address}</p>
         </div>
+        <Button variant="outline" size="sm" onClick={() => setMode("edit-property")} className="gap-2 shrink-0">
+          <Pencil className="h-4 w-4" /> Edit Property
+        </Button>
       </div>
+
+      <PropertyFormDialog
+        open={mode === "edit-property"}
+        onOpenChange={(open) => setMode(open ? "edit-property" : "view")}
+        property={property as any}
+      />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
