@@ -1457,7 +1457,7 @@ export type Database = {
           is_archived: boolean
           is_paused: boolean | null
           is_public: boolean
-          landlord_id: string | null
+          landlord_id: string
           listing_type: string
           monthly_rent: number
           name: string
@@ -1486,7 +1486,7 @@ export type Database = {
           is_archived?: boolean
           is_paused?: boolean | null
           is_public?: boolean
-          landlord_id?: string | null
+          landlord_id: string
           listing_type?: string
           monthly_rent?: number
           name: string
@@ -1515,7 +1515,7 @@ export type Database = {
           is_archived?: boolean
           is_paused?: boolean | null
           is_public?: boolean
-          landlord_id?: string | null
+          landlord_id?: string
           listing_type?: string
           monthly_rent?: number
           name?: string
