@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { ArrowLeft, Loader2, Building2, Users, FileText, CreditCard, AlertTriangle, Wrench, FolderOpen, ShieldCheck, Activity, Star, Tag } from "lucide-react";
+import { ArrowLeft, Loader2, Building2, Users, FileText, CreditCard, AlertTriangle, Wrench, FolderOpen, ShieldCheck, Activity, Star, Tag, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProperty } from "@/hooks/useProperties";
+import { PropertyFormDialog } from "@/components/PropertyFormDialog";
 import { PropertyOverviewTab } from "./tabs/PropertyOverviewTab";
 import { PropertyTenantsTab } from "./tabs/PropertyTenantsTab";
 import { PropertyLeaseTab } from "./tabs/PropertyLeaseTab";
