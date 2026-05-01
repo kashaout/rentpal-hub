@@ -229,13 +229,24 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Property Name</FormLabel>
+                  <FormLabel>Property Name {isEditing && <span className="text-xs text-muted-foreground">(locked)</span>}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input placeholder="Sunset Apartments" className="pl-10" {...field} />
+                      <Input
+                        placeholder="Sunset Apartments"
+                        className="pl-10"
+                        {...field}
+                        readOnly={isEditing}
+                        disabled={isEditing}
+                      />
                     </div>
                   </FormControl>
+                  {isEditing && (
+                    <FormDescription>
+                      Building name cannot be changed after creation.
+                    </FormDescription>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -246,13 +257,24 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address</FormLabel>
+                  <FormLabel>Address {isEditing && <span className="text-xs text-muted-foreground">(locked)</span>}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input placeholder="123 Main St, City" className="pl-10" {...field} />
+                      <Input
+                        placeholder="123 Main St, City"
+                        className="pl-10"
+                        {...field}
+                        readOnly={isEditing}
+                        disabled={isEditing}
+                      />
                     </div>
                   </FormControl>
+                  {isEditing && (
+                    <FormDescription>
+                      Street address cannot be changed after creation.
+                    </FormDescription>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
