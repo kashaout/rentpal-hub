@@ -95,6 +95,14 @@ export function PropertyCommandCenter({ propertyId, onBack }: PropertyCommandCen
         <Button variant="outline" size="sm" onClick={() => setMode("edit-property")} className="gap-2 shrink-0">
           <Pencil className="h-4 w-4" /> Edit Property
         </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowDeleteDialog(true)}
+          className="gap-2 shrink-0 text-destructive hover:text-destructive"
+        >
+          <Trash2 className="h-4 w-4" /> Delete
+        </Button>
       </div>
 
       <PropertyFormDialog
@@ -102,6 +110,26 @@ export function PropertyCommandCenter({ propertyId, onBack }: PropertyCommandCen
         onOpenChange={(open) => setMode(open ? "edit-property" : "view")}
         property={property as any}
       />
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Property</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{property.name}"? This will also remove all associated tenants. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteProperty.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
