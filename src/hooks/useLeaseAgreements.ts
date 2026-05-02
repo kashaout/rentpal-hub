@@ -93,17 +93,19 @@ export function useCreateLeaseAgreement() {
       const { data: sessionData } = await supabase.auth.getUser();
       assertAuthUser(sessionData?.user?.id, data.tenant_user_id);
 
-      // 3) Verify landlord_id actually exists on the property
-      const { data: prop, error: propErr } = await supabase
-        .from("properties")
-        .select("id, landlord_id")
-        .eq("id", data.property_id)
-        .maybeSingle();
+      // 3) Verify property exists and landlord matches — use the same
+      // SECURITY DEFINER RPC that tenants use to browse listings, so this
+      // check works under tenant RLS (direct reads on `properties` are blocked).
+      const { data: rpcRows, error: propErr } = await supabase.rpc(
+        "get_public_property_listings" as any,
+        { _property_id: data.property_id }
+      );
 
       if (propErr) {
         console.error("[lease] Property lookup failed:", propErr);
         throw new MutationSafetyError("Could not verify the selected property.");
       }
+      const prop = ((rpcRows as any[]) || [])[0];
       if (!prop) {
         throw new MutationSafetyError("Selected property no longer exists.");
       }
