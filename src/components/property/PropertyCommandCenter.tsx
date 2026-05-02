@@ -51,6 +51,18 @@ export function PropertyCommandCenter({ propertyId, onBack }: PropertyCommandCen
   const { data: property, isLoading } = useProperty(propertyId);
   const [activeTab, setActiveTab] = useState("overview");
   const [mode, setMode] = useState<Mode>("view");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const deleteProperty = useDeleteProperty();
+
+  const handleDelete = async () => {
+    try {
+      await deleteProperty.mutateAsync(propertyId);
+      setShowDeleteDialog(false);
+      onBack();
+    } catch {
+      // toast handled by hook
+    }
+  };
 
   if (isLoading) {
     return (
