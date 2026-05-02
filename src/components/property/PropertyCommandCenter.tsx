@@ -1,8 +1,18 @@
 import { useState } from "react";
-import { ArrowLeft, Loader2, Building2, Users, FileText, CreditCard, AlertTriangle, Wrench, FolderOpen, ShieldCheck, Activity, Star, Tag, Pencil } from "lucide-react";
+import { ArrowLeft, Loader2, Building2, Users, FileText, CreditCard, AlertTriangle, Wrench, FolderOpen, ShieldCheck, Activity, Star, Tag, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useProperty } from "@/hooks/useProperties";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useProperty, useDeleteProperty } from "@/hooks/useProperties";
 import { PropertyFormDialog } from "@/components/PropertyFormDialog";
 import { PropertyOverviewTab } from "./tabs/PropertyOverviewTab";
 import { PropertyTenantsTab } from "./tabs/PropertyTenantsTab";
@@ -41,6 +51,18 @@ export function PropertyCommandCenter({ propertyId, onBack }: PropertyCommandCen
   const { data: property, isLoading } = useProperty(propertyId);
   const [activeTab, setActiveTab] = useState("overview");
   const [mode, setMode] = useState<Mode>("view");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const deleteProperty = useDeleteProperty();
+
+  const handleDelete = async () => {
+    try {
+      await deleteProperty.mutateAsync(propertyId);
+      setShowDeleteDialog(false);
+      onBack();
+    } catch {
+      // toast handled by hook
+    }
+  };
 
   if (isLoading) {
     return (
@@ -73,6 +95,14 @@ export function PropertyCommandCenter({ propertyId, onBack }: PropertyCommandCen
         <Button variant="outline" size="sm" onClick={() => setMode("edit-property")} className="gap-2 shrink-0">
           <Pencil className="h-4 w-4" /> Edit Property
         </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowDeleteDialog(true)}
+          className="gap-2 shrink-0 text-destructive hover:text-destructive"
+        >
+          <Trash2 className="h-4 w-4" /> Delete
+        </Button>
       </div>
 
       <PropertyFormDialog
@@ -80,6 +110,26 @@ export function PropertyCommandCenter({ propertyId, onBack }: PropertyCommandCen
         onOpenChange={(open) => setMode(open ? "edit-property" : "view")}
         property={property as any}
       />
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Property</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{property.name}"? This will also remove all associated tenants. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteProperty.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

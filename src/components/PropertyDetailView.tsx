@@ -494,17 +494,20 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
             <p className="text-sm text-muted-foreground">Provide your {isAirbnb ? "booking" : "rental"} details:</p>
 
             <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Personal Information</p>
+            <p className="text-xs text-muted-foreground">
+              These details come from your profile and are locked. Update them in Settings if needed.
+            </p>
             <div>
               <Label className="text-sm">Full Name <span className="text-destructive">*</span></Label>
-              <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" className="mt-1" />
+              <Input value={fullName} readOnly disabled placeholder="Your full name" className="mt-1 bg-muted" />
             </div>
             <div>
               <Label className="text-sm">Email Address <span className="text-destructive">*</span></Label>
-              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" className="mt-1" />
+              <Input type="email" value={email} readOnly disabled placeholder="you@email.com" className="mt-1 bg-muted" />
             </div>
             <div>
               <Label className="text-sm">Phone Number <span className="text-destructive">*</span></Label>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+234 ..." className="mt-1" />
+              <Input value={phone} readOnly disabled placeholder="+234 ..." className="mt-1 bg-muted" />
             </div>
             <div>
               <Label className="text-sm">Date of Birth <span className="text-destructive">*</span></Label>
