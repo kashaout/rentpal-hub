@@ -1,4 +1,1 @@
 project_id = "rsudeyfaoblhrjnbmvuq"
-
-[functions.bootstrap-admin]
-verify_jwt = false
