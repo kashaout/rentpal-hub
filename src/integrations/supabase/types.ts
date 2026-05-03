@@ -1387,11 +1387,16 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          billing_address: Json | null
           business_name: string | null
           created_at: string
+          date_of_birth: string | null
           email: string
           full_name: string | null
+          government_id_number: string | null
           id: string
+          id_photo_path: string | null
+          identity_complete: boolean
           onboarding_completed: boolean
           phone: string | null
           sla_compliance_rate: number | null
@@ -1404,11 +1409,16 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          billing_address?: Json | null
           business_name?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email: string
           full_name?: string | null
+          government_id_number?: string | null
           id?: string
+          id_photo_path?: string | null
+          identity_complete?: boolean
           onboarding_completed?: boolean
           phone?: string | null
           sla_compliance_rate?: number | null
@@ -1421,11 +1431,16 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          billing_address?: Json | null
           business_name?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string
           full_name?: string | null
+          government_id_number?: string | null
           id?: string
+          id_photo_path?: string | null
+          identity_complete?: boolean
           onboarding_completed?: boolean
           phone?: string | null
           sla_compliance_rate?: number | null
@@ -2579,6 +2594,52 @@ export type Database = {
       }
       release_expired_bookings: { Args: never; Returns: undefined }
       release_soft_locks: { Args: never; Returns: undefined }
+      rpc_admin_all_properties: {
+        Args: never
+        Returns: {
+          acquisition_cost: number | null
+          address: string
+          amenities: Json
+          annual_expenses: number | null
+          approval_threshold: number | null
+          cancellation_policy: string | null
+          created_at: string
+          currency: string
+          current_value: number | null
+          description: string | null
+          host_reliability_score: number | null
+          house_rules: string | null
+          id: string
+          image_url: string | null
+          is_archived: boolean
+          is_paused: boolean | null
+          is_public: boolean
+          landlord_id: string
+          listing_type: string
+          monthly_rent: number
+          name: string
+          notes: string | null
+          property_type: string
+          region: string
+          safety_features: Json | null
+          units: number
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "properties"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      rpc_admin_delete_landlord: {
+        Args: { _landlord_id: string }
+        Returns: Json
+      }
+      rpc_admin_landlord_delete_summary: {
+        Args: { _landlord_id: string }
+        Returns: Json
+      }
       rpc_landlord_maintenance_view: {
         Args: never
         Returns: {
