@@ -85,6 +85,7 @@ export function UserManagement() {
   const addRole = useAddRole();
   const removeRole = useRemoveRole();
   const action = useUserAction();
+  const queryClient = useQueryClient();
 
   const filteredUsers = users?.filter(
     (user) =>
@@ -508,9 +509,7 @@ export function UserManagement() {
           landlordName={landlordDelete.name}
           onDeleted={() => {
             setLandlordDelete(null);
-            // Refresh user list
-            // queryClient invalidate handled by useUserAction is admin-side; do explicit refresh here:
-            window.dispatchEvent(new Event("admin-users-refresh"));
+            queryClient.invalidateQueries({ queryKey: ["admin"] });
           }}
         />
       )}
