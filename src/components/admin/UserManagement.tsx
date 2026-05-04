@@ -7,6 +7,7 @@ import {
   Loader2, Plus, X, Search, RotateCcw, Trash2, Ban, CheckCircle, UserPlus, Eye,
 } from "lucide-react";
 import { AdminUserDetail } from "./AdminUserDetail";
+import { AdminLandlordDeleteDialog } from "./AdminLandlordDeleteDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,12 +78,14 @@ export function UserManagement() {
     userName: string;
   } | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [landlordDelete, setLandlordDelete] = useState<{ userId: string; name: string } | null>(null);
   const [newUser, setNewUser] = useState({ email: "", fullName: "", password: "", role: "tenant" as string });
 
   const { data: users, isLoading } = useAllUsers();
   const addRole = useAddRole();
   const removeRole = useRemoveRole();
   const action = useUserAction();
+  const queryClient = useQueryClient();
 
   const filteredUsers = users?.filter(
     (user) =>
@@ -338,13 +341,17 @@ export function UserManagement() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
-                          onClick={() =>
-                            setConfirmAction({
-                              type: "delete",
-                              userId: user.user_id,
-                              userName: user.full_name || user.email,
-                            })
-                          }
+                          onClick={() => {
+                            if (user.roles.includes("landlord")) {
+                              setLandlordDelete({ userId: user.user_id, name: user.full_name || user.email });
+                            } else {
+                              setConfirmAction({
+                                type: "delete",
+                                userId: user.user_id,
+                                userName: user.full_name || user.email,
+                              });
+                            }
+                          }}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete User
@@ -493,6 +500,19 @@ export function UserManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {landlordDelete && (
+        <AdminLandlordDeleteDialog
+          open={!!landlordDelete}
+          onOpenChange={(o) => { if (!o) setLandlordDelete(null); }}
+          landlordUserId={landlordDelete.userId}
+          landlordName={landlordDelete.name}
+          onDeleted={() => {
+            setLandlordDelete(null);
+            queryClient.invalidateQueries({ queryKey: ["admin"] });
+          }}
+        />
+      )}
     </div>
   );
 }

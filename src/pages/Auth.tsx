@@ -199,7 +199,14 @@ export default function Auth() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-2">
+            {isLogin && (
+              <div>
+                <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Forgot your password?
+                </Link>
+              </div>
+            )}
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
