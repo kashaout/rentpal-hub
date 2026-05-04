@@ -78,7 +78,7 @@ const Index = () => {
     ? "dashboard"
     : isMaintenanceOnly
     ? "maintenance-portal"
-    : "tenant-command-center";
+    : "browse-properties";
   const [currentView, setCurrentView] = useState(defaultView);
   // Track whether the user has explicitly navigated. While they have not,
   // keep the current view in sync with the role-derived default so that
