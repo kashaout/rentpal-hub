@@ -170,16 +170,33 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
     queryFn: async () => {
       if (!userId) return null;
 
-      // 1) PROPERTIES owned by landlord (entry point)
-      const { data: props, error: pErr } = await supabase
-        .from("properties")
-        .select(
-          "id, name, address, image_url, units, monthly_rent, is_archived, is_paused, is_public, currency, region, property_type, listing_type, description, amenities, acquisition_cost, current_value, annual_expenses, landlord_id, created_at, updated_at"
-        )
-        .eq("landlord_id", userId)
-        .eq("is_archived", false)
-        .order("created_at", { ascending: false });
-      if (pErr) throw pErr;
+      // Detect admin to fetch ALL properties via SECURITY DEFINER RPC.
+      const { data: roleRows } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      const isAdmin = (roleRows ?? []).some((r: any) => r.role === "admin");
+
+      // 1) PROPERTIES — admins see all via RPC, landlords see their own.
+      let props: any[] | null = null;
+      if (isAdmin) {
+        const { data, error } = await supabase.rpc("rpc_admin_all_properties" as any);
+        if (error) throw error;
+        props = (data as any[]) ?? [];
+      } else {
+        const { data, error: pErr } = await supabase
+          .from("properties")
+          .select(
+            "id, name, address, image_url, units, monthly_rent, is_archived, is_paused, is_public, currency, region, property_type, listing_type, description, amenities, acquisition_cost, current_value, annual_expenses, landlord_id, created_at, updated_at"
+          )
+          .eq("landlord_id", userId)
+          .eq("is_archived", false)
+          .order("created_at", { ascending: false });
+        if (pErr) throw pErr;
+        props = data ?? [];
+      }
+      // Filter archived for admin view too
+      props = (props ?? []).filter((p: any) => !p.is_archived);
 
       const propIds = (props ?? []).map((p: any) => p.id);
       const propMap = new Map<string, any>();
