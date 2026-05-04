@@ -66,7 +66,7 @@ export function AdminLandlordDeleteDialog({ open, onOpenChange, landlordUserId, 
   const onConfirm = async () => {
     setDeleting(true);
     const { data, error } = await supabase.functions.invoke("admin-delete-landlord", {
-      body: { landlordUserId },
+      body: { landlordId: landlordUserId },
     });
     setDeleting(false);
     if (error || data?.error) {
