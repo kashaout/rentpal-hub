@@ -22,6 +22,7 @@ import { ReportsPage } from "@/components/ReportsPage";
 import { FinanceDashboard } from "@/components/finance/FinanceDashboard";
 import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
+import { IdentityWizard } from "@/components/IdentityWizard";
 import { PendingLeasesPage } from "@/components/PendingLeasesPage";
 import { PropertyDetailView } from "@/components/PropertyDetailView";
 import { PropertyCommandCenter } from "@/components/property/PropertyCommandCenter";
@@ -64,6 +65,7 @@ const Index = () => {
   const [navOpen, setNavOpen] = useState(false);
   const viewHistoryRef = useRef<string[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showIdentity, setShowIdentity] = useState(false);
   // Track property detail for post-payment redirect
   const [detailPropertyId, setDetailPropertyId] = useState<string | null>(null);
   const [paymentSuccessPropertyId, setPaymentSuccessPropertyId] = useState<string | null>(null);
@@ -90,10 +92,13 @@ const Index = () => {
     }
   }, [defaultView]);
 
-  // Check onboarding status
+  // Check onboarding + identity status
   useEffect(() => {
-    if (profile && !(profile as any).onboarding_completed) {
+    if (!profile) return;
+    if (!(profile as any).onboarding_completed) {
       setShowOnboarding(true);
+    } else if (!(profile as any).identity_complete) {
+      setShowIdentity(true);
     }
   }, [profile]);
 
@@ -278,7 +283,13 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {showOnboarding && (
-        <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
+        <OnboardingWizard onComplete={() => {
+          setShowOnboarding(false);
+          if (profile && !(profile as any).identity_complete) setShowIdentity(true);
+        }} />
+      )}
+      {!showOnboarding && showIdentity && (
+        <IdentityWizard onComplete={() => setShowIdentity(false)} />
       )}
       <Sidebar
         currentView={currentView}
