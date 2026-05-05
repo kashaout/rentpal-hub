@@ -27,6 +27,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { toast as sonnerToast } from "sonner";
 import { usePricingPreview } from "@/hooks/usePricingPreview";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { IdentityWizard } from "@/components/IdentityWizard";
 
 const AMENITY_ICONS: Record<string, any> = {
   wifi: Wifi, parking: Car, coffee: Coffee, kitchen: Utensils,
@@ -101,6 +103,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [promoCode, setPromoCode] = useState("");
+  const [showIdentityWizard, setShowIdentityWizard] = useState(false);
 
   const uploadFileToStorage = async (file: File, folder: string): Promise<string | null> => {
     if (!user) return null;
@@ -824,7 +827,22 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {isAirbnb ? (
+              {!isManagerRole && !identityComplete ? (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Identity verification required</AlertTitle>
+                  <AlertDescription className="space-y-3">
+                    <p>You must complete identity verification before reserving this property.</p>
+                    <Button
+                      size="sm"
+                      onClick={() => setShowIdentityWizard(true)}
+                      className="w-full"
+                    >
+                      Complete Identity
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              ) : isAirbnb ? (
                 rentalStep !== "browse" ? renderWizardSteps() : (
                 <>
                   {/* Airbnb date+time pickers in sidebar */}
@@ -897,10 +915,11 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
                 renderStandardSidebar()
               )}
 
-              {rentalStep === "browse" && !isManagerRole && (
+              {rentalStep === "browse" && !isManagerRole && identityComplete && (
                 <p className="text-center text-xs text-muted-foreground">You won't be charged yet</p>
               )}
             </CardContent>
+
           </Card>
 
           {isAirbnb && bookings && bookings.length > 0 && (
@@ -924,6 +943,9 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
           )}
         </div>
       </div>
+      {showIdentityWizard && (
+        <IdentityWizard onComplete={() => setShowIdentityWizard(false)} />
+      )}
     </div>
   );
 }

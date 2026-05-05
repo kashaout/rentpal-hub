@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { checkRateLimit, recordAttempt, resetRateLimit } from "@/lib/rateLimiter";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -106,6 +107,7 @@ export default function Auth() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <EmailVerificationBanner />
       <div className="w-full max-w-md">
         {/* Back to site */}
         <div className="flex justify-center mb-4">

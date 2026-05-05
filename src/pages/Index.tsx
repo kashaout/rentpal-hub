@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { SessionTimeoutDialog } from "@/components/SessionTimeoutDialog";
 import { Header } from "@/components/Header";
 import { FeedbackButton } from "@/components/FeedbackButton";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { DevSecurityPanel } from "@/components/dev/DevSecurityPanel";
 import { TenantHelpWidget } from "@/components/tenant/TenantHelpWidget";
 import { Dashboard } from "@/components/Dashboard";
@@ -282,6 +283,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <EmailVerificationBanner />
       {showOnboarding && (
         <OnboardingWizard onComplete={() => {
           setShowOnboarding(false);
