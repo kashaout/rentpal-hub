@@ -288,15 +288,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
         console.error("Failed to store lease document:", e);
       }
 
-      // Update profile
-      try {
-        await supabase.from("profiles").update({
-          full_name: fullName,
-          phone: phone,
-        }).eq("user_id", user.id);
-      } catch (e) {
-        console.error("Failed to update profile:", e);
-      }
+      // Identity is sourced from profile (read-only); no profile mutation here.
 
       // Notify landlord
       const landlordId = property.landlord_id || user.id;
