@@ -103,6 +103,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [promoCode, setPromoCode] = useState("");
+  const [showIdentityWizard, setShowIdentityWizard] = useState(false);
 
   const uploadFileToStorage = async (file: File, folder: string): Promise<string | null> => {
     if (!user) return null;
