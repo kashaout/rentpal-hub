@@ -79,27 +79,26 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const [checkOutTime, setCheckOutTime] = useState<string>("11:00");
   const [guestCount, setGuestCount] = useState(1);
   const [notes, setNotes] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  // Identity is sourced from profiles (read-only). The user must confirm
+  // their verified identity is still valid before reserving / signing.
+  const [identityConfirmed, setIdentityConfirmed] = useState(false);
+  const fullName = profile?.full_name || "";
+  const email = user?.email || "";
+  const phone = profile?.phone || "";
+  const dateOfBirth = (profile as any)?.date_of_birth || "";
+  const govIdNumber = (profile as any)?.government_id_number || "";
+  const billingAddressObj = (profile as any)?.billing_address || null;
+  const billingAddress =
+    typeof billingAddressObj === "string"
+      ? billingAddressObj
+      : billingAddressObj?.line1 || "";
+  const identityComplete = Boolean((profile as any)?.identity_complete);
 
-  // Pre-fill from profile
-  useEffect(() => {
-    if (profile?.full_name && !fullName) setFullName(profile.full_name);
-    if (user?.email && !email) setEmail(user.email);
-    if (profile?.phone && !phone) setPhone(profile.phone);
-  }, [profile, user]);
-  const [dateOfBirth, setDateOfBirth] = useState("");
   const [unitNumber, setUnitNumber] = useState("1");
   const [specialRequests, setSpecialRequests] = useState("");
-  const [billingAddress, setBillingAddress] = useState("");
-  const [idType, setIdType] = useState("passport");
   const [createdAgreementId, setCreatedAgreementId] = useState<string | null>(null);
   const [agreementSigned, setAgreementSigned] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
-  const [idDocFile, setIdDocFile] = useState<File | null>(null);
-  const [selfieFile, setSelfieFile] = useState<File | null>(null);
-  const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [promoCode, setPromoCode] = useState("");
 
