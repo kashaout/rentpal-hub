@@ -199,25 +199,30 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
       return;
     }
 
+    if (!identityComplete) {
+      sonnerToast.error("Please complete identity verification before reserving a property.");
+      return;
+    }
+    if (!identityConfirmed) {
+      sonnerToast.error("Please confirm your identity details are still valid.");
+      return;
+    }
+
     try {
       setUploading(true);
-
-      if (idDocFile) await uploadFileToStorage(idDocFile, "id-document");
-      if (selfieFile) await uploadFileToStorage(selfieFile, "selfie");
-      if (profilePhotoFile) await uploadFileToStorage(profilePhotoFile, "profile-photo");
 
       const agreement = await createAgreement.mutateAsync({
         property_id: property.id,
         tenant_user_id: user.id,
         landlord_user_id: property.landlord_id,
-        tenant_name: fullName || profile?.full_name || user.email || "Tenant",
+        tenant_name: fullName || user.email || "Tenant",
         landlord_name: "Landlord",
         unit_number: unitNumber,
         rent_amount: Number(property.monthly_rent),
         currency: property.currency || "NGN",
         lease_start: format(selectedRange.from, "yyyy-MM-dd"),
         lease_end: format(selectedRange.to, "yyyy-MM-dd"),
-        terms: `LEASE AGREEMENT\n\nThis Lease Agreement is entered into between the Landlord and ${fullName || "Tenant"} for the property "${property.name}" located at ${property.address}, Unit ${unitNumber}.\n\nTENANT DETAILS:\nFull Name: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nDate of Birth: ${dateOfBirth ? format(new Date(dateOfBirth + "T00:00:00"), "MMMM d, yyyy") : "N/A"}\nID Type: ${idType.replace("_", " ")}\nOccupants: ${guestCount}\n\n1. TERM: The lease shall commence on ${format(selectedRange.from, "MMMM d, yyyy")} and terminate on ${format(selectedRange.to, "MMMM d, yyyy")}.\n\n2. RENT: The monthly rent shall be ${formatCurrency(Number(property.monthly_rent), property.currency || "NGN")}. Total for the lease period: ${formatCurrency(totalPrice, property.currency || "NGN")}.\n\n3. OCCUPANTS: ${guestCount} guest${guestCount > 1 ? "s" : ""}.\n\n4. SECURITY DEPOSIT: A security deposit equivalent to one month's rent may be required.\n\n5. MAINTENANCE: Tenant shall report any maintenance issues promptly through the portal.\n\n6. TERMINATION: Either party may terminate this agreement with 30 days written notice.\n\n7. GOVERNING LAW: This agreement shall be governed by the laws of the jurisdiction where the property is located.${specialRequests ? `\n\nSPECIAL REQUESTS: ${specialRequests}` : ""}${billingAddress ? `\n\nBILLING ADDRESS: ${billingAddress}` : ""}`,
+        terms: `LEASE AGREEMENT\n\nThis Lease Agreement is entered into between the Landlord and ${fullName || "Tenant"} for the property "${property.name}" located at ${property.address}, Unit ${unitNumber}.\n\nTENANT DETAILS:\nFull Name: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nDate of Birth: ${dateOfBirth ? format(new Date(dateOfBirth + "T00:00:00"), "MMMM d, yyyy") : "N/A"}\nGovernment ID: ${govIdNumber || "N/A"}\nBilling Address: ${billingAddress || "N/A"}\nOccupants: ${guestCount}\n\n1. TERM: The lease shall commence on ${format(selectedRange.from, "MMMM d, yyyy")} and terminate on ${format(selectedRange.to, "MMMM d, yyyy")}.\n\n2. RENT: The monthly rent shall be ${formatCurrency(Number(property.monthly_rent), property.currency || "NGN")}. Total for the lease period: ${formatCurrency(totalPrice, property.currency || "NGN")}.\n\n3. OCCUPANTS: ${guestCount} guest${guestCount > 1 ? "s" : ""}.\n\n4. SECURITY DEPOSIT: A security deposit equivalent to one month's rent may be required.\n\n5. MAINTENANCE: Tenant shall report any maintenance issues promptly through the portal.\n\n6. TERMINATION: Either party may terminate this agreement with 30 days written notice.\n\n7. GOVERNING LAW: This agreement shall be governed by the laws of the jurisdiction where the property is located.${specialRequests ? `\n\nSPECIAL REQUESTS: ${specialRequests}` : ""}`,
       });
 
       setCreatedAgreementId(agreement.id);
