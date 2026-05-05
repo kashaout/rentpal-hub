@@ -573,10 +573,8 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
                 <span>Email:</span><span className="font-medium text-foreground">{email}</span>
                 <span>Phone:</span><span className="font-medium text-foreground">{phone}</span>
                 <span>Date of Birth:</span><span className="font-medium text-foreground">{dateOfBirth ? format(new Date(dateOfBirth + "T00:00:00"), "MMMM d, yyyy") : "—"}</span>
-                <span>ID Type:</span><span className="font-medium text-foreground capitalize">{idType.replace("_", " ")}</span>
-                <span>ID Document:</span><span className="font-medium text-foreground">{idDocFile ? "✓ Uploaded" : "Not provided"}</span>
-                <span>Selfie:</span><span className="font-medium text-foreground">{selfieFile ? "✓ Uploaded" : "Not provided"}</span>
-                <span>Profile Photo:</span><span className="font-medium text-foreground">{profilePhotoFile ? "✓ Uploaded" : "Not provided"}</span>
+                <span>Government ID:</span><span className="font-medium text-foreground">{govIdNumber || "—"}</span>
+                <span>Billing Address:</span><span className="font-medium text-foreground">{billingAddress || "—"}</span>
               </div>
 
               <p className="font-semibold text-foreground text-xs uppercase tracking-wide pt-1">{isAirbnb ? "Booking" : "Lease"} Terms</p>
