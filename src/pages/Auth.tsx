@@ -107,6 +107,7 @@ export default function Auth() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <EmailVerificationBanner />
       <div className="w-full max-w-md">
         {/* Back to site */}
         <div className="flex justify-center mb-4">
