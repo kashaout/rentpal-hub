@@ -11,6 +11,11 @@ interface Profile {
   full_name: string | null;
   phone: string | null;
   avatar_url: string | null;
+  date_of_birth: string | null;
+  government_id_number: string | null;
+  billing_address: any | null;
+  id_photo_path: string | null;
+  identity_complete: boolean;
 }
 
 interface AuthContextType {

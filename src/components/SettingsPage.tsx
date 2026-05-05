@@ -45,6 +45,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { IdentityWizard } from "@/components/IdentityWizard";
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Name is required").max(100),
@@ -393,6 +394,34 @@ export function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <IdentitySection />
     </div>
+  );
+}
+
+function IdentitySection() {
+  const { profile } = useAuth();
+  const [open, setOpen] = useState(false);
+  const complete = Boolean((profile as any)?.identity_complete);
+  return (
+    <Card id="identity">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Shield className="h-5 w-5" /> Identity
+        </CardTitle>
+        <CardDescription>
+          Verified identity is used to auto-fill leases and bookings. {complete ? "Your identity is verified." : "Complete identity verification to reserve properties."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button onClick={() => setOpen(true)} variant={complete ? "outline" : "default"}>
+          {complete ? "Update identity" : "Verify identity"}
+        </Button>
+      </CardContent>
+      {open && (
+        <IdentityWizard onComplete={() => setOpen(false)} />
+      )}
+    </Card>
   );
 }

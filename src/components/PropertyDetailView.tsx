@@ -79,27 +79,26 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const [checkOutTime, setCheckOutTime] = useState<string>("11:00");
   const [guestCount, setGuestCount] = useState(1);
   const [notes, setNotes] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  // Identity is sourced from profiles (read-only). The user must confirm
+  // their verified identity is still valid before reserving / signing.
+  const [identityConfirmed, setIdentityConfirmed] = useState(false);
+  const fullName = profile?.full_name || "";
+  const email = user?.email || "";
+  const phone = profile?.phone || "";
+  const dateOfBirth = (profile as any)?.date_of_birth || "";
+  const govIdNumber = (profile as any)?.government_id_number || "";
+  const billingAddressObj = (profile as any)?.billing_address || null;
+  const billingAddress =
+    typeof billingAddressObj === "string"
+      ? billingAddressObj
+      : billingAddressObj?.line1 || "";
+  const identityComplete = Boolean((profile as any)?.identity_complete);
 
-  // Pre-fill from profile
-  useEffect(() => {
-    if (profile?.full_name && !fullName) setFullName(profile.full_name);
-    if (user?.email && !email) setEmail(user.email);
-    if (profile?.phone && !phone) setPhone(profile.phone);
-  }, [profile, user]);
-  const [dateOfBirth, setDateOfBirth] = useState("");
   const [unitNumber, setUnitNumber] = useState("1");
   const [specialRequests, setSpecialRequests] = useState("");
-  const [billingAddress, setBillingAddress] = useState("");
-  const [idType, setIdType] = useState("passport");
   const [createdAgreementId, setCreatedAgreementId] = useState<string | null>(null);
   const [agreementSigned, setAgreementSigned] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
-  const [idDocFile, setIdDocFile] = useState<File | null>(null);
-  const [selfieFile, setSelfieFile] = useState<File | null>(null);
-  const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [promoCode, setPromoCode] = useState("");
 
@@ -200,25 +199,30 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
       return;
     }
 
+    if (!identityComplete) {
+      sonnerToast.error("Please complete identity verification before reserving a property.");
+      return;
+    }
+    if (!identityConfirmed) {
+      sonnerToast.error("Please confirm your identity details are still valid.");
+      return;
+    }
+
     try {
       setUploading(true);
-
-      if (idDocFile) await uploadFileToStorage(idDocFile, "id-document");
-      if (selfieFile) await uploadFileToStorage(selfieFile, "selfie");
-      if (profilePhotoFile) await uploadFileToStorage(profilePhotoFile, "profile-photo");
 
       const agreement = await createAgreement.mutateAsync({
         property_id: property.id,
         tenant_user_id: user.id,
         landlord_user_id: property.landlord_id,
-        tenant_name: fullName || profile?.full_name || user.email || "Tenant",
+        tenant_name: fullName || user.email || "Tenant",
         landlord_name: "Landlord",
         unit_number: unitNumber,
         rent_amount: Number(property.monthly_rent),
         currency: property.currency || "NGN",
         lease_start: format(selectedRange.from, "yyyy-MM-dd"),
         lease_end: format(selectedRange.to, "yyyy-MM-dd"),
-        terms: `LEASE AGREEMENT\n\nThis Lease Agreement is entered into between the Landlord and ${fullName || "Tenant"} for the property "${property.name}" located at ${property.address}, Unit ${unitNumber}.\n\nTENANT DETAILS:\nFull Name: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nDate of Birth: ${dateOfBirth ? format(new Date(dateOfBirth + "T00:00:00"), "MMMM d, yyyy") : "N/A"}\nID Type: ${idType.replace("_", " ")}\nOccupants: ${guestCount}\n\n1. TERM: The lease shall commence on ${format(selectedRange.from, "MMMM d, yyyy")} and terminate on ${format(selectedRange.to, "MMMM d, yyyy")}.\n\n2. RENT: The monthly rent shall be ${formatCurrency(Number(property.monthly_rent), property.currency || "NGN")}. Total for the lease period: ${formatCurrency(totalPrice, property.currency || "NGN")}.\n\n3. OCCUPANTS: ${guestCount} guest${guestCount > 1 ? "s" : ""}.\n\n4. SECURITY DEPOSIT: A security deposit equivalent to one month's rent may be required.\n\n5. MAINTENANCE: Tenant shall report any maintenance issues promptly through the portal.\n\n6. TERMINATION: Either party may terminate this agreement with 30 days written notice.\n\n7. GOVERNING LAW: This agreement shall be governed by the laws of the jurisdiction where the property is located.${specialRequests ? `\n\nSPECIAL REQUESTS: ${specialRequests}` : ""}${billingAddress ? `\n\nBILLING ADDRESS: ${billingAddress}` : ""}`,
+        terms: `LEASE AGREEMENT\n\nThis Lease Agreement is entered into between the Landlord and ${fullName || "Tenant"} for the property "${property.name}" located at ${property.address}, Unit ${unitNumber}.\n\nTENANT DETAILS:\nFull Name: ${fullName}\nEmail: ${email}\nPhone: ${phone}\nDate of Birth: ${dateOfBirth ? format(new Date(dateOfBirth + "T00:00:00"), "MMMM d, yyyy") : "N/A"}\nGovernment ID: ${govIdNumber || "N/A"}\nBilling Address: ${billingAddress || "N/A"}\nOccupants: ${guestCount}\n\n1. TERM: The lease shall commence on ${format(selectedRange.from, "MMMM d, yyyy")} and terminate on ${format(selectedRange.to, "MMMM d, yyyy")}.\n\n2. RENT: The monthly rent shall be ${formatCurrency(Number(property.monthly_rent), property.currency || "NGN")}. Total for the lease period: ${formatCurrency(totalPrice, property.currency || "NGN")}.\n\n3. OCCUPANTS: ${guestCount} guest${guestCount > 1 ? "s" : ""}.\n\n4. SECURITY DEPOSIT: A security deposit equivalent to one month's rent may be required.\n\n5. MAINTENANCE: Tenant shall report any maintenance issues promptly through the portal.\n\n6. TERMINATION: Either party may terminate this agreement with 30 days written notice.\n\n7. GOVERNING LAW: This agreement shall be governed by the laws of the jurisdiction where the property is located.${specialRequests ? `\n\nSPECIAL REQUESTS: ${specialRequests}` : ""}`,
       });
 
       setCreatedAgreementId(agreement.id);
@@ -284,15 +288,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
         console.error("Failed to store lease document:", e);
       }
 
-      // Update profile
-      try {
-        await supabase.from("profiles").update({
-          full_name: fullName,
-          phone: phone,
-        }).eq("user_id", user.id);
-      } catch (e) {
-        console.error("Failed to update profile:", e);
-      }
+      // Identity is sourced from profile (read-only); no profile mutation here.
 
       // Notify landlord
       const landlordId = property.landlord_id || user.id;
@@ -491,58 +487,46 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
 
         {rentalStep === "details" && (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Provide your {isAirbnb ? "booking" : "rental"} details:</p>
+            <p className="text-sm text-muted-foreground">Confirm your verified identity for this {isAirbnb ? "booking" : "lease"}:</p>
 
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Personal Information</p>
-            <p className="text-xs text-muted-foreground">
-              These details come from your profile and are locked. Update them in Settings if needed.
-            </p>
-            <div>
-              <Label className="text-sm">Full Name <span className="text-destructive">*</span></Label>
-              <Input value={fullName} readOnly disabled placeholder="Your full name" className="mt-1 bg-muted" />
-            </div>
-            <div>
-              <Label className="text-sm">Email Address <span className="text-destructive">*</span></Label>
-              <Input type="email" value={email} readOnly disabled placeholder="you@email.com" className="mt-1 bg-muted" />
-            </div>
-            <div>
-              <Label className="text-sm">Phone Number <span className="text-destructive">*</span></Label>
-              <Input value={phone} readOnly disabled placeholder="+234 ..." className="mt-1 bg-muted" />
-            </div>
-            <div>
-              <Label className="text-sm">Date of Birth <span className="text-destructive">*</span></Label>
-              <Input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className="mt-1" />
-            </div>
-
-            <Separator />
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Identity Verification</p>
-            <div>
-              <Label className="text-sm">Government-Issued ID Type</Label>
-              <select
-                value={idType}
-                onChange={(e) => setIdType(e.target.value)}
-                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="passport">Passport</option>
-                <option value="drivers_license">Driver's License</option>
-                <option value="national_id">National ID</option>
-              </select>
-            </div>
-            <div>
-              <Label className="text-sm">Upload ID Document (optional)</Label>
-              <Input type="file" accept="image/*,.pdf" className="mt-1" onChange={(e) => setIdDocFile(e.target.files?.[0] || null)} />
-              {idDocFile && <p className="text-xs text-success mt-1 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{idDocFile.name}</p>}
-            </div>
-            <div>
-              <Label className="text-sm">Selfie for Verification (optional)</Label>
-              <Input type="file" accept="image/*" capture="user" className="mt-1" onChange={(e) => setSelfieFile(e.target.files?.[0] || null)} />
-              {selfieFile && <p className="text-xs text-success mt-1 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{selfieFile.name}</p>}
-            </div>
-            <div>
-              <Label className="text-sm">Profile Photo (optional)</Label>
-              <Input type="file" accept="image/*" className="mt-1" onChange={(e) => setProfilePhotoFile(e.target.files?.[0] || null)} />
-              {profilePhotoFile && <p className="text-xs text-success mt-1 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{profilePhotoFile.name}</p>}
-            </div>
+            {!identityComplete ? (
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 space-y-2">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                  <div className="text-sm text-foreground">
+                    <p className="font-semibold">Identity verification required</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Please complete identity verification before reserving a property.
+                      Go to <span className="font-medium">Settings → Identity</span> to finish.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border bg-secondary p-4 space-y-3">
+                <p className="text-sm font-semibold text-foreground">Your verified identity will be used for this {isAirbnb ? "booking" : "lease"}</p>
+                <div className="grid grid-cols-[120px_1fr] gap-y-1.5 text-sm">
+                  <span className="text-muted-foreground">Name:</span><span className="font-medium text-foreground">{fullName || "—"}</span>
+                  <span className="text-muted-foreground">Email:</span><span className="font-medium text-foreground">{email || "—"}</span>
+                  <span className="text-muted-foreground">Phone:</span><span className="font-medium text-foreground">{phone || "—"}</span>
+                  <span className="text-muted-foreground">DOB:</span><span className="font-medium text-foreground">{dateOfBirth ? format(new Date(dateOfBirth + "T00:00:00"), "MMMM d, yyyy") : "—"}</span>
+                  <span className="text-muted-foreground">Gov ID:</span><span className="font-medium text-foreground">{govIdNumber || "—"}</span>
+                  <span className="text-muted-foreground">Billing:</span><span className="font-medium text-foreground">{billingAddress || "—"}</span>
+                </div>
+                <label className="flex items-start gap-2 pt-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={identityConfirmed}
+                    onChange={(e) => setIdentityConfirmed(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-input"
+                  />
+                  <span className="text-sm text-foreground">Confirm details are still valid</span>
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  Need to update this? Go to <span className="font-medium">Settings → Identity</span>.
+                </p>
+              </div>
+            )}
 
             <Separator />
             <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Stay Details</p>
@@ -558,13 +542,6 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
               <Label className="text-sm">Special Requests / Messages to Host (optional)</Label>
               <Textarea value={specialRequests} onChange={(e) => setSpecialRequests(e.target.value)} placeholder="Any special requirements or messages..." className="mt-1 h-20" />
             </div>
-
-            <Separator />
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Billing Information</p>
-            <div>
-              <Label className="text-sm">Billing Address</Label>
-              <Textarea value={billingAddress} onChange={(e) => setBillingAddress(e.target.value)} placeholder="Your billing address..." className="mt-1 h-16" />
-            </div>
             <div>
               <Label className="text-sm">Additional Notes (optional)</Label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Past rental history, references..." className="mt-1 h-16" />
@@ -574,7 +551,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
               <Button variant="outline" onClick={() => setRentalStep(isAirbnb ? "browse" : "dates")} className="flex-1">Back</Button>
               <Button
                 onClick={() => setRentalStep("contract")}
-                disabled={!fullName.trim() || !email.trim() || !phone.trim() || !dateOfBirth}
+                disabled={!identityComplete || !identityConfirmed}
                 className="flex-1 gap-2"
               >
                 Continue <ArrowRight className="h-4 w-4" />
@@ -596,10 +573,8 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
                 <span>Email:</span><span className="font-medium text-foreground">{email}</span>
                 <span>Phone:</span><span className="font-medium text-foreground">{phone}</span>
                 <span>Date of Birth:</span><span className="font-medium text-foreground">{dateOfBirth ? format(new Date(dateOfBirth + "T00:00:00"), "MMMM d, yyyy") : "—"}</span>
-                <span>ID Type:</span><span className="font-medium text-foreground capitalize">{idType.replace("_", " ")}</span>
-                <span>ID Document:</span><span className="font-medium text-foreground">{idDocFile ? "✓ Uploaded" : "Not provided"}</span>
-                <span>Selfie:</span><span className="font-medium text-foreground">{selfieFile ? "✓ Uploaded" : "Not provided"}</span>
-                <span>Profile Photo:</span><span className="font-medium text-foreground">{profilePhotoFile ? "✓ Uploaded" : "Not provided"}</span>
+                <span>Government ID:</span><span className="font-medium text-foreground">{govIdNumber || "—"}</span>
+                <span>Billing Address:</span><span className="font-medium text-foreground">{billingAddress || "—"}</span>
               </div>
 
               <p className="font-semibold text-foreground text-xs uppercase tracking-wide pt-1">{isAirbnb ? "Booking" : "Lease"} Terms</p>
