@@ -487,58 +487,46 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
 
         {rentalStep === "details" && (
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Provide your {isAirbnb ? "booking" : "rental"} details:</p>
+            <p className="text-sm text-muted-foreground">Confirm your verified identity for this {isAirbnb ? "booking" : "lease"}:</p>
 
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Personal Information</p>
-            <p className="text-xs text-muted-foreground">
-              These details come from your profile and are locked. Update them in Settings if needed.
-            </p>
-            <div>
-              <Label className="text-sm">Full Name <span className="text-destructive">*</span></Label>
-              <Input value={fullName} readOnly disabled placeholder="Your full name" className="mt-1 bg-muted" />
-            </div>
-            <div>
-              <Label className="text-sm">Email Address <span className="text-destructive">*</span></Label>
-              <Input type="email" value={email} readOnly disabled placeholder="you@email.com" className="mt-1 bg-muted" />
-            </div>
-            <div>
-              <Label className="text-sm">Phone Number <span className="text-destructive">*</span></Label>
-              <Input value={phone} readOnly disabled placeholder="+234 ..." className="mt-1 bg-muted" />
-            </div>
-            <div>
-              <Label className="text-sm">Date of Birth <span className="text-destructive">*</span></Label>
-              <Input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className="mt-1" />
-            </div>
-
-            <Separator />
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Identity Verification</p>
-            <div>
-              <Label className="text-sm">Government-Issued ID Type</Label>
-              <select
-                value={idType}
-                onChange={(e) => setIdType(e.target.value)}
-                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="passport">Passport</option>
-                <option value="drivers_license">Driver's License</option>
-                <option value="national_id">National ID</option>
-              </select>
-            </div>
-            <div>
-              <Label className="text-sm">Upload ID Document (optional)</Label>
-              <Input type="file" accept="image/*,.pdf" className="mt-1" onChange={(e) => setIdDocFile(e.target.files?.[0] || null)} />
-              {idDocFile && <p className="text-xs text-success mt-1 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{idDocFile.name}</p>}
-            </div>
-            <div>
-              <Label className="text-sm">Selfie for Verification (optional)</Label>
-              <Input type="file" accept="image/*" capture="user" className="mt-1" onChange={(e) => setSelfieFile(e.target.files?.[0] || null)} />
-              {selfieFile && <p className="text-xs text-success mt-1 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{selfieFile.name}</p>}
-            </div>
-            <div>
-              <Label className="text-sm">Profile Photo (optional)</Label>
-              <Input type="file" accept="image/*" className="mt-1" onChange={(e) => setProfilePhotoFile(e.target.files?.[0] || null)} />
-              {profilePhotoFile && <p className="text-xs text-success mt-1 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />{profilePhotoFile.name}</p>}
-            </div>
+            {!identityComplete ? (
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 space-y-2">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                  <div className="text-sm text-foreground">
+                    <p className="font-semibold">Identity verification required</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Please complete identity verification before reserving a property.
+                      Go to <span className="font-medium">Settings → Identity</span> to finish.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border bg-secondary p-4 space-y-3">
+                <p className="text-sm font-semibold text-foreground">Your verified identity will be used for this {isAirbnb ? "booking" : "lease"}</p>
+                <div className="grid grid-cols-[120px_1fr] gap-y-1.5 text-sm">
+                  <span className="text-muted-foreground">Name:</span><span className="font-medium text-foreground">{fullName || "—"}</span>
+                  <span className="text-muted-foreground">Email:</span><span className="font-medium text-foreground">{email || "—"}</span>
+                  <span className="text-muted-foreground">Phone:</span><span className="font-medium text-foreground">{phone || "—"}</span>
+                  <span className="text-muted-foreground">DOB:</span><span className="font-medium text-foreground">{dateOfBirth ? format(new Date(dateOfBirth + "T00:00:00"), "MMMM d, yyyy") : "—"}</span>
+                  <span className="text-muted-foreground">Gov ID:</span><span className="font-medium text-foreground">{govIdNumber || "—"}</span>
+                  <span className="text-muted-foreground">Billing:</span><span className="font-medium text-foreground">{billingAddress || "—"}</span>
+                </div>
+                <label className="flex items-start gap-2 pt-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={identityConfirmed}
+                    onChange={(e) => setIdentityConfirmed(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-input"
+                  />
+                  <span className="text-sm text-foreground">Confirm details are still valid</span>
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  Need to update this? Go to <span className="font-medium">Settings → Identity</span>.
+                </p>
+              </div>
+            )}
 
             <Separator />
             <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Stay Details</p>
@@ -554,13 +542,6 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
               <Label className="text-sm">Special Requests / Messages to Host (optional)</Label>
               <Textarea value={specialRequests} onChange={(e) => setSpecialRequests(e.target.value)} placeholder="Any special requirements or messages..." className="mt-1 h-20" />
             </div>
-
-            <Separator />
-            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Billing Information</p>
-            <div>
-              <Label className="text-sm">Billing Address</Label>
-              <Textarea value={billingAddress} onChange={(e) => setBillingAddress(e.target.value)} placeholder="Your billing address..." className="mt-1 h-16" />
-            </div>
             <div>
               <Label className="text-sm">Additional Notes (optional)</Label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Past rental history, references..." className="mt-1 h-16" />
@@ -570,7 +551,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
               <Button variant="outline" onClick={() => setRentalStep(isAirbnb ? "browse" : "dates")} className="flex-1">Back</Button>
               <Button
                 onClick={() => setRentalStep("contract")}
-                disabled={!fullName.trim() || !email.trim() || !phone.trim() || !dateOfBirth}
+                disabled={!identityComplete || !identityConfirmed}
                 className="flex-1 gap-2"
               >
                 Continue <ArrowRight className="h-4 w-4" />
