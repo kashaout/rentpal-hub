@@ -420,10 +420,8 @@ function IdentitySection() {
         </Button>
       </CardContent>
       {open && (
-        <IdentityWizardLazy onComplete={() => setOpen(false)} />
+        <IdentityWizard onComplete={() => setOpen(false)} />
       )}
     </Card>
   );
 }
-
-import { IdentityWizard as IdentityWizardLazy } from "@/components/IdentityWizard";
