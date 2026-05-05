@@ -827,7 +827,22 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {isAirbnb ? (
+              {!isManagerRole && !identityComplete ? (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Identity verification required</AlertTitle>
+                  <AlertDescription className="space-y-3">
+                    <p>You must complete identity verification before reserving this property.</p>
+                    <Button
+                      size="sm"
+                      onClick={() => setShowIdentityWizard(true)}
+                      className="w-full"
+                    >
+                      Complete Identity
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              ) : isAirbnb ? (
                 rentalStep !== "browse" ? renderWizardSteps() : (
                 <>
                   {/* Airbnb date+time pickers in sidebar */}
@@ -900,10 +915,11 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
                 renderStandardSidebar()
               )}
 
-              {rentalStep === "browse" && !isManagerRole && (
+              {rentalStep === "browse" && !isManagerRole && identityComplete && (
                 <p className="text-center text-xs text-muted-foreground">You won't be charged yet</p>
               )}
             </CardContent>
+
           </Card>
 
           {isAirbnb && bookings && bookings.length > 0 && (
