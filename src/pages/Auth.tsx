@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { checkRateLimit, recordAttempt, resetRateLimit } from "@/lib/rateLimiter";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
