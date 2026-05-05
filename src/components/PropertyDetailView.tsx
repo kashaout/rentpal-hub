@@ -943,6 +943,9 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
           )}
         </div>
       </div>
+      {showIdentityWizard && (
+        <IdentityWizard onComplete={() => setShowIdentityWizard(false)} />
+      )}
     </div>
   );
 }
