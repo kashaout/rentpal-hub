@@ -1,8 +1,13 @@
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useTenantLifecycle } from "@/hooks/lifecycle/useTenantLifecycle";
 
 export interface TenantLeaseInfo {
-  id: string; // legacy "tenants.id" — now always equals lease_id (the canonical id)
+  /** Canonical tenants.id (bridge row PK). Used as tenant_id for payments/maintenance RLS. */
+  id: string;
+  /** lease_agreements.id — used for lease-specific reads (credentials, lease doc). */
   lease_id: string;
   property_id: string;
   property_name: string;
@@ -16,17 +21,38 @@ export interface TenantLeaseInfo {
 
 /**
  * THIN ADAPTER — derives the tenant's "active" lease from the canonical
- * useTenantLifecycle chain. The shape is preserved so downstream legacy
- * consumers (sidebar, payments, maintenance) keep working.
+ * useTenantLifecycle chain, then resolves the matching tenants.id bridge row
+ * so downstream `tenant_id` consumers (payments, maintenance, RLS) work.
  */
 export function useTenantLease() {
   const lc = useTenantLifecycle();
+  const { user } = useAuth();
+
+  const activePropertyId = lc.active?.property_id ?? null;
+
+  const { data: tenantBridgeId } = useQuery({
+    queryKey: ["tenant-bridge-id", user?.id, activePropertyId],
+    enabled: !!user?.id && !!activePropertyId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("user_id", user!.id)
+        .eq("property_id", activePropertyId!)
+        .eq("is_archived", false)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as any)?.id ?? null;
+    },
+  });
 
   const data = useMemo<TenantLeaseInfo | null>(() => {
     const row = lc.active;
     if (!row || !row.lease_id) return null;
     return {
-      id: row.lease_id,
+      id: tenantBridgeId ?? "",
       lease_id: row.lease_id,
       property_id: row.property_id,
       property_name: row.property_name,
@@ -37,7 +63,7 @@ export function useTenantLease() {
       lease_end: row.lease_end ?? "",
       payment_status: row.isPaid ? "paid" : "pending",
     };
-  }, [lc.active]);
+  }, [lc.active, tenantBridgeId]);
 
   return {
     data,
