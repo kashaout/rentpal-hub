@@ -64,10 +64,11 @@ export function useTenantLeaseByProperty(propertyId: string | null | undefined) 
       const tenantAny: any = tenantRow;
       const bookingAny: any = booking;
 
-      // Use lease.id as the canonical id whenever a lease exists; this
-      // matches useTenantPortal so QuickIssueButton sends a usable id to
-      // the maintenance RLS policy via active_tenants.
-      const canonicalId = leaseAny?.id ?? tenantAny?.id ?? bookingAny?.id ?? "";
+      // Canonical id = tenants.id (bridge row PK) so downstream tenant_id
+      // consumers (payments, maintenance, RLS via active_tenants) work.
+      // lease_id stays separate for lease-specific reads.
+      const canonicalId = tenantAny?.id ?? "";
+
 
       return {
         id: canonicalId,
