@@ -236,10 +236,13 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
       }
 
       // Compute derived gates — the ONLY place these flags are derived in tenant UI
+      // isPaid TRUTH SOURCE: payments.status='completed' for this lease, else
+      // fallback to tenants.payment_status='paid' where no lease payment row exists.
+      // Never derive paid from bookings.status/payment_status or fully_signed.
       for (const row of byProperty.values()) {
-        row.isPaid =
-          row.booking_status === "confirmed" ||
-          row.booking_payment_status === "paid";
+        const hasCompletedPayment = row.lease_id ? paidLeaseIds.has(row.lease_id) : false;
+        const tenantMarkedPaid = paidTenantPropertyIds.has(row.property_id);
+        row.isPaid = hasCompletedPayment || tenantMarkedPaid;
         row.canShowLease = !!row.lease_id;
         row.canSubmitMaintenance = row.fully_signed;
         // Codes: both signed + credentials provisioned. Final 12-hour window
