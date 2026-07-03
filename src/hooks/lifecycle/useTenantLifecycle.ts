@@ -124,6 +124,32 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
         .order("created_at", { ascending: false });
       if (lErr) throw lErr;
 
+      // 2b) PAYMENTS — source of truth for paid status. Fetch by lease_id.
+      const leaseIds = (leases ?? []).map((l: any) => l.id).filter(Boolean);
+      const { data: payments } = leaseIds.length
+        ? await supabase
+            .from("payments")
+            .select("lease_id, status")
+            .in("lease_id", leaseIds)
+        : { data: [] as any[] };
+      const paidLeaseIds = new Set<string>(
+        (payments ?? [])
+          .filter((p: any) => p.status === "completed")
+          .map((p: any) => p.lease_id)
+      );
+
+      // 2c) TENANTS bridge rows — fallback for payment_status where no lease payment row exists.
+      const { data: tenantRows } = await supabase
+        .from("tenants")
+        .select("property_id, payment_status, is_archived")
+        .eq("user_id", userId)
+        .eq("is_archived", false);
+      const paidTenantPropertyIds = new Set<string>(
+        (tenantRows ?? [])
+          .filter((t: any) => t.payment_status === "paid")
+          .map((t: any) => t.property_id)
+      );
+
       const propertyIds = new Set<string>();
       (bookings ?? []).forEach((b: any) => propertyIds.add(b.property_id));
       (leases ?? []).forEach((l: any) => propertyIds.add(l.property_id));
