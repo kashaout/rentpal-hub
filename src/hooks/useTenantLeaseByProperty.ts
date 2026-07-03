@@ -69,6 +69,21 @@ export function useTenantLeaseByProperty(propertyId: string | null | undefined) 
       // lease_id stays separate for lease-specific reads.
       const canonicalId = tenantAny?.id ?? "";
 
+      // Paid TRUTH SOURCE: payments.status='completed' for this lease, else
+      // fall back to tenants.payment_status='paid'. Never derive from booking.
+      let paid = false;
+      if (leaseAny?.id) {
+        const { data: payRows } = await supabase
+          .from("payments")
+          .select("status")
+          .eq("lease_id", leaseAny.id)
+          .eq("status", "completed")
+          .limit(1);
+        paid = !!(payRows && payRows.length);
+      }
+      if (!paid && tenantAny?.payment_status === "paid") {
+        paid = true;
+      }
 
       return {
         id: canonicalId,
@@ -80,10 +95,9 @@ export function useTenantLeaseByProperty(propertyId: string | null | undefined) 
         rent_amount: Number(leaseAny?.rent_amount ?? tenantAny?.rent_amount ?? bookingAny?.total_price ?? 0),
         lease_start: leaseAny?.lease_start ?? tenantAny?.lease_start ?? bookingAny?.check_in ?? "",
         lease_end: leaseAny?.lease_end ?? tenantAny?.lease_end ?? bookingAny?.check_out ?? "",
-        payment_status:
-          bookingAny?.payment_status === "paid" || bookingAny?.status === "confirmed"
-            ? "paid"
-            : (tenantAny?.payment_status as "paid" | "pending" | "overdue") ?? "pending",
+        payment_status: paid
+          ? "paid"
+          : (tenantAny?.payment_status as "paid" | "pending" | "overdue") ?? "pending",
       };
     },
   });
