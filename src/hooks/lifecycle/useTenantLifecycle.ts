@@ -154,12 +154,11 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
       (bookings ?? []).forEach((b: any) => propertyIds.add(b.property_id));
       (leases ?? []).forEach((l: any) => propertyIds.add(l.property_id));
 
-      // 3) PROPERTIES — for display only
+      // 3) PROPERTIES — via safe RPC (excludes financial columns)
       const { data: properties } = propertyIds.size
-        ? await supabase
-            .from("properties")
-            .select("id, name, address, image_url")
-            .in("id", Array.from(propertyIds))
+        ? await supabase.rpc("get_tenant_property_summary" as any, {
+            _property_ids: Array.from(propertyIds),
+          })
         : { data: [] as any[] };
       const propMap = new Map<string, any>();
       (properties ?? []).forEach((p: any) => propMap.set(p.id, p));

@@ -21,11 +21,10 @@ export function useTenantLeaseByProperty(propertyId: string | null | undefined) 
     queryFn: async (): Promise<TenantLeaseInfo | null> => {
       if (!user?.id || !propertyId) return null;
 
-      const { data: prop } = await supabase
-        .from("properties")
-        .select("id, name, address")
-        .eq("id", propertyId)
-        .maybeSingle();
+      const { data: propRows } = await supabase.rpc("get_tenant_property_summary" as any, {
+        _property_ids: [propertyId],
+      });
+      const prop = (propRows as any[])?.[0];
       if (!prop) return null;
 
       const { data: lease } = await supabase

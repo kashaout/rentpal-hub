@@ -54,10 +54,9 @@ export function useTenantBookedProperties() {
       (bookings ?? []).forEach((b: any) => b.property_id && propertyIds.add(b.property_id));
       if (propertyIds.size === 0) return [];
 
-      const { data: props } = await supabase
-        .from("properties")
-        .select("id, name, address, image_url")
-        .in("id", Array.from(propertyIds));
+      const { data: props } = await supabase.rpc("get_tenant_property_summary" as any, {
+        _property_ids: Array.from(propertyIds),
+      });
 
       const propMap = new Map<string, any>();
       (props ?? []).forEach((p: any) => propMap.set(p.id, p));
