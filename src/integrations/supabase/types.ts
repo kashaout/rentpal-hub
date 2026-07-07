@@ -2477,10 +2477,14 @@ export type Database = {
         Args: { _landlord_id: string }
         Returns: Json
       }
+      rpc_admin_health_snapshot: { Args: never; Returns: Json }
+      rpc_admin_integrity_anomalies: { Args: never; Returns: Json }
       rpc_admin_landlord_delete_summary: {
         Args: { _landlord_id: string }
         Returns: Json
       }
+      rpc_admin_operational_metrics: { Args: { _days?: number }; Returns: Json }
+      rpc_admin_security_summary: { Args: { _hours?: number }; Returns: Json }
       rpc_landlord_maintenance_view: {
         Args: never
         Returns: {
