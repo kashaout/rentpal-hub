@@ -14,6 +14,8 @@ import {
   MaintenanceRequestWithDetails,
 } from "@/hooks/useMaintenanceRequests";
 import { useLandlordLifecycle } from "@/hooks/lifecycle";
+import { useAuth } from "@/hooks/useAuth";
+import { useMaintenanceAssignedView } from "@/hooks/useMaintenanceAssignedView";
 import { MaintenanceUpdateDialog } from "./MaintenanceUpdateDialog";
 import { cn } from "@/lib/utils";
 import { getSignedUrl } from "@/hooks/useSignedUrls";
