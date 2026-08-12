@@ -187,14 +187,17 @@ function NewMaintenanceDialog({ defaultPropertyId, tenantBridgeId }: { defaultPr
 
   const handleSubmit = async () => {
     if (!title.trim() || !description.trim() || !user || !propertyId) return;
+    if (!tenantBridgeId) {
+      toast.error("No active tenancy found for this property — maintenance requests require an active lease.");
+      return;
+    }
 
     setUploading(true);
     try {
       const photoUrls = await uploadPhotos();
-      const tenantId = defaultTenantId || user.id;
 
       await createMaintenanceRequest.mutateAsync({
-        tenant_id: tenantId,
+        tenant_id: tenantBridgeId,
         property_id: propertyId,
         title: title.trim(),
         description: description.trim(),
