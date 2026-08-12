@@ -372,7 +372,7 @@ export function TenantRequestsInbox() {
         </div>
         <div className="flex gap-2">
           <NewRequestDialog defaultPropertyId={lease?.property_id} />
-          <NewMaintenanceDialog defaultPropertyId={lease?.property_id} defaultTenantId={lease?.id} />
+          <NewMaintenanceDialog defaultPropertyId={lease?.property_id} tenantBridgeId={lease?.id || undefined} />}
         </div>
       </div>
 
