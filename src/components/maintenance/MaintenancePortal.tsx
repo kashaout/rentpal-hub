@@ -14,6 +14,8 @@ import {
   MaintenanceRequestWithDetails,
 } from "@/hooks/useMaintenanceRequests";
 import { useLandlordLifecycle } from "@/hooks/lifecycle";
+import { useAuth } from "@/hooks/useAuth";
+import { useMaintenanceAssignedView } from "@/hooks/useMaintenanceAssignedView";
 import { MaintenanceUpdateDialog } from "./MaintenanceUpdateDialog";
 import { cn } from "@/lib/utils";
 import { getSignedUrl } from "@/hooks/useSignedUrls";
@@ -84,10 +86,20 @@ export function MaintenancePortal({ showPerformance = false }: MaintenancePortal
   const [activeTab, setActiveTab] = useState("pending");
   const [topTab, setTopTab] = useState<"requests" | "performance">("requests");
 
-  // CANONICAL: read maintenance directly from maintenance_requests via lifecycle.
-  // No work_orders merge — that violates the single-chain rule.
-  const { maintenance, isLoading } = useLandlordLifecycle();
-  const requests: MaintenanceRequestWithDetails[] = maintenance.map((m) => ({
+  // CANONICAL maintenance_requests paths — exactly one is active per role:
+  //  • manager (landlord/admin/consultant) -> useLandlordLifecycle (property-scoped)
+  //  • maintenance / vendor resource       -> rpc_maintenance_assigned_view (assignment-scoped)
+  const { isAdmin, isConsultant, isLandlord, isMaintenance, isVendor } = useAuth();
+  const isManagerRole = isAdmin || isConsultant || isLandlord;
+  const useAssignedPath = !isManagerRole && (isMaintenance || isVendor);
+
+  const landlordLc = useLandlordLifecycle();
+  const assigned = useMaintenanceAssignedView(useAssignedPath);
+
+  const source = useAssignedPath ? assigned.data ?? [] : landlordLc.maintenance;
+  const isLoading = useAssignedPath ? assigned.isLoading : landlordLc.isLoading;
+
+  const requests: MaintenanceRequestWithDetails[] = source.map((m: any) => ({
     id: m.id,
     tenant_id: m.tenant_id,
     property_id: m.property_id,
@@ -98,14 +110,14 @@ export function MaintenancePortal({ showPerformance = false }: MaintenancePortal
     created_at: m.created_at,
     updated_at: m.updated_at,
     resolved_at: m.resolved_at,
-    repair_notes: null,
+    repair_notes: m.repair_notes ?? null,
     photo_urls: m.photo_urls,
     assigned_to: m.assigned_to,
     rating: m.rating,
     property_name: m.property_name,
-    property_address: "",
-    assigned_user_name: null,
-    assigned_user_email: null,
+    property_address: m.property_address ?? "",
+    assigned_user_name: m.assigned_user_name ?? null,
+    assigned_user_email: m.assigned_user_email ?? null,
   }));
   const updateRequest = useUpdateMaintenanceRequest();
 
@@ -183,7 +195,7 @@ export function MaintenancePortal({ showPerformance = false }: MaintenancePortal
 
   const requestsView = (
     <div className="space-y-6">
-      <LifecycleBadge hook="useLandlordLifecycle" />
+      <LifecycleBadge hook={useAssignedPath ? "useMaintenanceAssignedView" : "useLandlordLifecycle"} />
       {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>

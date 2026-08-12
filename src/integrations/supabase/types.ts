@@ -2508,6 +2508,29 @@ export type Database = {
           updated_at: string
         }[]
       }
+      rpc_maintenance_assigned_view: {
+        Args: never
+        Returns: {
+          assigned_to: string
+          assigned_user_email: string
+          assigned_user_name: string
+          created_at: string
+          description: string
+          id: string
+          photo_urls: string[]
+          priority: string
+          property_address: string
+          property_id: string
+          property_name: string
+          rating: number
+          repair_notes: string
+          resolved_at: string
+          status: string
+          tenant_id: string
+          title: string
+          updated_at: string
+        }[]
+      }
       rpc_preview_pricing: {
         Args: {
           p_end_date: string

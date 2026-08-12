@@ -135,7 +135,11 @@ function NewRequestDialog({ defaultPropertyId }: { defaultPropertyId?: string })
   );
 }
 
-function NewMaintenanceDialog({ defaultPropertyId, defaultTenantId }: { defaultPropertyId?: string; defaultTenantId?: string }) {
+/**
+ * `tenantBridgeId` is the tenants.id bridge-row PK (maintenance_requests.tenant_id
+ * is a FK to tenants.id, NOT auth.users.id). Never substitute a lease id or user id.
+ */
+function NewMaintenanceDialog({ defaultPropertyId, tenantBridgeId }: { defaultPropertyId?: string; tenantBridgeId?: string }) {
   const { user } = useAuth();
   const { data: properties } = useTenantProperties();
   const createMaintenanceRequest = useCreateMaintenanceRequest();
@@ -183,14 +187,17 @@ function NewMaintenanceDialog({ defaultPropertyId, defaultTenantId }: { defaultP
 
   const handleSubmit = async () => {
     if (!title.trim() || !description.trim() || !user || !propertyId) return;
+    if (!tenantBridgeId) {
+      toast.error("No active tenancy found for this property — maintenance requests require an active lease.");
+      return;
+    }
 
     setUploading(true);
     try {
       const photoUrls = await uploadPhotos();
-      const tenantId = defaultTenantId || user.id;
 
       await createMaintenanceRequest.mutateAsync({
-        tenant_id: tenantId,
+        tenant_id: tenantBridgeId,
         property_id: propertyId,
         title: title.trim(),
         description: description.trim(),
@@ -365,7 +372,7 @@ export function TenantRequestsInbox() {
         </div>
         <div className="flex gap-2">
           <NewRequestDialog defaultPropertyId={lease?.property_id} />
-          <NewMaintenanceDialog defaultPropertyId={lease?.property_id} defaultTenantId={lease?.id} />
+          <NewMaintenanceDialog defaultPropertyId={lease?.property_id} tenantBridgeId={lease?.id || undefined} />
         </div>
       </div>
 
