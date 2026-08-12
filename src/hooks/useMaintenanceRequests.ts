@@ -27,6 +27,19 @@ export interface MaintenanceRequestWithDetails extends MaintenanceRequest {
   assigned_user_email: string | null;
 }
 
+/** Every consumer of maintenance_requests — keep in sync when adding a new view. */
+function invalidateMaintenance(queryClient: ReturnType<typeof useQueryClient>) {
+  [
+    "maintenance-requests",
+    "maintenance-assigned-view",
+    "landlord-maintenance-view",
+    "tenant-maintenance-view",
+    "landlord-lifecycle",
+    "tenant-lifecycle",
+    "work-orders",
+  ].forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
+}
+
 export function useMaintenanceRequests(tenantId?: string) {
   return useQuery({
     queryKey: ["maintenance-requests", tenantId],
@@ -111,7 +124,7 @@ export function useCreateMaintenanceRequest() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["maintenance-requests"] });
+      invalidateMaintenance(queryClient);
       toast({
         title: "Request submitted",
         description: "Your maintenance request has been submitted successfully.",
@@ -153,7 +166,7 @@ export function useUpdateMaintenanceRequest() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["maintenance-requests"] });
+      invalidateMaintenance(queryClient);
       toast({
         title: "Request updated",
         description: "The maintenance request has been updated.",
