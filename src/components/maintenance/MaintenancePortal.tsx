@@ -87,7 +87,8 @@ export function MaintenancePortal({ showPerformance = false }: MaintenancePortal
   // CANONICAL maintenance_requests paths — exactly one is active per role:
   //  • manager (landlord/admin/consultant) -> useLandlordLifecycle (property-scoped)
   //  • maintenance / vendor resource       -> rpc_maintenance_assigned_view (assignment-scoped)
-  const { isManagerRole, isMaintenance, isVendor } = useAuth();
+  const { isAdmin, isConsultant, isLandlord, isMaintenance, isVendor } = useAuth();
+  const isManagerRole = isAdmin || isConsultant || isLandlord;
   const useAssignedPath = !isManagerRole && (isMaintenance || isVendor);
 
   const landlordLc = useLandlordLifecycle();
