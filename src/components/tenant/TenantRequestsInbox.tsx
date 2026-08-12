@@ -135,7 +135,11 @@ function NewRequestDialog({ defaultPropertyId }: { defaultPropertyId?: string })
   );
 }
 
-function NewMaintenanceDialog({ defaultPropertyId, defaultTenantId }: { defaultPropertyId?: string; defaultTenantId?: string }) {
+/**
+ * `tenantBridgeId` is the tenants.id bridge-row PK (maintenance_requests.tenant_id
+ * is a FK to tenants.id, NOT auth.users.id). Never substitute a lease id or user id.
+ */
+function NewMaintenanceDialog({ defaultPropertyId, tenantBridgeId }: { defaultPropertyId?: string; tenantBridgeId?: string }) {
   const { user } = useAuth();
   const { data: properties } = useTenantProperties();
   const createMaintenanceRequest = useCreateMaintenanceRequest();
