@@ -25,6 +25,7 @@ const statusStyles: Record<string, string> = {
 export function TenantOverviewTab({ lease }: Props) {
   const { data: payments } = usePaymentsByTenant(lease.id);
   const { data: paid } = useTenantPaidStatus(lease.property_id);
+  const tenancy = useTenantPropertyLifecycle(lease.property_id);
   const daysLeft = differenceInDays(new Date(lease.lease_end), new Date());
   const totalPaid = payments?.filter(p => p.status === "completed").reduce((sum, p) => sum + Number(p.amount), 0) || 0;
 
