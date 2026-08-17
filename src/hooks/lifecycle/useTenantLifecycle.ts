@@ -46,12 +46,16 @@ export interface TenantPropertyLifecycle {
   fully_signed: boolean;
   credentials_sent_at: string | null;
   check_in_time: string | null;
+  checked_out_at: string | null;
 
   // Derived gating (the ONLY place these are computed)
   isPaid: boolean;                           // booking confirmed AND paid
+  /** Tenancy still live: fully signed AND not checked out / ended */
+  isActiveTenancy: boolean;
   canShowLease: boolean;                     // lease exists
   canShowCodes: boolean;                     // both signed + credentials_sent_at + within window
-  canSubmitMaintenance: boolean;             // fully signed
+  canSubmitMaintenance: boolean;             // active tenancy
+  canCheckout: boolean;                      // active tenancy that can be ended
 }
 
 export interface TenantLifecycleSnapshot {
@@ -118,7 +122,7 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
       const { data: leases, error: lErr } = await supabase
         .from("lease_agreements" as any)
         .select(
-          "id, property_id, status, unit_number, rent_amount, currency, lease_start, lease_end, tenant_signed_at, landlord_signed_at, credentials_sent_at, check_in_time"
+          "id, property_id, status, unit_number, rent_amount, currency, lease_start, lease_end, tenant_signed_at, landlord_signed_at, credentials_sent_at, check_in_time, checked_out_at"
         )
         .eq("tenant_user_id", userId)
         .order("created_at", { ascending: false });
