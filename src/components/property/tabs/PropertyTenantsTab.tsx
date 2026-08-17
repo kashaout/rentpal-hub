@@ -29,7 +29,23 @@ export function PropertyTenantsTab({ propertyId }: Props) {
         if (profiles) profileMap = Object.fromEntries(profiles.map(p => [p.user_id, p.full_name || "Unknown"]));
       }
 
-      return data.map(t => ({ ...t, tenant_name: profileMap[t.user_id || ""] || "Unknown" }));
+      // Resolve the live lease per tenant so checkout targets the canonical lease row
+      const { data: leases } = await supabase
+        .from("lease_agreements" as any)
+        .select("id, tenant_user_id, checked_out_at, status")
+        .eq("property_id", propertyId);
+      const leaseMap: Record<string, any> = {};
+      for (const l of (leases ?? []) as any[]) {
+        if (!leaseMap[l.tenant_user_id] || (!l.checked_out_at && l.status !== "ended")) {
+          leaseMap[l.tenant_user_id] = l;
+        }
+      }
+
+      return data.map(t => ({
+        ...t,
+        tenant_name: profileMap[t.user_id || ""] || "Unknown",
+        lease: t.user_id ? leaseMap[t.user_id] ?? null : null,
+      }));
     },
   });
 
@@ -50,10 +66,14 @@ export function PropertyTenantsTab({ propertyId }: Props) {
               <TableHead>Lease Period</TableHead>
               <TableHead>Rent</TableHead>
               <TableHead>Payment Status</TableHead>
+              <TableHead>Occupancy</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tenants.map((t) => (
+            {tenants.map((t: any) => {
+              const isActive = !t.is_archived && t.lease && !t.lease.checked_out_at && t.lease.status !== "ended";
+              return (
               <TableRow key={t.id}>
                 <TableCell className="font-medium">{t.tenant_name}</TableCell>
                 <TableCell>{t.unit_number}</TableCell>
@@ -66,8 +86,22 @@ export function PropertyTenantsTab({ propertyId }: Props) {
                     {t.payment_status}
                   </Badge>
                 </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className={isActive ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground"}>
+                    {isActive ? "Occupying" : "Checked out"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  {isActive && (
+                    <CheckoutDialog
+                      leaseId={t.lease.id}
+                      tenantName={t.tenant_name}
+                      label="Checkout"
+                    />
+                  )}
+                </TableCell>
               </TableRow>
-            ))}
+            );})}
           </TableBody>
         </Table>
       </CardContent>
