@@ -229,7 +229,7 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
       const { data: leases, error: lErr } = await supabase
         .from("lease_agreements" as any)
         .select(
-          "id, property_id, tenant_user_id, tenant_name, unit_number, rent_amount, currency, lease_start, lease_end, tenant_signed_at, landlord_signed_at, status"
+          "id, property_id, tenant_user_id, tenant_name, unit_number, rent_amount, currency, lease_start, lease_end, tenant_signed_at, landlord_signed_at, status, checked_out_at"
         )
         .eq("landlord_user_id", userId)
         .order("created_at", { ascending: false });
@@ -346,6 +346,8 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
         tenant_signed_at: l.tenant_signed_at,
         landlord_signed_at: l.landlord_signed_at,
         booking_status: null,
+        checked_out_at: l.checked_out_at ?? null,
+        is_active_tenancy: fullySigned && !l.checked_out_at && l.status !== "ended",
       });
     }
 
@@ -386,6 +388,8 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
         tenant_signed_at: null,
         landlord_signed_at: null,
         booking_status: b.status,
+        checked_out_at: null,
+        is_active_tenancy: b.status === "confirmed" || b.status === "active",
       });
     }
 
