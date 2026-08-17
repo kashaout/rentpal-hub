@@ -64,6 +64,10 @@ export interface LandlordTenantDerived {
   tenant_signed_at: string | null;
   landlord_signed_at: string | null;
   booking_status: string | null;
+  /** Move-out timestamp — set once checkout completes */
+  checked_out_at: string | null;
+  /** Canonical occupancy flag: fully signed and not checked out */
+  is_active_tenancy: boolean;
 }
 
 export interface LandlordMaintenanceItem {
