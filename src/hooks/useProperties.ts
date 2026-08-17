@@ -58,9 +58,15 @@ export function useProperties() {
 
   const data = useMemo<PropertyWithStats[]>(() => {
     return lc.properties.map((p) => {
+      // Occupancy = ACTIVE tenancies only. A checked-out lease never counts.
       const occupied = new Set(
         lc.tenants
-          .filter((t) => t.property_id === p.property_id && (t.fully_signed || t.payment_status === "paid"))
+          .filter(
+            (t) =>
+              t.property_id === p.property_id &&
+              t.is_active_tenancy &&
+              (t.fully_signed || t.payment_status === "paid")
+          )
           .map((t) => t.tenant_user_id ?? t.id)
       ).size;
       return {

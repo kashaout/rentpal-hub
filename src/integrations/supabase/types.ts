@@ -836,6 +836,7 @@ export type Database = {
       lease_agreements: {
         Row: {
           check_in_time: string | null
+          checked_out_at: string | null
           created_at: string
           credentials_sent_at: string | null
           currency: string
@@ -860,6 +861,7 @@ export type Database = {
         }
         Insert: {
           check_in_time?: string | null
+          checked_out_at?: string | null
           created_at?: string
           credentials_sent_at?: string | null
           currency?: string
@@ -884,6 +886,7 @@ export type Database = {
         }
         Update: {
           check_in_time?: string | null
+          checked_out_at?: string | null
           created_at?: string
           credentials_sent_at?: string | null
           currency?: string
@@ -2485,6 +2488,10 @@ export type Database = {
       }
       rpc_admin_operational_metrics: { Args: { _days?: number }; Returns: Json }
       rpc_admin_security_summary: { Args: { _hours?: number }; Returns: Json }
+      rpc_complete_checkout: {
+        Args: { _checkout_at?: string; _lease_id: string }
+        Returns: Json
+      }
       rpc_landlord_maintenance_view: {
         Args: never
         Returns: {

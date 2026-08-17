@@ -9,6 +9,8 @@ import { useTenantPaidStatus } from "@/hooks/useTenantPaidStatus";
 import { NotesSection } from "@/components/NotesSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useTenantPropertyLifecycle } from "@/hooks/lifecycle/useTenantLifecycle";
+import { CheckoutDialog } from "@/components/tenant/CheckoutDialog";
 
 interface Props {
   lease: TenantLeaseInfo;
@@ -23,6 +25,7 @@ const statusStyles: Record<string, string> = {
 export function TenantOverviewTab({ lease }: Props) {
   const { data: payments } = usePaymentsByTenant(lease.id);
   const { data: paid } = useTenantPaidStatus(lease.property_id);
+  const tenancy = useTenantPropertyLifecycle(lease.property_id);
   const daysLeft = differenceInDays(new Date(lease.lease_end), new Date());
   const totalPaid = payments?.filter(p => p.status === "completed").reduce((sum, p) => sum + Number(p.amount), 0) || 0;
 
@@ -111,6 +114,29 @@ export function TenantOverviewTab({ lease }: Props) {
               <p className="font-medium text-success">{formatCurrency(totalPaid, "NGN")}</p>
             </div>
           </div>
+
+          {tenancy?.canCheckout && (
+            <div className="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium">Moving out?</p>
+                <p className="text-sm text-muted-foreground">
+                  Completing checkout ends your tenancy and releases the unit. Your records stay available.
+                </p>
+              </div>
+              <CheckoutDialog
+                leaseId={tenancy.lease_id!}
+                propertyName={lease.property_name}
+                label="Complete Checkout"
+              />
+            </div>
+          )}
+          {tenancy?.checked_out_at && (
+            <div className="border-t pt-4">
+              <Badge variant="outline" className="bg-muted text-muted-foreground">
+                Tenancy ended · checked out {format(new Date(tenancy.checked_out_at), "MMM d, yyyy")}
+              </Badge>
+            </div>
+          )}
         </CardContent>
       </Card>
 
