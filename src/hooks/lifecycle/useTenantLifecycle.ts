@@ -270,7 +270,8 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
     if (!userId) return empty;
     const properties = query.data ?? [];
     const active =
-      properties.find((p) => p.fully_signed) ??
+      properties.find((p) => p.isActiveTenancy) ??
+      properties.find((p) => p.fully_signed && !p.checked_out_at) ??
       properties.find((p) => p.isPaid) ??
       properties[0] ??
       null;
