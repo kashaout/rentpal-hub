@@ -9,6 +9,8 @@ import { useTenantPaidStatus } from "@/hooks/useTenantPaidStatus";
 import { NotesSection } from "@/components/NotesSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useTenantPropertyLifecycle } from "@/hooks/lifecycle/useTenantLifecycle";
+import { CheckoutDialog } from "@/components/tenant/CheckoutDialog";
 
 interface Props {
   lease: TenantLeaseInfo;
