@@ -238,6 +238,7 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
           row.fully_signed = !!(l.tenant_signed_at && l.landlord_signed_at);
           row.credentials_sent_at = l.credentials_sent_at;
           row.check_in_time = l.check_in_time;
+          row.checked_out_at = l.checked_out_at ?? null;
         }
       }
 
@@ -249,12 +250,16 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
         const hasCompletedPayment = row.lease_id ? paidLeaseIds.has(row.lease_id) : false;
         const tenantMarkedPaid = paidTenantPropertyIds.has(row.property_id);
         row.isPaid = hasCompletedPayment || tenantMarkedPaid;
+        // A tenancy stops being active the moment checkout is recorded.
+        row.isActiveTenancy =
+          row.fully_signed && !row.checked_out_at && row.lease_status !== "ended";
         row.canShowLease = !!row.lease_id;
-        row.canSubmitMaintenance = row.fully_signed;
+        row.canSubmitMaintenance = row.isActiveTenancy;
+        row.canCheckout = row.isActiveTenancy;
         // Codes: both signed + credentials provisioned. Final 12-hour window
         // gating is enforced server-side by get_lease_credentials RPC.
         row.canShowCodes =
-          row.fully_signed && !!row.credentials_sent_at;
+          row.isActiveTenancy && !!row.credentials_sent_at;
       }
 
       return Array.from(byProperty.values());
