@@ -197,10 +197,13 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
           fully_signed: false,
           credentials_sent_at: null,
           check_in_time: null,
+          checked_out_at: null,
           isPaid: false,
+          isActiveTenancy: false,
           canShowLease: false,
           canShowCodes: false,
           canSubmitMaintenance: false,
+          canCheckout: false,
         };
         byProperty.set(propertyId, row);
         return row;
