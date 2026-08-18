@@ -158,7 +158,7 @@ export function useCreateOrUpdateSubscription() {
     mutationFn: async (_plan: SubscriptionPlan) => {
       throw new Error("Direct subscription updates are not allowed. Please use the subscription checkout flow.");
     },
-    onError: (error: Error) => {
+    onError: () => {
       toast({
         title: "Subscription update blocked",
         description: "Please use the upgrade button to subscribe via the secure checkout flow.",

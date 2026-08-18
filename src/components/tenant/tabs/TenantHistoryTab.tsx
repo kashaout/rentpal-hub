@@ -27,7 +27,7 @@ const typeColors: Record<string, string> = {
   Review: "bg-secondary text-secondary-foreground border-secondary",
 };
 
-export function TenantHistoryTab({ tenantId, propertyId }: Props) {
+export function TenantHistoryTab({ tenantId }: Props) {
   const { user } = useAuth();
 
   const { data: history, isLoading } = useQuery({

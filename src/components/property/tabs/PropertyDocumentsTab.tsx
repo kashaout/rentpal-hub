@@ -25,7 +25,7 @@ export function PropertyDocumentsTab({ propertyId }: Props) {
     },
   });
 
-  const handleDownload = async (filePath: string, fileName: string) => {
+  const handleDownload = async (filePath: string, _fileName: string) => {
     const { data } = await supabase.storage.from("documents").createSignedUrl(filePath, 300);
     if (data?.signedUrl) {
       window.open(data.signedUrl, "_blank");

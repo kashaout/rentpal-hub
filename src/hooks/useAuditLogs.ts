@@ -50,7 +50,7 @@ export function useAuditLogs(options: UseAuditLogsOptions = {}) {
       if (error) throw error;
 
       // Fetch user emails for the logs
-      const userIds = [...new Set(data?.filter(log => log.user_id).map(log => log.user_id))];
+      const userIds = [...new Set((data ?? []).map((log) => log.user_id).filter((id): id is string => !!id))];
       
       let userMap: Record<string, string> = {};
       if (userIds.length > 0) {

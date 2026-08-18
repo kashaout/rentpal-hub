@@ -17,7 +17,7 @@ const statusColors: Record<string, string> = {
   closed: "bg-muted text-muted-foreground",
 };
 
-export function TenantCommunicationTab({ propertyId }: Props) {
+export function TenantCommunicationTab(_props: Props) {
   const { user } = useAuth();
 
   const { data: requests, isLoading } = useQuery({

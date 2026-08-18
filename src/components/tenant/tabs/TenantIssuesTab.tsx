@@ -24,7 +24,7 @@ const statusColors: Record<string, string> = {
   completed: "bg-success/10 text-success border-success/20",
 };
 
-export function TenantIssuesTab({ tenantId, propertyId }: Props) {
+export function TenantIssuesTab(_props: Props) {
   const { data: allIssues, isLoading } = useTenantMaintenanceView();
   // Filter to the specific property shown in the command center
   const issues = allIssues?.filter((i) => i.property_name) || [];

@@ -70,7 +70,7 @@ export interface NavVisibility {
 
 export function getNavVisibility(
   roles: AppRole[],
-  features: SubscriptionFeatures,
+  _features: SubscriptionFeatures,
   plan: SubscriptionPlan
 ): NavVisibility {
   const manager = isManagerRole(roles);

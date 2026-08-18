@@ -66,7 +66,7 @@ export function useMaintenanceRequests(tenantId?: string) {
       const propertiesMap = new Map(properties?.map((p) => [p.id, p]) || []);
 
       // Fetch assigned user details
-      const assignedUserIds = [...new Set(data.filter(r => r.assigned_to).map(r => r.assigned_to))];
+      const assignedUserIds = [...new Set(data.map((r) => r.assigned_to).filter((id): id is string => !!id))];
       let profilesMap = new Map<string, { full_name: string | null; email: string }>();
       
       if (assignedUserIds.length > 0) {

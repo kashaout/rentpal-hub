@@ -6,7 +6,7 @@ const currencyFormats: Record<Currency, { symbol: string; locale: string }> = {
 
 export function formatCurrency(
   amount: number,
-  currency: Currency | string = "NGN",
+  _currency: Currency | string = "NGN",
   compact: boolean = false
 ): string {
   const validCurrency = "NGN" as Currency;
