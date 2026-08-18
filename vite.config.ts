@@ -15,4 +15,20 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Keep sourcemaps out of production output; enabled for the dev-mode build.
+    sourcemap: mode === "development",
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        // Conservative vendor splitting: only large, always-used libraries.
+        // No route/feature chunking, so dynamic imports stay intact.
+        manualChunks: {
+          react: ["react", "react-dom", "react-router-dom"],
+          supabase: ["@supabase/supabase-js"],
+          charts: ["recharts"],
+        },
+      },
+    },
+  },
 }));

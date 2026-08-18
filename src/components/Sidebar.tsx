@@ -53,7 +53,7 @@ function NavItem({ icon: Icon, label, active, onClick, badge, locked }: NavItemP
   );
 }
 
-function QuickIssueButton({ onViewChange }: { onViewChange: (view: string) => void }) {
+function QuickIssueButton(_props: { onViewChange: (view: string) => void }) {
   const { user } = useAuth();
   const { data: lease } = useTenantLease();
   const createMaintenanceRequest = useCreateMaintenanceRequest();

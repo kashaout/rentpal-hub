@@ -155,7 +155,7 @@ function TenantRow({ tenant }: { tenant: LandlordTenantRow }) {
           <span className="text-muted-foreground">Rent</span>
           <span className="font-medium">{formatCurrency(tenant.rent_amount, tenant.currency)}</span>
         </div>
-        {tenant.lease_start && (
+        {tenant.lease_start && tenant.lease_end && (
           <p className="text-xs text-muted-foreground">
             {format(new Date(tenant.lease_start), "MMM d, yyyy")} – {format(new Date(tenant.lease_end), "MMM d, yyyy")}
           </p>
