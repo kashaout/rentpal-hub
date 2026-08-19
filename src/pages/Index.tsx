@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 import { SessionTimeoutDialog } from "@/components/SessionTimeoutDialog";
 import { Header } from "@/components/Header";
@@ -6,33 +7,44 @@ import { FeedbackButton } from "@/components/FeedbackButton";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { DevSecurityPanel } from "@/components/dev/DevSecurityPanel";
 import { TenantHelpWidget } from "@/components/tenant/TenantHelpWidget";
-import { Dashboard } from "@/components/Dashboard";
-import { AdminPanel } from "@/components/admin/AdminPanel";
-import { LandlordUserManagement } from "@/components/admin/LandlordUserManagement";
-import { TenantPortal } from "@/components/tenant/TenantPortal";
-import { TenantCommandCenter } from "@/components/tenant/TenantCommandCenter";
-import { TenantBrowseProperties } from "@/components/tenant/TenantBrowseProperties";
-import { MyBookingsPage } from "@/components/tenant/MyBookingsPage";
-import { TenantRequestsInbox } from "@/components/tenant/TenantRequestsInbox";
-import { MaintenancePortal } from "@/components/maintenance/MaintenancePortal";
-import { PropertiesPage } from "@/components/PropertiesPage";
-import { TenantsPage } from "@/components/TenantsPage";
-import { SettingsPage } from "@/components/SettingsPage";
-import { ReportsPage } from "@/components/ReportsPage";
-
-import { FinanceDashboard } from "@/components/finance/FinanceDashboard";
-import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { IdentityWizard } from "@/components/IdentityWizard";
-import { PendingLeasesPage } from "@/components/PendingLeasesPage";
-import { PropertyDetailView } from "@/components/PropertyDetailView";
-import { PropertyCommandCenter } from "@/components/property/PropertyCommandCenter";
 
-import { TenantReportsPage } from "@/components/tenant/TenantReportsPage";
+// View-level code splitting: only the view the user actually opens is fetched.
+const Dashboard = lazy(() => import("@/components/Dashboard").then(m => ({ default: m.Dashboard })));
+const AdminPanel = lazy(() => import("@/components/admin/AdminPanel").then(m => ({ default: m.AdminPanel })));
+const LandlordUserManagement = lazy(() => import("@/components/admin/LandlordUserManagement").then(m => ({ default: m.LandlordUserManagement })));
+const TenantPortal = lazy(() => import("@/components/tenant/TenantPortal").then(m => ({ default: m.TenantPortal })));
+const TenantCommandCenter = lazy(() => import("@/components/tenant/TenantCommandCenter").then(m => ({ default: m.TenantCommandCenter })));
+const TenantBrowseProperties = lazy(() => import("@/components/tenant/TenantBrowseProperties").then(m => ({ default: m.TenantBrowseProperties })));
+const MyBookingsPage = lazy(() => import("@/components/tenant/MyBookingsPage").then(m => ({ default: m.MyBookingsPage })));
+const TenantRequestsInbox = lazy(() => import("@/components/tenant/TenantRequestsInbox").then(m => ({ default: m.TenantRequestsInbox })));
+const MaintenancePortal = lazy(() => import("@/components/maintenance/MaintenancePortal").then(m => ({ default: m.MaintenancePortal })));
+const PropertiesPage = lazy(() => import("@/components/PropertiesPage").then(m => ({ default: m.PropertiesPage })));
+const TenantsPage = lazy(() => import("@/components/TenantsPage").then(m => ({ default: m.TenantsPage })));
+const SettingsPage = lazy(() => import("@/components/SettingsPage").then(m => ({ default: m.SettingsPage })));
+const ReportsPage = lazy(() => import("@/components/ReportsPage").then(m => ({ default: m.ReportsPage })));
+const FinanceDashboard = lazy(() => import("@/components/finance/FinanceDashboard").then(m => ({ default: m.FinanceDashboard })));
+const SubscriptionPlans = lazy(() => import("@/components/subscription/SubscriptionPlans").then(m => ({ default: m.SubscriptionPlans })));
+const PendingLeasesPage = lazy(() => import("@/components/PendingLeasesPage").then(m => ({ default: m.PendingLeasesPage })));
+const PropertyDetailView = lazy(() => import("@/components/PropertyDetailView").then(m => ({ default: m.PropertyDetailView })));
+const PropertyCommandCenter = lazy(() => import("@/components/property/PropertyCommandCenter").then(m => ({ default: m.PropertyCommandCenter })));
+const TenantReportsPage = lazy(() => import("@/components/tenant/TenantReportsPage").then(m => ({ default: m.TenantReportsPage })));
+
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+
+function ViewFallback() {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center" role="status" aria-live="polite">
+      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <span className="sr-only">Loading view</span>
+    </div>
+  );
+}
+
 
 const viewTitles: Record<string, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Welcome back! Here's your overview." },
