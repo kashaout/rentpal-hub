@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, useCallback, useMemo, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -73,127 +73,137 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-    return data as Profile | null;
-  };
+  // Identity of the user whose profile/roles are currently loaded, plus the
+  // in-flight request for it. Together these de-duplicate the concurrent
+  // getSession() + onAuthStateChange bootstrap and skip refetching on token
+  // refresh / tab focus events, which re-emit the same user.
+  const loadedUserIdRef = useRef<string | null>(null);
+  const inFlightRef = useRef<Promise<void> | null>(null);
+  const mountedRef = useRef(true);
 
-  const fetchRoles = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId);
-    return (data?.map((r) => r.role as AppRole) || []);
-  };
+  const loadIdentity = useCallback(async (userId: string, force = false) => {
+    if (!force && loadedUserIdRef.current === userId) return;
+    if (!force && inFlightRef.current) return inFlightRef.current;
+
+    const request = (async () => {
+      const [profileResult, rolesResult] = await Promise.all([
+        supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", userId),
+      ]);
+      if (!mountedRef.current) return;
+      loadedUserIdRef.current = userId;
+      setProfile((profileResult.data as Profile | null) ?? null);
+      setRoles((rolesResult.data ?? []).map((r) => r.role as AppRole));
+    })();
+
+    inFlightRef.current = request;
+    try {
+      await request;
+    } finally {
+      if (inFlightRef.current === request) inFlightRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
+    mountedRef.current = true;
 
-        if (newSession?.user) {
-          // Defer profile/role fetch to avoid deadlock
-          setTimeout(async () => {
-            const [profileData, rolesData] = await Promise.all([
-              fetchProfile(newSession.user.id),
-              fetchRoles(newSession.user.id),
-            ]);
-            setProfile(profileData);
-            setRoles(rolesData);
-            setLoading(false);
-          }, 0);
-        } else {
-          setProfile(null);
-          setRoles([]);
-          setLoading(false);
-        }
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+
+      if (newSession?.user) {
+        // Never await Supabase calls inside the callback itself (deadlock);
+        // run them as a detached promise instead of a setTimeout hack.
+        void loadIdentity(newSession.user.id).finally(() => {
+          if (mountedRef.current) setLoading(false);
+        });
+      } else {
+        loadedUserIdRef.current = null;
+        setProfile(null);
+        setRoles([]);
+        setLoading(false);
       }
-    );
+    });
 
     // THEN check initial session
-    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
+    void supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
+      if (!mountedRef.current) return;
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
 
       if (initialSession?.user) {
-        const [profileData, rolesData] = await Promise.all([
-          fetchProfile(initialSession.user.id),
-          fetchRoles(initialSession.user.id),
-        ]);
-        setProfile(profileData);
-        setRoles(rolesData);
+        await loadIdentity(initialSession.user.id);
       }
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mountedRef.current = false;
+      subscription.unsubscribe();
+    };
+  }, [loadIdentity]);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error ? new Error(error.message) : null };
-  };
+  }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, role?: "landlord" | "tenant") => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: role
-          ? { full_name: fullName, role }
-          : { full_name: fullName },
-      },
-    });
+  const signUp = useCallback(
+    async (email: string, password: string, fullName: string, role?: "landlord" | "tenant") => {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: role ? { full_name: fullName, role } : { full_name: fullName },
+        },
+      });
 
-    if (error) return { error: new Error(error.message) };
-    return { error: null };
-  };
+      if (error) return { error: new Error(error.message) };
+      return { error: null };
+    },
+    []
+  );
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut();
+    loadedUserIdRef.current = null;
     setUser(null);
     setSession(null);
     setProfile(null);
     setRoles([]);
-  };
+  }, []);
 
-  const hasRole = (role: AppRole) => roles.includes(role);
+  const hasRole = useCallback((role: AppRole) => roles.includes(role), [roles]);
 
-  const refreshRoles = async () => {
+  const refreshRoles = useCallback(async () => {
     if (!user?.id) return;
-    const [profileData, rolesData] = await Promise.all([
-      fetchProfile(user.id),
-      fetchRoles(user.id),
-    ]);
-    setProfile(profileData);
-    setRoles(rolesData);
-  };
+    await loadIdentity(user.id, true);
+  }, [user?.id, loadIdentity]);
 
-  const value: AuthContextType = {
-    user,
-    session,
-    profile,
-    roles,
-    loading,
-    signIn,
-    signUp,
-    signOut,
-    hasRole,
-    refreshRoles,
-    isAdmin: hasRole("admin"),
-    isConsultant: hasRole("consultant"),
-    isLandlord: hasRole("landlord"),
-    isTenant: hasRole("tenant"),
-    isMaintenance: hasRole("maintenance"),
-    isVendor: hasRole("vendor"),
-  };
+  const value = useMemo<AuthContextType>(
+    () => ({
+      user,
+      session,
+      profile,
+      roles,
+      loading,
+      signIn,
+      signUp,
+      signOut,
+      hasRole,
+      refreshRoles,
+      isAdmin: roles.includes("admin"),
+      isConsultant: roles.includes("consultant"),
+      isLandlord: roles.includes("landlord"),
+      isTenant: roles.includes("tenant"),
+      isMaintenance: roles.includes("maintenance"),
+      isVendor: roles.includes("vendor"),
+    }),
+    [user, session, profile, roles, loading, signIn, signUp, signOut, hasRole, refreshRoles]
+  );
+
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
