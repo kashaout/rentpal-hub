@@ -47,7 +47,7 @@ export function usePricingPreview({
         p_start_date: startDate,
         p_end_date: endDate,
         p_promo_code: promoCode?.trim() ? promoCode.trim() : null,
-      } as any);
+      });
       if (error) return null;
       const row = Array.isArray(data) ? data[0] : data;
       if (!row) return null;

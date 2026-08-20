@@ -75,7 +75,7 @@ export function useSubmitVerification() {
           verification_type: verificationType,
           submitted_data: submittedData,
           document_paths: documentPaths,
-        } as any)
+        })
         .select()
         .single();
 
@@ -144,7 +144,7 @@ export function useApproveVerification() {
         _request_id: requestId,
         _approved: approved,
         _notes: notes || null,
-      } as any);
+      });
 
       if (error) throw error;
     },

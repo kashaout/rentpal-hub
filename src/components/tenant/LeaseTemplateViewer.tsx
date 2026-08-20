@@ -25,7 +25,7 @@ export function LeaseTemplateViewer({ agreement, onBack }: LeaseTemplateViewerPr
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_lease_credentials", {
         _lease_id: agreement.id,
-      } as any);
+      });
       if (error) return null;
       return Array.isArray(data) ? (data as any)[0] ?? null : data ?? null;
     },

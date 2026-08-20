@@ -87,7 +87,7 @@ export function SettingsPage() {
           full_name: data.full_name,
           phone: data.phone,
           business_name: data.business_name,
-        } as any)
+        })
         .eq("user_id", user.id);
 
       if (error) throw error;
@@ -104,7 +104,7 @@ export function SettingsPage() {
     try {
       await supabase
         .from("profiles")
-        .update({ ux_role: value } as any)
+        .update({ ux_role: value })
         .eq("user_id", user.id);
       toast.success("Experience preference updated");
     } catch {

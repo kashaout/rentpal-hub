@@ -48,7 +48,7 @@ export function useMarkNotificationRead() {
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
         .from("landlord_notifications")
-        .update({ is_read: true, read_at: new Date().toISOString() } as any)
+        .update({ is_read: true, read_at: new Date().toISOString() })
         .eq("id", notificationId);
 
       if (error) throw error;

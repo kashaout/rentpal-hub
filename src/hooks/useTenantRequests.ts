@@ -62,7 +62,7 @@ export function useCreateTenantRequest() {
     mutationFn: async (data: { tenant_user_id: string; property_id: string; category: string; subject: string; message: string; priority?: string }) => {
       const { data: result, error } = await supabase
         .from("tenant_requests")
-        .insert(data as any)
+        .insert(data)
         .select()
         .single();
 
@@ -91,7 +91,7 @@ export function useRespondToRequest() {
           landlord_response: response,
           responded_at: new Date().toISOString(),
           status: status || "responded",
-        } as any)
+        })
         .eq("id", requestId);
 
       if (error) throw error;

@@ -124,7 +124,7 @@ export function PropertyOverviewTab({ property }: Props) {
       <NotesSection
         notes={(property as any).notes || null}
         onSave={async (notes) => {
-          await supabase.from("properties").update({ notes } as any).eq("id", property.id);
+          await supabase.from("properties").update({ notes }).eq("id", property.id);
         }}
       />
     </div>

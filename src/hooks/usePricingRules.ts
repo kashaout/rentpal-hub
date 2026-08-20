@@ -54,7 +54,7 @@ export function useCreatePricingRule() {
     mutationFn: async (input: CreatePricingRuleInput) => {
       const { data, error } = await supabase
         .from("pricing_rules")
-        .insert({ ...input, landlord_id: user!.id } as any)
+        .insert({ ...input, landlord_id: user!.id })
         .select()
         .single();
       if (error) throw error;

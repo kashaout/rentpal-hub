@@ -65,7 +65,7 @@ export function useCreateDispute() {
       if (input.booking_id) {
         await supabase
           .from("bookings")
-          .update({ payout_status: "frozen" } as any)
+          .update({ payout_status: "frozen" })
           .eq("id", input.booking_id);
       }
 
@@ -75,7 +75,7 @@ export function useCreateDispute() {
           ...input,
           filed_by: user.id,
           payout_frozen: true,
-        } as any)
+        })
         .select()
         .single();
 
@@ -119,7 +119,7 @@ export function useResolveDispute() {
           resolved_by: user?.id,
           resolved_at: new Date().toISOString(),
           payout_frozen: false,
-        } as any)
+        })
         .eq("id", disputeId);
 
       if (error) throw error;

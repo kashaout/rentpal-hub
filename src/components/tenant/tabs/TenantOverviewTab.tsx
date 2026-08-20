@@ -143,7 +143,7 @@ export function TenantOverviewTab({ lease }: Props) {
       <NotesSection
         notes={(lease as any).notes || null}
         onSave={async (notes) => {
-          await supabase.from("tenants").update({ notes } as any).eq("id", lease.id);
+          await supabase.from("tenants").update({ notes }).eq("id", lease.id);
         }}
       />
 

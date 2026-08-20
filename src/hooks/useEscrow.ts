@@ -69,7 +69,7 @@ export function useCreateEscrowTransaction() {
           ...input,
           status: "pending",
           created_by: (await supabase.auth.getUser()).data.user?.id,
-        } as any)
+        })
         .select()
         .single();
 

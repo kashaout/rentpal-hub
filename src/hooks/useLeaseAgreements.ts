@@ -122,7 +122,7 @@ export function useCreateLeaseAgreement() {
 
       const { data: result, error } = await supabase
         .from("lease_agreements")
-        .insert(data as any)
+        .insert(data)
         .select()
         .single();
 
@@ -150,7 +150,7 @@ export function useSignLeaseAgreement() {
         // Use secure RPC that only updates signing fields
         const { error } = await supabase.rpc("sign_lease_as_tenant", {
           _lease_id: agreementId,
-        } as any);
+        });
         if (error) throw error;
       } else {
         // Landlord countersign — timestamp is the only source of truth.
@@ -182,7 +182,7 @@ export function useSignLeaseAgreement() {
 
         const { error } = await supabase
           .from("lease_agreements")
-          .update(updateData as any)
+          .update(updateData)
           .eq("id", agreementId);
 
         if (error) throw error;

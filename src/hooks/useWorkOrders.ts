@@ -141,7 +141,7 @@ export function useCreateWorkOrder() {
           sla_response_deadline: slaResponseDeadline,
           sla_resolution_deadline: slaResolutionDeadline,
           priority_score: input.priority_score || calculatePriorityScore(input.severity),
-        } as any)
+        })
         .select()
         .single();
 
@@ -154,7 +154,7 @@ export function useCreateWorkOrder() {
         new_status: input.assigned_to || input.vendor_id ? "assigned" : "created",
         action: "work_order_created",
         details: `Work order created with ${input.severity} severity`,
-      } as any);
+      });
 
       return data as unknown as WorkOrder;
     },
@@ -236,7 +236,7 @@ export function useUpdateWorkOrderStatus() {
 
       const { error } = await supabase
         .from("work_orders")
-        .update(updates as any)
+        .update(updates)
         .eq("id", workOrderId);
 
       if (error) throw error;
@@ -249,7 +249,7 @@ export function useUpdateWorkOrderStatus() {
         new_status: newStatus,
         action: "status_change",
         details: notes || `Status changed to ${newStatus}`,
-      } as any);
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["work-orders"] });

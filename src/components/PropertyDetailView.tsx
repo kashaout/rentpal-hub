@@ -127,7 +127,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
       notification_type: "lease_signing",
       title: "New Lease Agreement Awaiting Your Signature",
       message: `${fullName || "A tenant"} has signed a lease agreement for ${property.name}, Unit ${unitNumber}. Please review and counter-sign.`,
-    } as any);
+    });
 
     supabase.functions.invoke("notify-landlord-lease", {
       body: {
