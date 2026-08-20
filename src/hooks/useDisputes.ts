@@ -34,7 +34,7 @@ export function useDisputes() {
     queryKey: ["disputes", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("disputes" as any)
+        .from("disputes")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -70,7 +70,7 @@ export function useCreateDispute() {
       }
 
       const { data, error } = await supabase
-        .from("disputes" as any)
+        .from("disputes")
         .insert({
           ...input,
           filed_by: user.id,
@@ -110,7 +110,7 @@ export function useResolveDispute() {
       resolution_notes: string;
     }) => {
       const { error } = await supabase
-        .from("disputes" as any)
+        .from("disputes")
         .update({
           status: "resolved",
           resolution_type,

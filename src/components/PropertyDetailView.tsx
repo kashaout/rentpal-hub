@@ -119,7 +119,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
 
   const notifyLandlord = async (agreementId: string, landlordId: string) => {
     if (!user || !property || !selectedRange.from || !selectedRange.to) return;
-    await supabase.from("landlord_notifications" as any).insert({
+    await supabase.from("landlord_notifications").insert({
       landlord_user_id: landlordId,
       tenant_user_id: user.id,
       lease_agreement_id: agreementId,

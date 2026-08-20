@@ -34,7 +34,7 @@ function usePublicProperties() {
   return useQuery({
     queryKey: ["public-properties-page"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_public_property_listings" as any, {
+      const { data, error } = await supabase.rpc("get_public_property_listings", {
         _property_id: null,
       });
       if (error) throw error;

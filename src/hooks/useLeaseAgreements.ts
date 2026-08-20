@@ -42,7 +42,7 @@ export function useMyLeaseAgreements() {
     queryKey: ["lease-agreements", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lease_agreements" as any)
+        .from("lease_agreements")
         .select("*")
         .or(`tenant_user_id.eq.${user!.id},landlord_user_id.eq.${user!.id}`)
         .order("created_at", { ascending: false });
@@ -58,7 +58,7 @@ export function useLeaseAgreementByProperty(propertyId: string, tenantUserId?: s
   return useQuery({
     queryKey: ["lease-agreement", propertyId, tenantUserId],
     queryFn: async () => {
-      let query = (supabase.from("lease_agreements" as any) as any)
+      let query = (supabase.from("lease_agreements") as any)
         .select("*")
         .eq("property_id", propertyId);
 
@@ -121,7 +121,7 @@ export function useCreateLeaseAgreement() {
       }
 
       const { data: result, error } = await supabase
-        .from("lease_agreements" as any)
+        .from("lease_agreements")
         .insert(data as any)
         .select()
         .single();
@@ -158,7 +158,7 @@ export function useSignLeaseAgreement() {
         // tenant signing order. Lease becomes "active" only when BOTH
         // tenant_signed_at AND landlord_signed_at are populated.
         const { data: current, error: fetchError } = await supabase
-          .from("lease_agreements" as any)
+          .from("lease_agreements")
           .select("tenant_signed_at, landlord_signed_at")
           .eq("id", agreementId)
           .single();
@@ -181,7 +181,7 @@ export function useSignLeaseAgreement() {
         };
 
         const { error } = await supabase
-          .from("lease_agreements" as any)
+          .from("lease_agreements")
           .update(updateData as any)
           .eq("id", agreementId);
 

@@ -73,7 +73,7 @@ function useManageableUsers() {
 
       // Get user IDs from lease agreements
       const { data: leases } = await supabase
-        .from("lease_agreements" as any)
+        .from("lease_agreements")
         .select("tenant_user_id")
         .in("property_id", propIds);
 

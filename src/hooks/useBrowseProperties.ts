@@ -26,7 +26,7 @@ export function useBrowseProperties() {
   return useQuery({
     queryKey: ["browse-properties"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_public_property_listings" as any, {
+      const { data, error } = await supabase.rpc("get_public_property_listings", {
         _property_id: null,
       });
 

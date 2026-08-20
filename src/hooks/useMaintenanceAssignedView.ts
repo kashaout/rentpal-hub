@@ -12,7 +12,7 @@ export function useMaintenanceAssignedView(enabled = true) {
     queryKey: ["maintenance-assigned-view"],
     enabled,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("rpc_maintenance_assigned_view" as any);
+      const { data, error } = await supabase.rpc("rpc_maintenance_assigned_view");
       if (error) throw error;
       return (data || []) as unknown as LandlordMaintenanceItem[];
     },

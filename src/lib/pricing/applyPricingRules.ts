@@ -92,7 +92,7 @@ export async function applyPricingRules(input: PricingInput): Promise<PricingRes
   // simply show no discount in the UI — Stripe + lifecycle stay consistent
   // because the authoritative computation runs again at booking insert time.
   const { data, error } = await supabase
-    .from("pricing_rules" as any)
+    .from("pricing_rules")
     .select("*")
     .eq("landlord_id", input.landlord_id)
     .eq("active", true);

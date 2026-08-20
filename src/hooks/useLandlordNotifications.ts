@@ -23,7 +23,7 @@ export function useLandlordNotifications() {
     queryKey: ["landlord-notifications", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("landlord_notifications" as any)
+        .from("landlord_notifications")
         .select("*")
         .eq("landlord_user_id", user!.id)
         .order("created_at", { ascending: false })
@@ -47,7 +47,7 @@ export function useMarkNotificationRead() {
   return useMutation({
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
-        .from("landlord_notifications" as any)
+        .from("landlord_notifications")
         .update({ is_read: true, read_at: new Date().toISOString() } as any)
         .eq("id", notificationId);
 

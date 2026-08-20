@@ -31,7 +31,7 @@ export function usePricingRules(propertyId?: string) {
     queryKey: ["pricing-rules", user?.id, propertyId ?? "all"],
     queryFn: async () => {
       let query = supabase
-        .from("pricing_rules" as any)
+        .from("pricing_rules")
         .select("*")
         .eq("landlord_id", user!.id)
         .order("created_at", { ascending: false });
@@ -53,7 +53,7 @@ export function useCreatePricingRule() {
   return useMutation({
     mutationFn: async (input: CreatePricingRuleInput) => {
       const { data, error } = await supabase
-        .from("pricing_rules" as any)
+        .from("pricing_rules")
         .insert({ ...input, landlord_id: user!.id } as any)
         .select()
         .single();
@@ -75,7 +75,7 @@ export function useUpdatePricingRule() {
   return useMutation({
     mutationFn: async ({ id, ...patch }: Partial<PricingRule> & { id: string }) => {
       const { error } = await supabase
-        .from("pricing_rules" as any)
+        .from("pricing_rules")
         .update(patch as any)
         .eq("id", id);
       if (error) throw error;
@@ -93,7 +93,7 @@ export function useDeletePricingRule() {
   const { toast } = useToast();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("pricing_rules" as any).delete().eq("id", id);
+      const { error } = await supabase.from("pricing_rules").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

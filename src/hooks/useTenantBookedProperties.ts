@@ -36,7 +36,7 @@ export function useTenantBookedProperties() {
 
       // 1) Lease-based access
       const { data: leases } = await supabase
-        .from("lease_agreements" as any)
+        .from("lease_agreements")
         .select("id, property_id, lease_start, lease_end, tenant_signed_at, landlord_signed_at")
         .eq("tenant_user_id", user.id)
         .order("lease_start", { ascending: false });
@@ -54,7 +54,7 @@ export function useTenantBookedProperties() {
       (bookings ?? []).forEach((b: any) => b.property_id && propertyIds.add(b.property_id));
       if (propertyIds.size === 0) return [];
 
-      const { data: props } = await supabase.rpc("get_tenant_property_summary" as any, {
+      const { data: props } = await supabase.rpc("get_tenant_property_summary", {
         _property_ids: Array.from(propertyIds),
       });
 

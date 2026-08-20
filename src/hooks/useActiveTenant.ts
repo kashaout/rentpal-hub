@@ -38,7 +38,7 @@ export function useActiveTenant() {
 
       // Source of truth: active_tenants view (joins lease_agreements for the property info)
       const { data, error } = await supabase
-        .from("active_tenants" as any)
+        .from("active_tenants")
         .select("*")
         .eq("tenant_user_id", user.id)
         .order("lease_start", { ascending: false })
@@ -51,7 +51,7 @@ export function useActiveTenant() {
 
       // Fetch related lease agreement details + property
       const { data: leaseRow, error: leaseErr } = await supabase
-        .from("lease_agreements" as any)
+        .from("lease_agreements")
         .select("unit_number, rent_amount, currency, property_id")
         .eq("id", lease.lease_id)
         .maybeSingle();
