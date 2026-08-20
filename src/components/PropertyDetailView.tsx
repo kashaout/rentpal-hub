@@ -87,14 +87,14 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const fullName = profile?.full_name || "";
   const email = user?.email || "";
   const phone = profile?.phone || "";
-  const dateOfBirth = (profile as any)?.date_of_birth || "";
-  const govIdNumber = (profile as any)?.government_id_number || "";
-  const billingAddressObj = (profile as any)?.billing_address || null;
+  const dateOfBirth = profile?.date_of_birth || "";
+  const govIdNumber = profile?.government_id_number || "";
+  const billingAddressObj = profile?.billing_address || null;
   const billingAddress =
     typeof billingAddressObj === "string"
       ? billingAddressObj
       : billingAddressObj?.line1 || "";
-  const identityComplete = Boolean((profile as any)?.identity_complete);
+  const identityComplete = Boolean(profile?.identity_complete);
 
   const [unitNumber, setUnitNumber] = useState("1");
   const [specialRequests, setSpecialRequests] = useState("");

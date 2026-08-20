@@ -15,7 +15,7 @@ export function EmailVerificationBanner() {
   const [sending, setSending] = useState(false);
 
   if (!user) return null;
-  if ((user as any).email_confirmed_at) return null;
+  if (user.email_confirmed_at) return null;
 
   const resend = async () => {
     if (!user.email) return;

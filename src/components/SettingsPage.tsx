@@ -72,7 +72,7 @@ export function SettingsPage() {
       full_name: profile?.full_name || "",
       email: profile?.email || user?.email || "",
       phone: profile?.phone || "",
-      business_name: (profile as any)?.business_name || "",
+      business_name: profile?.business_name || "",
     },
   });
 
@@ -126,7 +126,7 @@ export function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Select defaultValue={(profile as any)?.ux_role || ""} onValueChange={handleUxRoleChange}>
+          <Select defaultValue={profile?.ux_role || ""} onValueChange={handleUxRoleChange}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Select preference" />
             </SelectTrigger>
@@ -403,7 +403,7 @@ export function SettingsPage() {
 function IdentitySection() {
   const { profile } = useAuth();
   const [open, setOpen] = useState(false);
-  const complete = Boolean((profile as any)?.identity_complete);
+  const complete = Boolean(profile?.identity_complete);
   return (
     <Card id="identity">
       <CardHeader>

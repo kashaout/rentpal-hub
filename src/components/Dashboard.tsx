@@ -75,7 +75,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   const currentHint = planHints[plan] || planHints.free;
 
-  const showQuickGuide = isManagerRole && (profile as any)?.onboarding_completed && totalProperties === 0;
+  const showQuickGuide = isManagerRole && profile?.onboarding_completed && totalProperties === 0;
 
   // For tenant dashboard: show properties they have bookings/leases for
   const tenantPropertyIds = new Set<string>();
