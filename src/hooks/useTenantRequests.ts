@@ -25,7 +25,7 @@ export function useMyTenantRequests() {
     queryKey: ["tenant-requests", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tenant_requests" as any)
+        .from("tenant_requests")
         .select("*")
         .eq("tenant_user_id", user!.id)
         .order("created_at", { ascending: false });
@@ -44,7 +44,7 @@ export function useLandlordTenantRequests() {
     queryKey: ["landlord-tenant-requests", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tenant_requests" as any)
+        .from("tenant_requests")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -61,8 +61,8 @@ export function useCreateTenantRequest() {
   return useMutation({
     mutationFn: async (data: { tenant_user_id: string; property_id: string; category: string; subject: string; message: string; priority?: string }) => {
       const { data: result, error } = await supabase
-        .from("tenant_requests" as any)
-        .insert(data as any)
+        .from("tenant_requests")
+        .insert(data)
         .select()
         .single();
 
@@ -86,12 +86,12 @@ export function useRespondToRequest() {
   return useMutation({
     mutationFn: async ({ requestId, response, status }: { requestId: string; response: string; status?: string }) => {
       const { error } = await supabase
-        .from("tenant_requests" as any)
+        .from("tenant_requests")
         .update({
           landlord_response: response,
           responded_at: new Date().toISOString(),
           status: status || "responded",
-        } as any)
+        })
         .eq("id", requestId);
 
       if (error) throw error;

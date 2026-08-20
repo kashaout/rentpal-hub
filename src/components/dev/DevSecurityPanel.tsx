@@ -34,7 +34,7 @@ export function DevSecurityPanel() {
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from("security_events" as any)
+      .from("security_events")
       .select("id, event_type, table_name, action, user_id, ip_address, details, created_at")
       .order("created_at", { ascending: false })
       .limit(50);

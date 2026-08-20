@@ -53,7 +53,7 @@ export function IdentityWizard({ onComplete }: Props) {
           billing_address: { line1: address } as any,
           id_photo_path: path,
           identity_complete: true,
-        } as any)
+        })
         .eq("user_id", user.id);
       if (profErr) throw profErr;
 

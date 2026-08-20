@@ -48,7 +48,7 @@ export function AdminLandlordDeleteDialog({ open, onOpenChange, landlordUserId, 
     }
     setLoading(true);
     supabase
-      .rpc("rpc_admin_landlord_delete_summary" as any, { _landlord_user_id: landlordUserId })
+      .rpc("rpc_admin_landlord_delete_summary", { _landlord_id: landlordUserId })
       .then(({ data, error }: any) => {
         if (error) {
           toast({ title: "Could not load summary", description: error.message, variant: "destructive" });

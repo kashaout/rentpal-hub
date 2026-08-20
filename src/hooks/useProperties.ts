@@ -226,7 +226,7 @@ export function useDeleteProperty() {
         throw new Error(`Cannot archive: this property has ${openIssues} open maintenance issue(s). Please resolve them first.`);
       }
 
-      const { error } = await supabase.from("properties").update({ is_archived: true } as any).eq("id", id);
+      const { error } = await supabase.from("properties").update({ is_archived: true }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

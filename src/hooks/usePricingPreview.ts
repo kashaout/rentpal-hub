@@ -42,12 +42,12 @@ export function usePricingPreview({
     ],
     queryFn: async (): Promise<PricingPreview | null> => {
       if (!propertyId || !startDate || !endDate) return null;
-      const { data, error } = await supabase.rpc("rpc_preview_pricing" as any, {
+      const { data, error } = await supabase.rpc("rpc_preview_pricing", {
         p_property_id: propertyId,
         p_start_date: startDate,
         p_end_date: endDate,
         p_promo_code: promoCode?.trim() ? promoCode.trim() : null,
-      } as any);
+      });
       if (error) return null;
       const row = Array.isArray(data) ? data[0] : data;
       if (!row) return null;

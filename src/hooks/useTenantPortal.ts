@@ -44,7 +44,7 @@ export function useTenantLease() {
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return (data as any)?.id ?? null;
+      return data?.id ?? null;
     },
   });
 

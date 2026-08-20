@@ -34,7 +34,7 @@ export function useDisputes() {
     queryKey: ["disputes", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("disputes" as any)
+        .from("disputes")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -65,17 +65,17 @@ export function useCreateDispute() {
       if (input.booking_id) {
         await supabase
           .from("bookings")
-          .update({ payout_status: "frozen" } as any)
+          .update({ payout_status: "frozen" })
           .eq("id", input.booking_id);
       }
 
       const { data, error } = await supabase
-        .from("disputes" as any)
+        .from("disputes")
         .insert({
           ...input,
           filed_by: user.id,
           payout_frozen: true,
-        } as any)
+        })
         .select()
         .single();
 
@@ -110,7 +110,7 @@ export function useResolveDispute() {
       resolution_notes: string;
     }) => {
       const { error } = await supabase
-        .from("disputes" as any)
+        .from("disputes")
         .update({
           status: "resolved",
           resolution_type,
@@ -119,7 +119,7 @@ export function useResolveDispute() {
           resolved_by: user?.id,
           resolved_at: new Date().toISOString(),
           payout_frozen: false,
-        } as any)
+        })
         .eq("id", disputeId);
 
       if (error) throw error;

@@ -42,7 +42,7 @@ export function useMyLeaseAgreements() {
     queryKey: ["lease-agreements", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lease_agreements" as any)
+        .from("lease_agreements")
         .select("*")
         .or(`tenant_user_id.eq.${user!.id},landlord_user_id.eq.${user!.id}`)
         .order("created_at", { ascending: false });
@@ -58,7 +58,7 @@ export function useLeaseAgreementByProperty(propertyId: string, tenantUserId?: s
   return useQuery({
     queryKey: ["lease-agreement", propertyId, tenantUserId],
     queryFn: async () => {
-      let query = (supabase.from("lease_agreements" as any) as any)
+      let query = (supabase.from("lease_agreements") as any)
         .select("*")
         .eq("property_id", propertyId);
 
@@ -97,7 +97,7 @@ export function useCreateLeaseAgreement() {
       // SECURITY DEFINER RPC that tenants use to browse listings, so this
       // check works under tenant RLS (direct reads on `properties` are blocked).
       const { data: rpcRows, error: propErr } = await supabase.rpc(
-        "get_public_property_listings" as any,
+        "get_public_property_listings",
         { _property_id: data.property_id }
       );
 
@@ -105,7 +105,7 @@ export function useCreateLeaseAgreement() {
         console.error("[lease] Property lookup failed:", propErr);
         throw new MutationSafetyError("Could not verify the selected property.");
       }
-      const prop = ((rpcRows as any[]) || [])[0];
+      const prop = (rpcRows ?? [])[0];
       if (!prop) {
         throw new MutationSafetyError("Selected property no longer exists.");
       }
@@ -121,8 +121,8 @@ export function useCreateLeaseAgreement() {
       }
 
       const { data: result, error } = await supabase
-        .from("lease_agreements" as any)
-        .insert(data as any)
+        .from("lease_agreements")
+        .insert(data)
         .select()
         .single();
 
@@ -150,7 +150,7 @@ export function useSignLeaseAgreement() {
         // Use secure RPC that only updates signing fields
         const { error } = await supabase.rpc("sign_lease_as_tenant", {
           _lease_id: agreementId,
-        } as any);
+        });
         if (error) throw error;
       } else {
         // Landlord countersign — timestamp is the only source of truth.
@@ -158,7 +158,7 @@ export function useSignLeaseAgreement() {
         // tenant signing order. Lease becomes "active" only when BOTH
         // tenant_signed_at AND landlord_signed_at are populated.
         const { data: current, error: fetchError } = await supabase
-          .from("lease_agreements" as any)
+          .from("lease_agreements")
           .select("tenant_signed_at, landlord_signed_at")
           .eq("id", agreementId)
           .single();
@@ -181,8 +181,8 @@ export function useSignLeaseAgreement() {
         };
 
         const { error } = await supabase
-          .from("lease_agreements" as any)
-          .update(updateData as any)
+          .from("lease_agreements")
+          .update(updateData)
           .eq("id", agreementId);
 
         if (error) throw error;

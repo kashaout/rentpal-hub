@@ -184,7 +184,7 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
       // 1) PROPERTIES — admins see all via RPC, landlords see their own.
       let props: any[] | null = null;
       if (isAdmin) {
-        const { data, error } = await supabase.rpc("rpc_admin_all_properties" as any);
+        const { data, error } = await supabase.rpc("rpc_admin_all_properties");
         if (error) throw error;
         props = (data as any[]) ?? [];
       } else {
@@ -227,7 +227,7 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
 
       // 3) LEASE AGREEMENTS where I'm the landlord
       const { data: leases, error: lErr } = await supabase
-        .from("lease_agreements" as any)
+        .from("lease_agreements")
         .select(
           "id, property_id, tenant_user_id, tenant_name, unit_number, rent_amount, currency, lease_start, lease_end, tenant_signed_at, landlord_signed_at, status, checked_out_at"
         )

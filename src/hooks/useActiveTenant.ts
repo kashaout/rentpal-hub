@@ -38,7 +38,7 @@ export function useActiveTenant() {
 
       // Source of truth: active_tenants view (joins lease_agreements for the property info)
       const { data, error } = await supabase
-        .from("active_tenants" as any)
+        .from("active_tenants")
         .select("*")
         .eq("tenant_user_id", user.id)
         .order("lease_start", { ascending: false })
@@ -47,41 +47,39 @@ export function useActiveTenant() {
 
       if (error) throw error;
       if (!data) return null;
-      const lease = data as any;
 
-      // Fetch related lease agreement details + property
-      const { data: leaseRow, error: leaseErr } = await supabase
-        .from("lease_agreements" as any)
-        .select("unit_number, rent_amount, currency, property_id")
-        .eq("id", lease.lease_id)
-        .maybeSingle();
+      // The active_tenants view exposes nullable columns; a tenancy without a
+      // resolvable lease/property is not actionable, so treat it as "none".
+      const leaseId = data.lease_id;
+      const propertyId = data.property_id;
+      if (!leaseId || !propertyId) return null;
 
-      if (leaseErr) throw leaseErr;
-      const leaseDetails = leaseRow as any;
+      // Lease detail + property summary are independent — run them in parallel
+      // instead of two sequential round trips.
+      const [leaseResult, propResult] = await Promise.all([
+        supabase
+          .from("lease_agreements")
+          .select("unit_number, rent_amount, currency, property_id")
+          .eq("id", leaseId)
+          .maybeSingle(),
+        supabase.rpc("get_tenant_property_summary", { _property_ids: [propertyId] }),
+      ]);
 
-      const { data: propRows, error: propErr } = await supabase.rpc(
-        "get_tenant_property_summary" as any,
-        { _property_ids: [lease.property_id] }
-      );
-      if (propErr) throw propErr;
-      const prop = (propRows as any[])?.[0];
+      if (leaseResult.error) throw leaseResult.error;
+      if (propResult.error) throw propResult.error;
 
-      // TEMP guard log — confirms tenant access derived from active_tenants
-      console.log("[useActiveTenant] active tenancy resolved:", {
-        user_id: user.id,
-        lease_id: lease.lease_id,
-        property_id: lease.property_id,
-      });
+      const leaseDetails = leaseResult.data;
+      const prop = propResult.data?.[0];
 
       return {
-        lease_id: lease.lease_id,
-        property_id: lease.property_id,
-        landlord_user_id: lease.landlord_user_id,
-        tenant_user_id: lease.tenant_user_id,
-        lease_start: lease.lease_start,
-        lease_end: lease.lease_end,
-        tenant_signed_at: lease.tenant_signed_at,
-        landlord_signed_at: lease.landlord_signed_at,
+        lease_id: leaseId,
+        property_id: propertyId,
+        landlord_user_id: data.landlord_user_id ?? "",
+        tenant_user_id: data.tenant_user_id ?? "",
+        lease_start: data.lease_start ?? "",
+        lease_end: data.lease_end ?? "",
+        tenant_signed_at: data.tenant_signed_at ?? "",
+        landlord_signed_at: data.landlord_signed_at ?? "",
         property_name: prop?.name ?? "My Property",
         property_address: prop?.address ?? "",
         unit_number: leaseDetails?.unit_number ?? "",
@@ -89,6 +87,7 @@ export function useActiveTenant() {
         currency: leaseDetails?.currency ?? "NGN",
       };
     },
+
     enabled: !!user?.id,
     staleTime: 30_000,
   });

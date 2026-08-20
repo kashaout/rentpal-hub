@@ -25,20 +25,30 @@ export function useBrowseProperties() {
 
   return useQuery({
     queryKey: ["browse-properties"],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_public_property_listings" as any, {
-        _property_id: null,
-      });
-
-      console.log("[useBrowseProperties] public listings rows:", data?.length ?? 0, error ? `error: ${error.message}` : "");
+    queryFn: async (): Promise<BrowseProperty[]> => {
+      // `_property_id` is optional on the RPC — omitting it returns all listings.
+      const { data, error } = await supabase.rpc("get_public_property_listings", {});
 
       if (error) throw error;
-      return ((data as any[]) || []).map((p) => ({
-        ...p,
-        amenities: (p.amenities as string[]) || [],
+      return (data ?? []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        address: p.address,
+        description: p.description ?? null,
+        image_url: p.image_url ?? null,
+        property_type: p.property_type,
+        listing_type: p.listing_type,
+        monthly_rent: Number(p.monthly_rent ?? 0),
+        currency: p.currency,
+        units: Number(p.units ?? 0),
+        region: p.region,
+        amenities: Array.isArray(p.amenities) ? (p.amenities as string[]) : [],
         is_paused: !!p.is_paused,
-      })) as BrowseProperty[];
+        landlord_business_name: p.landlord_business_name ?? null,
+        landlord_name: p.landlord_business_name ?? null,
+      }));
     },
     enabled: !!user,
   });
 }
+

@@ -31,8 +31,8 @@ export function useLeaseCredentials(leaseId?: string) {
       const row = Array.isArray(data) ? data[0] : data;
       if (!row) return null;
       return {
-        wifi_password: (row as any).wifi_password ?? null,
-        keybox_password: (row as any).keybox_password ?? null,
+        wifi_password: row.wifi_password ?? null,
+        keybox_password: row.keybox_password ?? null,
       };
     },
     enabled: !!leaseId,

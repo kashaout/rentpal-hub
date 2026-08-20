@@ -87,14 +87,14 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const fullName = profile?.full_name || "";
   const email = user?.email || "";
   const phone = profile?.phone || "";
-  const dateOfBirth = (profile as any)?.date_of_birth || "";
-  const govIdNumber = (profile as any)?.government_id_number || "";
-  const billingAddressObj = (profile as any)?.billing_address || null;
+  const dateOfBirth = profile?.date_of_birth || "";
+  const govIdNumber = profile?.government_id_number || "";
+  const billingAddressObj = profile?.billing_address || null;
   const billingAddress =
     typeof billingAddressObj === "string"
       ? billingAddressObj
       : billingAddressObj?.line1 || "";
-  const identityComplete = Boolean((profile as any)?.identity_complete);
+  const identityComplete = Boolean(profile?.identity_complete);
 
   const [unitNumber, setUnitNumber] = useState("1");
   const [specialRequests, setSpecialRequests] = useState("");
@@ -119,7 +119,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
 
   const notifyLandlord = async (agreementId: string, landlordId: string) => {
     if (!user || !property || !selectedRange.from || !selectedRange.to) return;
-    await supabase.from("landlord_notifications" as any).insert({
+    await supabase.from("landlord_notifications").insert({
       landlord_user_id: landlordId,
       tenant_user_id: user.id,
       lease_agreement_id: agreementId,
@@ -127,7 +127,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
       notification_type: "lease_signing",
       title: "New Lease Agreement Awaiting Your Signature",
       message: `${fullName || "A tenant"} has signed a lease agreement for ${property.name}, Unit ${unitNumber}. Please review and counter-sign.`,
-    } as any);
+    });
 
     supabase.functions.invoke("notify-landlord-lease", {
       body: {

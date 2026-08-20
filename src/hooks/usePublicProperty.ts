@@ -13,12 +13,12 @@ export function usePublicProperty(id: string) {
   return useQuery({
     queryKey: ["public-property", id],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_public_property_listings" as any, {
+      const { data, error } = await supabase.rpc("get_public_property_listings", {
         _property_id: id,
       });
 
       if (error) throw error;
-      const d = ((data as any[]) || [])[0];
+      const d = (data ?? [])[0];
       if (!d) return null;
       return {
         id: d.id,

@@ -108,9 +108,9 @@ const Index = () => {
   // Check onboarding + identity status
   useEffect(() => {
     if (!profile) return;
-    if (!(profile as any).onboarding_completed) {
+    if (!profile.onboarding_completed) {
       setShowOnboarding(true);
-    } else if (!(profile as any).identity_complete) {
+    } else if (!profile.identity_complete) {
       setShowIdentity(true);
     }
   }, [profile]);
@@ -299,7 +299,7 @@ const Index = () => {
       {showOnboarding && (
         <OnboardingWizard onComplete={() => {
           setShowOnboarding(false);
-          if (profile && !(profile as any).identity_complete) setShowIdentity(true);
+          if (profile && !profile.identity_complete) setShowIdentity(true);
         }} />
       )}
       {!showOnboarding && showIdentity && (

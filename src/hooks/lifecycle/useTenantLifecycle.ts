@@ -120,7 +120,7 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
 
       // 2) LEASES — fully-signed and in-progress leases for this tenant
       const { data: leases, error: lErr } = await supabase
-        .from("lease_agreements" as any)
+        .from("lease_agreements")
         .select(
           "id, property_id, status, unit_number, rent_amount, currency, lease_start, lease_end, tenant_signed_at, landlord_signed_at, credentials_sent_at, check_in_time, checked_out_at"
         )
@@ -160,7 +160,7 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
 
       // 3) PROPERTIES — via safe RPC (excludes financial columns)
       const { data: properties } = propertyIds.size
-        ? await supabase.rpc("get_tenant_property_summary" as any, {
+        ? await supabase.rpc("get_tenant_property_summary", {
             _property_ids: Array.from(propertyIds),
           })
         : { data: [] as any[] };

@@ -1,22 +1,16 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback, useMemo, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-type AppRole = "admin" | "consultant" | "landlord" | "tenant" | "maintenance" | "vendor";
+type AppRole = Database["public"]["Enums"]["app_role"];
 
-interface Profile {
-  id: string;
-  user_id: string;
-  email: string;
-  full_name: string | null;
-  phone: string | null;
-  avatar_url: string | null;
-  date_of_birth: string | null;
-  government_id_number: string | null;
-  billing_address: any | null;
-  id_photo_path: string | null;
-  identity_complete: boolean;
-}
+/**
+ * Profile is sourced directly from the generated database types so that any
+ * schema change surfaces as a compile error instead of an `as any` cast.
+ */
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+
 
 interface AuthContextType {
   user: User | null;

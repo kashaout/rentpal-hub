@@ -34,11 +34,10 @@ function usePublicProperties() {
   return useQuery({
     queryKey: ["public-properties-page"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_public_property_listings" as any, {
-        _property_id: null,
-      });
+      const { data, error } = await supabase.rpc("get_public_property_listings", {});
+
       if (error) throw error;
-      return ((data as any[]) || []) as PublicProperty[];
+      return (data ?? []) as PublicProperty[];
     },
     staleTime: 60_000,
   });

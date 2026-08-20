@@ -32,7 +32,7 @@ export function useEscrowTransactions(propertyId?: string) {
     queryKey: ["escrow-transactions", propertyId, user?.id],
     queryFn: async () => {
       let query = supabase
-        .from("escrow_transactions" as any)
+        .from("escrow_transactions")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -64,12 +64,12 @@ export function useCreateEscrowTransaction() {
       stripe_payment_intent_id?: string;
     }) => {
       const { data, error } = await supabase
-        .from("escrow_transactions" as any)
+        .from("escrow_transactions")
         .insert({
           ...input,
           status: "pending",
           created_by: (await supabase.auth.getUser()).data.user?.id,
-        } as any)
+        })
         .select()
         .single();
 
@@ -93,7 +93,7 @@ export function useEscrowBalance(propertyId?: string) {
     queryKey: ["escrow-balance", propertyId, user?.id],
     queryFn: async () => {
       let query = supabase
-        .from("escrow_transactions" as any)
+        .from("escrow_transactions")
         .select("amount, transaction_type, status, currency")
         .eq("status", "completed");
 

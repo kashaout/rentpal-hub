@@ -37,7 +37,7 @@ export function useCompleteCheckout() {
       leaseId: string;
       checkoutAt?: string;
     }): Promise<CheckoutResult> => {
-      const { data, error } = await supabase.rpc("rpc_complete_checkout" as any, {
+      const { data, error } = await supabase.rpc("rpc_complete_checkout", {
         _lease_id: leaseId,
         _checkout_at: checkoutAt ?? new Date().toISOString(),
       });

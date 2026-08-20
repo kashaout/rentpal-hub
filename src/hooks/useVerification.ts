@@ -75,7 +75,7 @@ export function useSubmitVerification() {
           verification_type: verificationType,
           submitted_data: submittedData,
           document_paths: documentPaths,
-        } as any)
+        })
         .select()
         .single();
 
@@ -144,7 +144,7 @@ export function useApproveVerification() {
         _request_id: requestId,
         _approved: approved,
         _notes: notes || null,
-      } as any);
+      });
 
       if (error) throw error;
     },
@@ -163,7 +163,7 @@ export function useIsVerifiedLandlord() {
     queryFn: async () => {
       if (!user) return false;
       const { data, error } = await supabase
-        .from("verified_landlords" as any)
+        .from("verified_landlords")
         .select("user_id")
         .eq("user_id", user.id)
         .maybeSingle();
@@ -184,8 +184,8 @@ export function useIsVerifiedTenant() {
       if (!user) return { shortTerm: false, longTerm: false, any: false };
 
       const [shortRes, longRes] = await Promise.all([
-        supabase.from("verified_tenants_short_term" as any).select("user_id").eq("user_id", user.id).maybeSingle(),
-        supabase.from("verified_tenants_long_term" as any).select("user_id").eq("user_id", user.id).maybeSingle(),
+        supabase.from("verified_tenants_short_term").select("user_id").eq("user_id", user.id).maybeSingle(),
+        supabase.from("verified_tenants_long_term").select("user_id").eq("user_id", user.id).maybeSingle(),
       ]);
 
       const shortTerm = !!shortRes.data;

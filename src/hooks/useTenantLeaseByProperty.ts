@@ -21,14 +21,14 @@ export function useTenantLeaseByProperty(propertyId: string | null | undefined) 
     queryFn: async (): Promise<TenantLeaseInfo | null> => {
       if (!user?.id || !propertyId) return null;
 
-      const { data: propRows } = await supabase.rpc("get_tenant_property_summary" as any, {
+      const { data: propRows } = await supabase.rpc("get_tenant_property_summary", {
         _property_ids: [propertyId],
       });
-      const prop = (propRows as any[])?.[0];
+      const prop = propRows?.[0];
       if (!prop) return null;
 
       const { data: lease } = await supabase
-        .from("lease_agreements" as any)
+        .from("lease_agreements")
         .select("id, unit_number, rent_amount, currency, lease_start, lease_end")
         .eq("tenant_user_id", user.id)
         .eq("property_id", propertyId)
@@ -88,8 +88,8 @@ export function useTenantLeaseByProperty(propertyId: string | null | undefined) 
         id: canonicalId,
         lease_id: leaseAny?.id ?? "",
         property_id: propertyId,
-        property_name: (prop as any).name ?? "Property",
-        property_address: (prop as any).address ?? "",
+        property_name: prop.name ?? "Property",
+        property_address: prop.address ?? "",
         unit_number: leaseAny?.unit_number ?? tenantAny?.unit_number ?? "—",
         rent_amount: Number(leaseAny?.rent_amount ?? tenantAny?.rent_amount ?? bookingAny?.total_price ?? 0),
         lease_start: leaseAny?.lease_start ?? tenantAny?.lease_start ?? bookingAny?.check_in ?? "",

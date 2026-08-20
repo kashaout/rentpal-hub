@@ -32,7 +32,7 @@ export function PropertyTenantsTab({ propertyId }: Props) {
 
       // Resolve the live lease per tenant so checkout targets the canonical lease row
       const { data: leases } = await supabase
-        .from("lease_agreements" as any)
+        .from("lease_agreements")
         .select("id, tenant_user_id, checked_out_at, status")
         .eq("property_id", propertyId);
       const leaseMap: Record<string, any> = {};

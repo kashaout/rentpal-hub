@@ -89,7 +89,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
     // Save UX role to profile — DB trigger auto-inserts into user_roles
     await supabase
       .from("profiles")
-      .update({ ux_role: uxRole } as any)
+      .update({ ux_role: uxRole })
       .eq("user_id", user.id);
     // Refresh client-side roles so RLS-gated mutations work immediately
     await refreshRoles();
@@ -101,7 +101,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
     if (user?.id) {
       await supabase
         .from("profiles")
-        .update({ onboarding_completed: true } as any)
+        .update({ onboarding_completed: true })
         .eq("user_id", user.id);
     }
     setCompleting(false);

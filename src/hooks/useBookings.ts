@@ -78,8 +78,8 @@ export function usePropertyBookings(propertyId: string) {
     queryKey: ["bookings", propertyId],
     queryFn: async () => {
       // Release expired soft locks and bookings
-      await supabase.rpc("release_expired_bookings" as any);
-      await supabase.rpc("release_soft_locks" as any);
+      await supabase.rpc("release_expired_bookings");
+      await supabase.rpc("release_soft_locks");
 
       const { data, error } = await supabase
         .from("bookings")
@@ -140,7 +140,7 @@ export function useSoftLockBooking() {
           soft_lock_expires_at: softLockExpires,
           status: "pending",
           payment_status: "unpaid",
-        } as any)
+        })
         .select()
         .single();
 
@@ -181,7 +181,7 @@ export function useCreateBooking() {
           final_price: snap.final_price,
           pricing_rule_id: snap.pricing_rule_id,
           user_id: user!.id,
-        } as any)
+        })
         .select()
         .single();
 
@@ -211,7 +211,7 @@ export function useCancelBooking() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("bookings")
-        .update({ status: "cancelled" } as any)
+        .update({ status: "cancelled" })
         .eq("id", id);
       if (error) throw error;
     },

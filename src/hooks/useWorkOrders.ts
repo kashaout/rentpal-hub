@@ -60,7 +60,7 @@ export function useWorkOrders(propertyId?: string) {
     queryKey: ["work-orders", propertyId],
     queryFn: async () => {
       let query = supabase
-        .from("work_orders" as any)
+        .from("work_orders")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -119,7 +119,7 @@ export function useCreateWorkOrder() {
     }) => {
       // Fetch SLA config for the severity
       const { data: slaConfig } = await supabase
-        .from("sla_configs" as any)
+        .from("sla_configs")
         .select("*")
         .eq("severity", input.severity)
         .single();
@@ -134,27 +134,27 @@ export function useCreateWorkOrder() {
         : null;
 
       const { data, error } = await supabase
-        .from("work_orders" as any)
+        .from("work_orders")
         .insert({
           ...input,
           status: input.assigned_to || input.vendor_id ? "assigned" : "created",
           sla_response_deadline: slaResponseDeadline,
           sla_resolution_deadline: slaResolutionDeadline,
           priority_score: input.priority_score || calculatePriorityScore(input.severity),
-        } as any)
+        })
         .select()
         .single();
 
       if (error) throw error;
 
       // Log the creation
-      await supabase.from("maintenance_logs" as any).insert({
+      await supabase.from("maintenance_logs").insert({
         work_order_id: (data as any).id,
         user_id: (await supabase.auth.getUser()).data.user?.id,
         new_status: input.assigned_to || input.vendor_id ? "assigned" : "created",
         action: "work_order_created",
         details: `Work order created with ${input.severity} severity`,
-      } as any);
+      });
 
       return data as unknown as WorkOrder;
     },
@@ -190,7 +190,7 @@ export function useUpdateWorkOrderStatus() {
     }) => {
       // Get current work order
       const { data: current } = await supabase
-        .from("work_orders" as any)
+        .from("work_orders")
         .select("*")
         .eq("id", workOrderId)
         .single();
@@ -235,21 +235,21 @@ export function useUpdateWorkOrderStatus() {
       if (newStatus === "closed") updates.closed_at = now.toISOString();
 
       const { error } = await supabase
-        .from("work_orders" as any)
-        .update(updates as any)
+        .from("work_orders")
+        .update(updates)
         .eq("id", workOrderId);
 
       if (error) throw error;
 
       // Log the status change
-      await supabase.from("maintenance_logs" as any).insert({
+      await supabase.from("maintenance_logs").insert({
         work_order_id: workOrderId,
         user_id: user?.id,
         previous_status: currentWo?.status,
         new_status: newStatus,
         action: "status_change",
         details: notes || `Status changed to ${newStatus}`,
-      } as any);
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["work-orders"] });
