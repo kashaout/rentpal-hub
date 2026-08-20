@@ -38,7 +38,7 @@ function usePublicProperties() {
         _property_id: null,
       });
       if (error) throw error;
-      return ((data as any[]) || []) as PublicProperty[];
+      return (data ?? []) as PublicProperty[];
     },
     staleTime: 60_000,
   });

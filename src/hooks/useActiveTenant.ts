@@ -47,7 +47,7 @@ export function useActiveTenant() {
 
       if (error) throw error;
       if (!data) return null;
-      const lease = data as any;
+      const lease = data;
 
       // Fetch related lease agreement details + property
       const { data: leaseRow, error: leaseErr } = await supabase
@@ -57,14 +57,14 @@ export function useActiveTenant() {
         .maybeSingle();
 
       if (leaseErr) throw leaseErr;
-      const leaseDetails = leaseRow as any;
+      const leaseDetails = leaseRow;
 
       const { data: propRows, error: propErr } = await supabase.rpc(
         "get_tenant_property_summary",
         { _property_ids: [lease.property_id] }
       );
       if (propErr) throw propErr;
-      const prop = (propRows as any[])?.[0];
+      const prop = propRows?.[0];
 
       // TEMP guard log — confirms tenant access derived from active_tenants
       console.log("[useActiveTenant] active tenancy resolved:", {

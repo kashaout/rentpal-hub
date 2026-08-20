@@ -33,7 +33,7 @@ export function useBrowseProperties() {
       console.log("[useBrowseProperties] public listings rows:", data?.length ?? 0, error ? `error: ${error.message}` : "");
 
       if (error) throw error;
-      return ((data as any[]) || []).map((p) => ({
+      return (data ?? []).map((p) => ({
         ...p,
         amenities: (p.amenities as string[]) || [],
         is_paused: !!p.is_paused,

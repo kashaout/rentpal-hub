@@ -18,7 +18,7 @@ export function usePublicProperty(id: string) {
       });
 
       if (error) throw error;
-      const d = ((data as any[]) || [])[0];
+      const d = (data ?? [])[0];
       if (!d) return null;
       return {
         id: d.id,

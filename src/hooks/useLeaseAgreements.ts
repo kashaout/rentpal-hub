@@ -105,7 +105,7 @@ export function useCreateLeaseAgreement() {
         console.error("[lease] Property lookup failed:", propErr);
         throw new MutationSafetyError("Could not verify the selected property.");
       }
-      const prop = ((rpcRows as any[]) || [])[0];
+      const prop = (rpcRows ?? [])[0];
       if (!prop) {
         throw new MutationSafetyError("Selected property no longer exists.");
       }
