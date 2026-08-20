@@ -97,7 +97,7 @@ export function useCreateLeaseAgreement() {
       // SECURITY DEFINER RPC that tenants use to browse listings, so this
       // check works under tenant RLS (direct reads on `properties` are blocked).
       const { data: rpcRows, error: propErr } = await supabase.rpc(
-        "get_public_property_listings" as any,
+        "get_public_property_listings",
         { _property_id: data.property_id }
       );
 

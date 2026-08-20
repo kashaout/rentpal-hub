@@ -60,7 +60,7 @@ export function useActiveTenant() {
       const leaseDetails = leaseRow as any;
 
       const { data: propRows, error: propErr } = await supabase.rpc(
-        "get_tenant_property_summary" as any,
+        "get_tenant_property_summary",
         { _property_ids: [lease.property_id] }
       );
       if (propErr) throw propErr;
