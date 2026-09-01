@@ -2,6 +2,63 @@ import { useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import type { Database } from "@/integrations/supabase/types";
+
+type Tables = Database["public"]["Tables"];
+
+/**
+ * Column lists are kept beside their row types so the generated Supabase types
+ * stay the single source of truth — a dropped/renamed column becomes a compile
+ * error instead of a silently-undefined field at runtime.
+ */
+const PROPERTY_COLUMNS =
+  "id, name, address, image_url, units, monthly_rent, is_archived, is_paused, is_public, currency, region, property_type, listing_type, description, amenities, acquisition_cost, current_value, annual_expenses, landlord_id, created_at, updated_at" as const;
+
+type PropertyRow = Pick<
+  Tables["properties"]["Row"],
+  | "id" | "name" | "address" | "image_url" | "units" | "monthly_rent"
+  | "is_archived" | "is_paused" | "is_public" | "currency" | "region"
+  | "property_type" | "listing_type" | "description" | "amenities"
+  | "acquisition_cost" | "current_value" | "annual_expenses"
+  | "landlord_id" | "created_at" | "updated_at"
+>;
+
+type BookingRow = Pick<
+  Tables["bookings"]["Row"],
+  "id" | "property_id" | "user_id" | "status" | "payment_status" | "check_in" | "check_out" | "total_price" | "created_at"
+>;
+
+type LeaseRow = Pick<
+  Tables["lease_agreements"]["Row"],
+  | "id" | "property_id" | "tenant_user_id" | "tenant_name" | "unit_number"
+  | "rent_amount" | "currency" | "lease_start" | "lease_end"
+  | "tenant_signed_at" | "landlord_signed_at" | "status" | "checked_out_at"
+>;
+
+type PaymentRow = Pick<
+  Tables["payments"]["Row"],
+  "id" | "property_id" | "lease_id" | "tenant_id" | "amount" | "status" | "payment_date" | "payment_method" | "notes"
+>;
+
+type MaintenanceRow = Pick<
+  Tables["maintenance_requests"]["Row"],
+  | "id" | "property_id" | "tenant_id" | "title" | "description" | "priority"
+  | "status" | "created_at" | "updated_at" | "resolved_at" | "assigned_to"
+  | "photo_urls" | "rating"
+>;
+
+type ProfileRow = Pick<Tables["profiles"]["Row"], "user_id" | "full_name" | "email" | "phone">;
+
+interface LandlordLifecycleData {
+  properties: PropertyRow[];
+  bookings: BookingRow[];
+  leases: LeaseRow[];
+  payments: PaymentRow[];
+  maintenance: MaintenanceRow[];
+  profiles: Map<string, ProfileRow>;
+  propMap: Map<string, PropertyRow>;
+}
+
 
 /**
  * CANONICAL LANDLORD LIFECYCLE
@@ -171,7 +228,7 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
     queryKey: ["landlord-lifecycle", userId],
     enabled: !!userId,
     staleTime: 15_000,
-    queryFn: async () => {
+    queryFn: async (): Promise<LandlordLifecycleData | null> => {
       if (!userId) return null;
 
       // Detect admin to fetch ALL properties via SECURITY DEFINER RPC.
@@ -179,20 +236,18 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
         .from("user_roles")
         .select("role")
         .eq("user_id", userId);
-      const isAdmin = (roleRows ?? []).some((r: any) => r.role === "admin");
+      const isAdmin = (roleRows ?? []).some((r) => r.role === "admin");
 
       // 1) PROPERTIES — admins see all via RPC, landlords see their own.
-      let props: any[] | null = null;
+      let props: PropertyRow[] = [];
       if (isAdmin) {
         const { data, error } = await supabase.rpc("rpc_admin_all_properties");
         if (error) throw error;
-        props = (data as any[]) ?? [];
+        props = data ?? [];
       } else {
         const { data, error: pErr } = await supabase
           .from("properties")
-          .select(
-            "id, name, address, image_url, units, monthly_rent, is_archived, is_paused, is_public, currency, region, property_type, listing_type, description, amenities, acquisition_cost, current_value, annual_expenses, landlord_id, created_at, updated_at"
-          )
+          .select(PROPERTY_COLUMNS)
           .eq("landlord_id", userId)
           .eq("is_archived", false)
           .order("created_at", { ascending: false });
@@ -200,11 +255,11 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
         props = data ?? [];
       }
       // Filter archived for admin view too
-      props = (props ?? []).filter((p: any) => !p.is_archived);
+      props = props.filter((p) => !p.is_archived);
 
-      const propIds = (props ?? []).map((p: any) => p.id);
-      const propMap = new Map<string, any>();
-      (props ?? []).forEach((p: any) => propMap.set(p.id, p));
+      const propIds = props.map((p) => p.id);
+      const propMap = new Map<string, PropertyRow>();
+      props.forEach((p) => propMap.set(p.id, p));
 
       if (propIds.length === 0) {
         return {
@@ -214,68 +269,76 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
           payments: [],
           maintenance: [],
           profiles: new Map(),
+          propMap,
         };
       }
 
-      // 2) BOOKINGS for those properties
-      const { data: bookings, error: bErr } = await supabase
-        .from("bookings")
-        .select("id, property_id, user_id, status, payment_status, check_in, check_out, total_price, created_at")
-        .in("property_id", propIds)
-        .order("created_at", { ascending: false });
-      if (bErr) throw bErr;
+      // 2-5) BOOKINGS / LEASES / PAYMENTS / MAINTENANCE are independent reads
+      // over the same property set — run them in one parallel round trip
+      // instead of four sequential ones.
+      const [bookingsRes, leasesRes, paymentsRes, maintenanceRes] = await Promise.all([
+        supabase
+          .from("bookings")
+          .select("id, property_id, user_id, status, payment_status, check_in, check_out, total_price, created_at")
+          .in("property_id", propIds)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("lease_agreements")
+          .select(
+            "id, property_id, tenant_user_id, tenant_name, unit_number, rent_amount, currency, lease_start, lease_end, tenant_signed_at, landlord_signed_at, status, checked_out_at"
+          )
+          .eq("landlord_user_id", userId)
+          .order("created_at", { ascending: false }),
+        // `lease_id` is REQUIRED here: it is the join key for the paid-status
+        // truth source below. Omitting it silently marks every tenant unpaid.
+        supabase
+          .from("payments")
+          .select("id, property_id, lease_id, tenant_id, amount, status, payment_date, payment_method, notes")
+          .in("property_id", propIds)
+          .order("payment_date", { ascending: false }),
+        supabase
+          .from("maintenance_requests")
+          .select(
+            "id, property_id, tenant_id, title, description, priority, status, created_at, updated_at, resolved_at, assigned_to, photo_urls, rating"
+          )
+          .in("property_id", propIds)
+          .order("created_at", { ascending: false }),
+      ]);
 
-      // 3) LEASE AGREEMENTS where I'm the landlord
-      const { data: leases, error: lErr } = await supabase
-        .from("lease_agreements")
-        .select(
-          "id, property_id, tenant_user_id, tenant_name, unit_number, rent_amount, currency, lease_start, lease_end, tenant_signed_at, landlord_signed_at, status, checked_out_at"
-        )
-        .eq("landlord_user_id", userId)
-        .order("created_at", { ascending: false });
-      if (lErr) throw lErr;
+      if (bookingsRes.error) throw bookingsRes.error;
+      if (leasesRes.error) throw leasesRes.error;
 
-      // 4) PAYMENTS via property_id (chain-correct)
-      const { data: payments } = await supabase
-        .from("payments")
-        .select("id, property_id, tenant_id, amount, status, payment_date, payment_method, notes")
-        .in("property_id", propIds)
-        .order("payment_date", { ascending: false });
+      const bookings = bookingsRes.data ?? [];
+      const leases = leasesRes.data ?? [];
+      const payments = paymentsRes.data ?? [];
+      const maintenance = maintenanceRes.data ?? [];
 
-      // 5) MAINTENANCE REQUESTS for those properties
-      const { data: maintenance } = await supabase
-        .from("maintenance_requests")
-        .select(
-          "id, property_id, tenant_id, title, description, priority, status, created_at, updated_at, resolved_at, assigned_to, photo_urls, rating"
-        )
-        .in("property_id", propIds)
-        .order("created_at", { ascending: false });
-
-      // Profiles for tenant names/contacts (batched)
+      // Profiles for tenant names/contacts (batched — single request, no N+1)
       const tenantUserIds = new Set<string>();
-      (bookings ?? []).forEach((b: any) => b.user_id && tenantUserIds.add(b.user_id));
-      (leases ?? []).forEach((l: any) => l.tenant_user_id && tenantUserIds.add(l.tenant_user_id));
+      bookings.forEach((b) => b.user_id && tenantUserIds.add(b.user_id));
+      leases.forEach((l) => l.tenant_user_id && tenantUserIds.add(l.tenant_user_id));
 
-      const { data: profiles } = tenantUserIds.size
-        ? await supabase
-            .from("profiles")
-            .select("user_id, full_name, email, phone")
-            .in("user_id", Array.from(tenantUserIds))
-        : { data: [] as any[] };
-      const profileMap = new Map<string, any>();
-      (profiles ?? []).forEach((p: any) => profileMap.set(p.user_id, p));
+      const profileMap = new Map<string, ProfileRow>();
+      if (tenantUserIds.size) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, email, phone")
+          .in("user_id", Array.from(tenantUserIds));
+        (profiles ?? []).forEach((p) => profileMap.set(p.user_id, p));
+      }
 
       return {
-        properties: props ?? [],
-        bookings: bookings ?? [],
-        leases: leases ?? [],
-        payments: payments ?? [],
-        maintenance: maintenance ?? [],
+        properties: props,
+        bookings,
+        leases,
+        payments,
+        maintenance,
         profiles: profileMap,
         propMap,
       };
     },
   });
+
 
   return useMemo<LandlordLifecycleSnapshot>(() => {
     if (!userId || !query.data) {
