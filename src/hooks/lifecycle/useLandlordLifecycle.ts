@@ -2,6 +2,63 @@ import { useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import type { Database } from "@/integrations/supabase/types";
+
+type Tables = Database["public"]["Tables"];
+
+/**
+ * Column lists are kept beside their row types so the generated Supabase types
+ * stay the single source of truth — a dropped/renamed column becomes a compile
+ * error instead of a silently-undefined field at runtime.
+ */
+const PROPERTY_COLUMNS =
+  "id, name, address, image_url, units, monthly_rent, is_archived, is_paused, is_public, currency, region, property_type, listing_type, description, amenities, acquisition_cost, current_value, annual_expenses, landlord_id, created_at, updated_at" as const;
+
+type PropertyRow = Pick<
+  Tables["properties"]["Row"],
+  | "id" | "name" | "address" | "image_url" | "units" | "monthly_rent"
+  | "is_archived" | "is_paused" | "is_public" | "currency" | "region"
+  | "property_type" | "listing_type" | "description" | "amenities"
+  | "acquisition_cost" | "current_value" | "annual_expenses"
+  | "landlord_id" | "created_at" | "updated_at"
+>;
+
+type BookingRow = Pick<
+  Tables["bookings"]["Row"],
+  "id" | "property_id" | "user_id" | "status" | "payment_status" | "check_in" | "check_out" | "total_price" | "created_at"
+>;
+
+type LeaseRow = Pick<
+  Tables["lease_agreements"]["Row"],
+  | "id" | "property_id" | "tenant_user_id" | "tenant_name" | "unit_number"
+  | "rent_amount" | "currency" | "lease_start" | "lease_end"
+  | "tenant_signed_at" | "landlord_signed_at" | "status" | "checked_out_at"
+>;
+
+type PaymentRow = Pick<
+  Tables["payments"]["Row"],
+  "id" | "property_id" | "lease_id" | "tenant_id" | "amount" | "status" | "payment_date" | "payment_method" | "notes"
+>;
+
+type MaintenanceRow = Pick<
+  Tables["maintenance_requests"]["Row"],
+  | "id" | "property_id" | "tenant_id" | "title" | "description" | "priority"
+  | "status" | "created_at" | "updated_at" | "resolved_at" | "assigned_to"
+  | "photo_urls" | "rating"
+>;
+
+type ProfileRow = Pick<Tables["profiles"]["Row"], "user_id" | "full_name" | "email" | "phone">;
+
+interface LandlordLifecycleData {
+  properties: PropertyRow[];
+  bookings: BookingRow[];
+  leases: LeaseRow[];
+  payments: PaymentRow[];
+  maintenance: MaintenanceRow[];
+  profiles: Map<string, ProfileRow>;
+  propMap: Map<string, PropertyRow>;
+}
+
 
 /**
  * CANONICAL LANDLORD LIFECYCLE
