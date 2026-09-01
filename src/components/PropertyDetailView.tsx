@@ -93,7 +93,12 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
   const billingAddress =
     typeof billingAddressObj === "string"
       ? billingAddressObj
-      : billingAddressObj?.line1 || "";
+      : billingAddressObj &&
+          typeof billingAddressObj === "object" &&
+          !Array.isArray(billingAddressObj) &&
+          typeof billingAddressObj.line1 === "string"
+        ? billingAddressObj.line1
+        : "";
   const identityComplete = Boolean(profile?.identity_complete);
 
   const [unitNumber, setUnitNumber] = useState("1");
