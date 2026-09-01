@@ -46,7 +46,7 @@ export function usePricingPreview({
         p_property_id: propertyId,
         p_start_date: startDate,
         p_end_date: endDate,
-        p_promo_code: promoCode?.trim() ? promoCode.trim() : null,
+        p_promo_code: promoCode?.trim() ? promoCode.trim() : undefined,
       });
       if (error) return null;
       const row = Array.isArray(data) ? data[0] : data;

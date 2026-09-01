@@ -143,7 +143,7 @@ export function useApproveVerification() {
       const { error } = await supabase.rpc("approve_verification", {
         _request_id: requestId,
         _approved: approved,
-        _notes: notes || null,
+        _notes: notes || undefined,
       });
 
       if (error) throw error;
