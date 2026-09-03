@@ -344,9 +344,10 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
     if (!userId || !query.data) {
       return { ...empty, isLoading: query.isLoading, isError: query.isError };
     }
-    const data: any = query.data;
-    const propMap: Map<string, any> = data.propMap ?? new Map();
-    const profileMap: Map<string, any> = data.profiles ?? new Map();
+    const data: LandlordLifecycleData = query.data;
+    const propMap = data.propMap;
+    const profileMap = data.profiles;
+
 
     const properties: LandlordPropertySummary[] = (data.properties as any[]).map((p) => ({
       property_id: p.id,
