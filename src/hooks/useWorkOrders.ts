@@ -218,7 +218,7 @@ export function useUpdateWorkOrderStatus() {
 
         // Check if cost exceeds property approval threshold
         const totalCost = actualCost || currentWo?.actual_cost || 0;
-        if (totalCost > 0) {
+        if (totalCost > 0 && currentWo) {
           const { data: property } = await supabase
             .from("properties")
             .select("approval_threshold")
