@@ -2,6 +2,7 @@ import { useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import type { Database } from "@/integrations/supabase/types";
 
 /**
  * CANONICAL TENANT LIFECYCLE
@@ -217,7 +218,7 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
       };
 
       // Apply most-recent booking per property
-      for (const b of (bookings ?? []) as any[]) {
+      for (const b of bookings ?? []) {
         const row = ensureRow(b.property_id);
         if (!row.booking_id) {
           row.booking_id = b.id;
@@ -230,7 +231,7 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
       }
 
       // Overlay most-recent lease per property
-      for (const l of (leases ?? []) as any[]) {
+      for (const l of leases ?? []) {
         const row = ensureRow(l.property_id);
         if (!row.lease_id) {
           row.lease_id = l.id;
