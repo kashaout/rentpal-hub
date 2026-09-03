@@ -121,7 +121,7 @@ export function useProperty(id: string) {
         ...data,
         amenities: (data.amenities as unknown as string[]) || [],
         description: data.description as string | null,
-        is_public: (data as any).is_public ?? true,
+        is_public: data.is_public ?? true,
       } as Property;
     },
     enabled: !!user && !!id,

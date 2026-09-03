@@ -36,7 +36,7 @@ export function PropertyTenantsTab({ propertyId }: Props) {
         .select("id, tenant_user_id, checked_out_at, status")
         .eq("property_id", propertyId);
       const leaseMap: Record<string, any> = {};
-      for (const l of (leases ?? []) as any[]) {
+      for (const l of leases ?? []) {
         if (!leaseMap[l.tenant_user_id] || (!l.checked_out_at && l.status !== "ended")) {
           leaseMap[l.tenant_user_id] = l;
         }

@@ -344,11 +344,12 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
     if (!userId || !query.data) {
       return { ...empty, isLoading: query.isLoading, isError: query.isError };
     }
-    const data: any = query.data;
-    const propMap: Map<string, any> = data.propMap ?? new Map();
-    const profileMap: Map<string, any> = data.profiles ?? new Map();
+    const data: LandlordLifecycleData = query.data;
+    const propMap = data.propMap;
+    const profileMap = data.profiles;
 
-    const properties: LandlordPropertySummary[] = (data.properties as any[]).map((p) => ({
+
+    const properties: LandlordPropertySummary[] = data.properties.map((p) => ({
       property_id: p.id,
       property_name: p.name,
       property_address: p.address,
@@ -375,7 +376,7 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
     // Payment truth source: payments.status='completed' per lease_id.
     // Never derive paid from lease fully_signed or booking.status='confirmed'.
     const paidLeaseIds = new Set<string>(
-      ((data.payments as any[]) ?? [])
+      data.payments
         .filter((p) => p.status === "completed" && p.lease_id)
         .map((p) => p.lease_id as string)
     );
@@ -384,7 +385,7 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
     const derivedTenants: LandlordTenantDerived[] = [];
     const seenKeys = new Set<string>();
 
-    for (const l of data.leases as any[]) {
+    for (const l of data.leases) {
       const prop = propMap.get(l.property_id);
       if (!prop) continue;
       const profile = l.tenant_user_id ? profileMap.get(l.tenant_user_id) : null;
@@ -414,7 +415,7 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
       });
     }
 
-    for (const b of data.bookings as any[]) {
+    for (const b of data.bookings) {
       const key = `${b.user_id}::${b.property_id}`;
       if (seenKeys.has(key)) continue;
       const prop = propMap.get(b.property_id);
@@ -424,7 +425,7 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
       // Booking-only tenants (no lease yet): fall back to tenants.payment_status
       // through the payments join by matching a completed payment for this
       // property + tenant user. Absent that, default to pending.
-      const hasCompletedPayment = ((data.payments as any[]) ?? []).some(
+      const hasCompletedPayment = data.payments.some(
         (p) =>
           p.status === "completed" &&
           p.property_id === b.property_id &&
@@ -456,7 +457,7 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
       });
     }
 
-    const maintenance: LandlordMaintenanceItem[] = (data.maintenance as any[]).map((m) => ({
+    const maintenance: LandlordMaintenanceItem[] = data.maintenance.map((m) => ({
       id: m.id,
       property_id: m.property_id,
       property_name: propMap.get(m.property_id)?.name ?? "Property",
@@ -473,7 +474,7 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
       rating: m.rating,
     }));
 
-    const payments: LandlordPaymentItem[] = (data.payments as any[]).map((p) => ({
+    const payments: LandlordPaymentItem[] = data.payments.map((p) => ({
       id: p.id,
       property_id: p.property_id,
       property_name: p.property_id ? propMap.get(p.property_id)?.name ?? "Property" : "—",
@@ -489,8 +490,8 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
       isLoading: query.isLoading,
       isError: query.isError,
       properties,
-      bookings: data.bookings ?? [],
-      leases: data.leases ?? [],
+      bookings: data.bookings,
+      leases: data.leases,
       tenants: derivedTenants,
       maintenance,
       payments,

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
 
 export const WORK_ORDER_STATUSES = [
   "created",
@@ -29,7 +30,7 @@ export interface WorkOrder {
   estimated_cost: number;
   actual_cost: number;
   labor_hours: number;
-  parts_used: any[];
+  parts_used: Database["public"]["Tables"]["work_orders"]["Row"]["parts_used"];
   approval_required: boolean;
   approval_status: string;
   approved_by: string | null;
@@ -86,8 +87,8 @@ export function useWorkOrders(propertyId?: string) {
           : { data: [] },
       ]);
 
-      const propMap = new Map((propertiesRes.data || []).map((p: any) => [p.id, p]));
-      const reqMap = new Map((requestsRes.data || []).map((r: any) => [r.id, r]));
+      const propMap = new Map((propertiesRes.data || []).map((p) => [p.id, p] as const));
+      const reqMap = new Map((requestsRes.data || []).map((r) => [r.id, r] as const));
 
       return workOrders.map((wo) => {
         const prop = propMap.get(wo.property_id);
@@ -125,7 +126,7 @@ export function useCreateWorkOrder() {
         .single();
 
       const now = new Date();
-      const sla = slaConfig as any;
+      const sla = slaConfig;
       const slaResponseDeadline = sla
         ? new Date(now.getTime() + sla.response_minutes * 60000).toISOString()
         : null;
@@ -149,7 +150,7 @@ export function useCreateWorkOrder() {
 
       // Log the creation
       await supabase.from("maintenance_logs").insert({
-        work_order_id: (data as any).id,
+        work_order_id: data.id,
         user_id: (await supabase.auth.getUser()).data.user?.id,
         new_status: input.assigned_to || input.vendor_id ? "assigned" : "created",
         action: "work_order_created",
@@ -186,7 +187,7 @@ export function useUpdateWorkOrderStatus() {
       notes?: string;
       actualCost?: number;
       laborHours?: number;
-      partsUsed?: any[];
+      partsUsed?: Database["public"]["Tables"]["work_orders"]["Row"]["parts_used"];
     }) => {
       // Get current work order
       const { data: current } = await supabase
@@ -195,9 +196,9 @@ export function useUpdateWorkOrderStatus() {
         .eq("id", workOrderId)
         .single();
 
-      const currentWo = current as any;
+      const currentWo = current;
 
-      const updates: any = { status: newStatus };
+      const updates: Database["public"]["Tables"]["work_orders"]["Update"] = { status: newStatus };
 
       if (notes) updates.notes = notes;
       if (actualCost !== undefined) updates.actual_cost = actualCost;
@@ -217,14 +218,14 @@ export function useUpdateWorkOrderStatus() {
 
         // Check if cost exceeds property approval threshold
         const totalCost = actualCost || currentWo?.actual_cost || 0;
-        if (totalCost > 0) {
+        if (totalCost > 0 && currentWo) {
           const { data: property } = await supabase
             .from("properties")
             .select("approval_threshold")
             .eq("id", currentWo.property_id)
             .single();
 
-          if (property && totalCost > (property as any).approval_threshold) {
+          if (property?.approval_threshold != null && totalCost > property.approval_threshold) {
             updates.approval_required = true;
             updates.approval_status = "pending";
             updates.status = "completed"; // Stay at completed until approved

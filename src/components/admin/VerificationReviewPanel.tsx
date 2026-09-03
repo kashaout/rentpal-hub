@@ -16,6 +16,13 @@ import { useAllVerificationRequests, useApproveVerification, VerificationRequest
 import { toast } from "sonner";
 import { format } from "date-fns";
 
+/** submitted_data is Json in the database — narrow before reading fields. */
+function submittedField(data: unknown, key: "address" | "full_name"): string | undefined {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return undefined;
+  const value = (data as Record<string, unknown>)[key];
+  return typeof value === "string" ? value.toLowerCase().trim() || undefined : undefined;
+}
+
 function RiskFlagsSection({ request, allRequests }: { request: VerificationRequest; allRequests: VerificationRequest[] }) {
   const flags: { label: string; severity: "warn" | "error"; detail: string }[] = [];
 
@@ -30,12 +37,12 @@ function RiskFlagsSection({ request, allRequests }: { request: VerificationReque
   }
 
   // 2. Duplicate address across accounts
-  const submittedAddress = (request.submitted_data as any)?.address?.toLowerCase?.()?.trim();
+  const submittedAddress = submittedField(request.submitted_data, "address");
   if (submittedAddress) {
     const duplicateAddressUsers = allRequests.filter(
       (r) =>
         r.user_id !== request.user_id &&
-        (r.submitted_data as any)?.address?.toLowerCase?.()?.trim() === submittedAddress
+        submittedField(r.submitted_data, "address") === submittedAddress
     );
     if (duplicateAddressUsers.length > 0) {
       flags.push({
@@ -47,12 +54,12 @@ function RiskFlagsSection({ request, allRequests }: { request: VerificationReque
   }
 
   // 3. Name mismatch between profile name and submitted name
-  const submittedName = (request.submitted_data as any)?.full_name?.toLowerCase?.()?.trim();
+  const submittedName = submittedField(request.submitted_data, "full_name");
   // We compare against the user_id — in a full implementation you'd fetch the profile name,
   // but we can flag if the submitted name changed between attempts
   const otherNames = userRequests
     .filter((r) => r.id !== request.id)
-    .map((r) => (r.submitted_data as any)?.full_name?.toLowerCase?.()?.trim())
+    .map((r) => submittedField(r.submitted_data, "full_name"))
     .filter(Boolean);
   if (otherNames.length > 0 && submittedName) {
     const hasMismatch = otherNames.some((n) => n !== submittedName);
@@ -114,8 +121,8 @@ export function VerificationReviewPanel() {
       toast.success(approved ? "Verification approved!" : "Verification rejected.");
       setSelectedRequest(null);
       setAdminNotes("");
-    } catch (err: any) {
-      toast.error(err.message || "Action failed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Action failed");
     }
   };
 
@@ -166,7 +173,7 @@ export function VerificationReviewPanel() {
                     <User className="h-5 w-5 text-muted-foreground" />
                   )}
                   <div>
-                    <p className="font-medium text-sm">{(req.submitted_data as any)?.full_name || "Unknown"}</p>
+                    <p className="font-medium text-sm">{submittedField(req.submitted_data, "full_name") || "Unknown"}</p>
                     <p className="text-xs text-muted-foreground">{typeLabel(req.verification_type)} · {format(new Date(req.created_at), "MMM d, yyyy")}</p>
                   </div>
                 </div>

@@ -50,7 +50,7 @@ export function IdentityWizard({ onComplete }: Props) {
         .update({
           date_of_birth: dob,
           government_id_number: idNumber,
-          billing_address: { line1: address } as any,
+          billing_address: { line1: address },
           id_photo_path: path,
           identity_complete: true,
         })
