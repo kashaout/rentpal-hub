@@ -129,17 +129,19 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
       if (lErr) throw lErr;
 
       // 2b) PAYMENTS — source of truth for paid status. Fetch by lease_id.
-      const leaseIds = (leases ?? []).map((l: any) => l.id).filter(Boolean);
-      const { data: payments } = leaseIds.length
-        ? await supabase
-            .from("payments")
-            .select("lease_id, status")
-            .in("lease_id", leaseIds)
-        : { data: [] as any[] };
+      const leaseIds = (leases ?? []).map((l) => l.id).filter(Boolean);
+      const payments: Array<{ lease_id: string | null; status: string }> = leaseIds.length
+        ? (
+            await supabase
+              .from("payments")
+              .select("lease_id, status")
+              .in("lease_id", leaseIds)
+          ).data ?? []
+        : [];
       const paidLeaseIds = new Set<string>(
-        (payments ?? [])
-          .filter((p: any) => p.status === "completed")
-          .map((p: any) => p.lease_id)
+        payments
+          .filter((p) => p.status === "completed" && p.lease_id)
+          .map((p) => p.lease_id as string)
       );
 
       // 2c) TENANTS bridge rows — fallback for payment_status where no lease payment row exists.
@@ -150,22 +152,27 @@ export function useTenantLifecycle(): TenantLifecycleSnapshot {
         .eq("is_archived", false);
       const paidTenantPropertyIds = new Set<string>(
         (tenantRows ?? [])
-          .filter((t: any) => t.payment_status === "paid")
-          .map((t: any) => t.property_id)
+          .filter((t) => t.payment_status === "paid")
+          .map((t) => t.property_id)
       );
 
       const propertyIds = new Set<string>();
-      (bookings ?? []).forEach((b: any) => propertyIds.add(b.property_id));
-      (leases ?? []).forEach((l: any) => propertyIds.add(l.property_id));
+      (bookings ?? []).forEach((b) => propertyIds.add(b.property_id));
+      (leases ?? []).forEach((l) => propertyIds.add(l.property_id));
 
       // 3) PROPERTIES — via safe RPC (excludes financial columns)
-      const { data: properties } = propertyIds.size
-        ? await supabase.rpc("get_tenant_property_summary", {
-            _property_ids: Array.from(propertyIds),
-          })
-        : { data: [] as any[] };
-      const propMap = new Map<string, any>();
-      (properties ?? []).forEach((p: any) => propMap.set(p.id, p));
+      type TenantPropertySummary =
+        Database["public"]["Functions"]["get_tenant_property_summary"]["Returns"][number];
+      const properties: TenantPropertySummary[] = propertyIds.size
+        ? (
+            await supabase.rpc("get_tenant_property_summary", {
+              _property_ids: Array.from(propertyIds),
+            })
+          ).data ?? []
+        : [];
+      const propMap = new Map<string, TenantPropertySummary>();
+      properties.forEach((p) => propMap.set(p.id, p));
+
 
       // 4) Build per-property snapshot — booking is the seed, lease overlays
       const byProperty = new Map<string, TenantPropertyLifecycle>();
