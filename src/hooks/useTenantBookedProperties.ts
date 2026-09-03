@@ -64,7 +64,7 @@ export function useTenantBookedProperties() {
       const today = new Date();
       const map = new Map<string, TenantBookedProperty>();
 
-      for (const lease of (leases ?? []) as any[]) {
+      for (const lease of leases ?? []) {
         const p = propMap.get(lease.property_id);
         if (!p) continue;
         const isCurrent = new Date(lease.lease_end) >= today
@@ -88,7 +88,7 @@ export function useTenantBookedProperties() {
         });
       }
 
-      for (const b of (bookings ?? []) as any[]) {
+      for (const b of bookings ?? []) {
         const p = propMap.get(b.property_id);
         if (!p) continue;
         const decoded = decodeBookingNotes(b.notes);

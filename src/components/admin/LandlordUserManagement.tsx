@@ -91,8 +91,8 @@ function useManageableUsers() {
 
       const userIds = new Set<string>();
       tenants?.forEach((t: any) => { if (t.user_id) userIds.add(t.user_id); });
-      (bookings as any[] || []).forEach((b: any) => { if (b.user_id) userIds.add(b.user_id); });
-      (leases as any[] || []).forEach((l: any) => { if (l.tenant_user_id) userIds.add(l.tenant_user_id); });
+      (bookings ?? []).forEach((b) => { if (b.user_id) userIds.add(b.user_id); });
+      (leases ?? []).forEach((l) => { if (l.tenant_user_id) userIds.add(l.tenant_user_id); });
       workOrders?.forEach((wo: any) => {
         if (wo.assigned_to) userIds.add(wo.assigned_to);
         if (wo.vendor_id) userIds.add(wo.vendor_id);

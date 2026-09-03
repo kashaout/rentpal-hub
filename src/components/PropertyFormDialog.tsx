@@ -86,7 +86,7 @@ export function PropertyFormDialog({ open, onOpenChange, property }: PropertyFor
       listing_type: (property?.listing_type as "standard" | "airbnb") || "standard",
       description: property?.description || "",
       amenities: (property?.amenities as string[]) || [],
-      is_public: (property as any)?.is_public ?? true,
+      is_public: property?.is_public ?? true,
     },
   });
 

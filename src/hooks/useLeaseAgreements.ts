@@ -58,7 +58,8 @@ export function useLeaseAgreementByProperty(propertyId: string, tenantUserId?: s
   return useQuery({
     queryKey: ["lease-agreement", propertyId, tenantUserId],
     queryFn: async () => {
-      let query = (supabase.from("lease_agreements") as any)
+      let query = supabase
+        .from("lease_agreements")
         .select("*")
         .eq("property_id", propertyId);
 
@@ -164,7 +165,7 @@ export function useSignLeaseAgreement() {
           .single();
 
         if (fetchError) throw fetchError;
-        const currentData = current as any;
+        const currentData = current;
 
         // Only block if the LANDLORD has already signed.
         // Do NOT block when tenant_signed_at is set — that's the normal flow.

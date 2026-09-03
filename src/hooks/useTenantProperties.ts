@@ -36,11 +36,11 @@ export function useTenantProperties() {
       const map = new Map<string, TenantProperty>();
 
       for (const row of tenantRows || []) {
-        const p = row.properties as any;
+        const p = row.properties;
         if (p?.id) map.set(p.id, { id: p.id, name: p.name, address: p.address });
       }
       for (const row of bookingRows || []) {
-        const p = row.properties as any;
+        const p = row.properties;
         if (p?.id) map.set(p.id, { id: p.id, name: p.name, address: p.address });
       }
 
