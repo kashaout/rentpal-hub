@@ -62,7 +62,7 @@ interface PropertyDetailViewProps {
 export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: PropertyDetailViewProps) {
   const { data: publicProperty, isLoading: publicLoading } = usePublicProperty(propertyId);
   // Tenant detail view always reads from the public listing (safe columns only)
-  const property = publicProperty as any;
+  const property = publicProperty;
   const isLoading = publicLoading;
   const { data: bookings } = usePropertyBookings(propertyId);
   const createBooking = useCreateBooking();

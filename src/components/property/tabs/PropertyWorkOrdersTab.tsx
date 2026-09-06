@@ -57,7 +57,7 @@ export function PropertyWorkOrdersTab({ propertyId }: Props) {
             {workOrders.map((wo) => (
               <TableRow key={wo.id}>
                 <TableCell className="font-medium">
-                  {(wo.maintenance_requests as any)?.title || "Work Order"}
+                  {wo.maintenance_requests?.title || "Work Order"}
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className="capitalize">{wo.severity}</Badge>

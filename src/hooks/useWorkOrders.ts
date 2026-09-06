@@ -4,6 +4,25 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
+/**
+ * Work-order writes also change what the maintenance dashboards show
+ * (landlord view, tenant view, assigned-staff view, property tab, lifecycle).
+ * Keep this list in sync when a new work-order consumer is added.
+ */
+function invalidateWorkOrderSurfaces(queryClient: ReturnType<typeof useQueryClient>) {
+  [
+    "work-orders",
+    "property-work-orders",
+    "maintenance-requests",
+    "maintenance-assigned-view",
+    "landlord-maintenance-view",
+    "tenant-maintenance-view",
+    "landlord-lifecycle",
+    "tenant-lifecycle",
+  ].forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
+}
+
+
 export const WORK_ORDER_STATUSES = [
   "created",
   "assigned",
@@ -160,7 +179,7 @@ export function useCreateWorkOrder() {
       return data as unknown as WorkOrder;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["work-orders"] });
+      invalidateWorkOrderSurfaces(queryClient);
       toast.success("Work order created");
     },
     onError: (error: Error) => {
@@ -253,7 +272,7 @@ export function useUpdateWorkOrderStatus() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["work-orders"] });
+      invalidateWorkOrderSurfaces(queryClient);
       toast.success("Work order updated");
     },
     onError: (error: Error) => {
