@@ -160,7 +160,7 @@ export function useCreateWorkOrder() {
       return data as unknown as WorkOrder;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["work-orders"] });
+      invalidateWorkOrderSurfaces(queryClient);
       toast.success("Work order created");
     },
     onError: (error: Error) => {
@@ -253,7 +253,7 @@ export function useUpdateWorkOrderStatus() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["work-orders"] });
+      invalidateWorkOrderSurfaces(queryClient);
       toast.success("Work order updated");
     },
     onError: (error: Error) => {
