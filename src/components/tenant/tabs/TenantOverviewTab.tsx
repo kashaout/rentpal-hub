@@ -141,7 +141,7 @@ export function TenantOverviewTab({ lease }: Props) {
       </Card>
 
       <NotesSection
-        notes={lease.notes ?? null}
+        notes={(lease as any).notes || null}
         onSave={async (notes) => {
           await supabase.from("tenants").update({ notes }).eq("id", lease.id);
         }}
