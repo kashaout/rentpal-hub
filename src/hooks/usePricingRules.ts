@@ -3,6 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { sanitizeErrorMessage } from "@/lib/errorUtils";
+import type { Database } from "@/integrations/supabase/types";
+
+type PricingRuleUpdate = Database["public"]["Tables"]["pricing_rules"]["Update"];
 
 export interface PricingRule {
   id: string;
@@ -76,7 +79,7 @@ export function useUpdatePricingRule() {
     mutationFn: async ({ id, ...patch }: Partial<PricingRule> & { id: string }) => {
       const { error } = await supabase
         .from("pricing_rules")
-        .update(patch as any)
+        .update(patch as PricingRuleUpdate)
         .eq("id", id);
       if (error) throw error;
     },
