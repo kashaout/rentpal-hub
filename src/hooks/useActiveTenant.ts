@@ -1,5 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -29,7 +28,6 @@ export interface ActiveTenancy {
  */
 export function useActiveTenant() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: ["active-tenant", user?.id],

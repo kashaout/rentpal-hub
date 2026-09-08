@@ -1,5 +1,5 @@
-import { useMemo, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { Database } from "@/integrations/supabase/types";
@@ -206,7 +206,6 @@ const empty: LandlordLifecycleSnapshot = {
 
 export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const userId = user?.id;
 
 
