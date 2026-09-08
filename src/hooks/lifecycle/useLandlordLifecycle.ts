@@ -209,20 +209,6 @@ export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
   const queryClient = useQueryClient();
   const userId = user?.id;
 
-  useEffect(() => {
-    if (!userId) return;
-    const ch = supabase
-      .channel(`landlord-lifecycle-${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "lease_agreements", filter: `landlord_user_id=eq.${userId}` },
-        () => queryClient.invalidateQueries({ queryKey: ["landlord-lifecycle", userId] })
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
-  }, [userId, queryClient]);
 
   const query = useQuery({
     queryKey: ["landlord-lifecycle", userId],

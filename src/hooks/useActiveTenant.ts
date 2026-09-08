@@ -92,31 +92,6 @@ export function useActiveTenant() {
     staleTime: 30_000,
   });
 
-  // Realtime: refetch the moment the lease state changes
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const channel = supabase
-      .channel(`active-tenant-${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "lease_agreements",
-          filter: `tenant_user_id=eq.${user.id}`,
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["active-tenant", user.id] });
-          queryClient.invalidateQueries({ queryKey: ["lease-agreements"] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, queryClient]);
 
   return {
     ...query,
