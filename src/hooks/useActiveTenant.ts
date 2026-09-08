@@ -1,5 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -29,7 +28,6 @@ export interface ActiveTenancy {
  */
 export function useActiveTenant() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: ["active-tenant", user?.id],
@@ -92,31 +90,6 @@ export function useActiveTenant() {
     staleTime: 30_000,
   });
 
-  // Realtime: refetch the moment the lease state changes
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const channel = supabase
-      .channel(`active-tenant-${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "lease_agreements",
-          filter: `tenant_user_id=eq.${user.id}`,
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["active-tenant", user.id] });
-          queryClient.invalidateQueries({ queryKey: ["lease-agreements"] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, queryClient]);
 
   return {
     ...query,

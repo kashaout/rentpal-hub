@@ -1,5 +1,5 @@
-import { useMemo, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { Database } from "@/integrations/supabase/types";
@@ -80,29 +80,8 @@ const empty: TenantLifecycleSnapshot = {
 
 export function useTenantLifecycle(): TenantLifecycleSnapshot {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const userId = user?.id;
 
-  // Realtime: refetch when bookings/leases/payments for this tenant change
-  useEffect(() => {
-    if (!userId) return;
-    const ch = supabase
-      .channel(`tenant-lifecycle-${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "bookings", filter: `user_id=eq.${userId}` },
-        () => queryClient.invalidateQueries({ queryKey: ["tenant-lifecycle", userId] })
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "lease_agreements", filter: `tenant_user_id=eq.${userId}` },
-        () => queryClient.invalidateQueries({ queryKey: ["tenant-lifecycle", userId] })
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
-  }, [userId, queryClient]);
 
   const query = useQuery({
     queryKey: ["tenant-lifecycle", userId],

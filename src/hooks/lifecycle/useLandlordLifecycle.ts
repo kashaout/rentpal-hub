@@ -1,5 +1,5 @@
-import { useMemo, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { Database } from "@/integrations/supabase/types";
@@ -206,23 +206,8 @@ const empty: LandlordLifecycleSnapshot = {
 
 export function useLandlordLifecycle(): LandlordLifecycleSnapshot {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const userId = user?.id;
 
-  useEffect(() => {
-    if (!userId) return;
-    const ch = supabase
-      .channel(`landlord-lifecycle-${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "lease_agreements", filter: `landlord_user_id=eq.${userId}` },
-        () => queryClient.invalidateQueries({ queryKey: ["landlord-lifecycle", userId] })
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
-  }, [userId, queryClient]);
 
   const query = useQuery({
     queryKey: ["landlord-lifecycle", userId],
