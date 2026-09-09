@@ -32,6 +32,11 @@ export function IdentityWizard({ onComplete }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    if (savedDob) setDob(savedDob);
+  }, [savedDob]);
+
+
   const submit = async () => {
     if (!user?.id) return;
     if (!dob || !idNumber || !address || !file) {
