@@ -48,6 +48,14 @@ export interface UpdatePropertyData extends Partial<CreatePropertyData> {
   id: string;
 }
 
+/** Refresh every cache that renders property data, including the landlord
+ *  lifecycle chain the dashboard reads from. */
+function invalidatePropertySurfaces(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ["properties"] });
+  queryClient.invalidateQueries({ queryKey: ["landlord-lifecycle"] });
+  queryClient.invalidateQueries({ queryKey: ["tenant-lifecycle"] });
+}
+
 /**
  * THIN ADAPTER over useLandlordLifecycle.
  * All read-side property data flows through the canonical chain
@@ -154,7 +162,7 @@ export function useCreateProperty() {
       return property;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      invalidatePropertySurfaces(queryClient);
       toast({ title: "Property created successfully!" });
     },
     onError: (error: Error) => {
@@ -184,7 +192,7 @@ export function useUpdateProperty() {
       return property;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      invalidatePropertySurfaces(queryClient);
       queryClient.invalidateQueries({ queryKey: ["property", variables.id] });
       toast({ title: "Property updated successfully!" });
     },
@@ -230,7 +238,7 @@ export function useDeleteProperty() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
+      invalidatePropertySurfaces(queryClient);
       toast({ title: "Property archived successfully!" });
     },
     onError: (error: Error) => {

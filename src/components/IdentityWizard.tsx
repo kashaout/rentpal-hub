@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ShieldCheck, Upload, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,13 +22,20 @@ interface Props {
  * lease/booking can be created.
  */
 export function IdentityWizard({ onComplete }: Props) {
-  const { user, refreshRoles } = useAuth();
+  const { user, profile, refreshRoles } = useAuth();
   const { toast } = useToast();
-  const [dob, setDob] = useState("");
+  // Date of birth is captured at sign-up — reuse it instead of asking twice.
+  const savedDob = profile?.date_of_birth ?? "";
+  const [dob, setDob] = useState(savedDob);
   const [idNumber, setIdNumber] = useState("");
   const [address, setAddress] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (savedDob) setDob(savedDob);
+  }, [savedDob]);
+
 
   const submit = async () => {
     if (!user?.id) return;
@@ -84,7 +91,17 @@ export function IdentityWizard({ onComplete }: Props) {
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="dob">Date of birth</Label>
-              <Input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} max={new Date().toISOString().split("T")[0]} />
+              <Input
+                id="dob"
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                max={new Date().toISOString().split("T")[0]}
+                disabled={!!savedDob}
+              />
+              {savedDob && (
+                <p className="text-xs text-muted-foreground">Taken from your sign-up details.</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="gid">Government ID number</Label>

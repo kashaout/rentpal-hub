@@ -19,7 +19,13 @@ interface AuthContextType {
   roles: AppRole[];
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string, role?: "landlord" | "tenant") => Promise<{ error: Error | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    role?: "landlord" | "tenant",
+    dateOfBirth?: string,
+  ) => Promise<{ error: Error | null; needsEmailConfirmation: boolean }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
   /** Re-fetch the current user's profile + roles from the server. Use after onboarding/role changes. */
@@ -144,18 +150,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = useCallback(
-    async (email: string, password: string, fullName: string, role?: "landlord" | "tenant") => {
-      const { error } = await supabase.auth.signUp({
+    async (
+      email: string,
+      password: string,
+      fullName: string,
+      role?: "landlord" | "tenant",
+      dateOfBirth?: string,
+    ) => {
+      const metadata: Record<string, string> = { full_name: fullName };
+      if (role) metadata.role = role;
+      if (dateOfBirth) metadata.date_of_birth = dateOfBirth;
+
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: window.location.origin,
-          data: role ? { full_name: fullName, role } : { full_name: fullName },
+          data: metadata,
         },
       });
 
-      if (error) return { error: new Error(error.message) };
-      return { error: null };
+      if (error) return { error: new Error(error.message), needsEmailConfirmation: false };
+      return { error: null, needsEmailConfirmation: !data.session };
     },
     []
   );

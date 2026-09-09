@@ -7,6 +7,7 @@ import {
   assertAuthUser,
   MutationSafetyError,
 } from "@/lib/mutationSafety";
+import { assertIdentityComplete } from "@/lib/identityGuard";
 
 export interface LeaseAgreement {
   id: string;
@@ -93,6 +94,9 @@ export function useCreateLeaseAgreement() {
       // 2) Verify auth session matches the tenant user on the lease
       const { data: sessionData } = await supabase.auth.getUser();
       assertAuthUser(sessionData?.user?.id, data.tenant_user_id);
+
+      // 2b) Identity verification is mandatory before any lease can exist
+      await assertIdentityComplete(sessionData?.user?.id);
 
       // 3) Verify property exists and landlord matches — use the same
       // SECURITY DEFINER RPC that tenants use to browse listings, so this

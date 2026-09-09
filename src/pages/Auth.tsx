@@ -21,6 +21,7 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
   const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -91,19 +92,58 @@ export default function Auth() {
           navigate("/dashboard");
         }
       } else {
-        const { error } = await signUp(email, password, fullName);
+        const { error, needsEmailConfirmation } = await signUp(
+          email,
+          password,
+          fullName,
+          undefined,
+          dateOfBirth,
+        );
         if (error) {
           toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
         } else {
           resetRateLimit();
-          toast({ title: "Account created successfully!" });
-          navigate("/dashboard");
+          if (needsEmailConfirmation) {
+            setPendingEmail(email);
+            toast({ title: "Check your email", description: "Confirm your address to finish signing up." });
+          } else {
+            toast({ title: "Account created successfully!" });
+            navigate("/dashboard");
+          }
         }
       }
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (pendingEmail) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md rounded-2xl border bg-card p-8 shadow-elevated text-center space-y-4">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+            <Mail className="h-7 w-7 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground">Check your email</h2>
+          <p className="text-sm text-muted-foreground">
+            We sent a confirmation link to <span className="font-semibold text-foreground">{pendingEmail}</span>.
+            Open it to activate your account, then come back and sign in.
+          </p>
+          <Button
+            variant="outline"
+            className="w-full rounded-xl"
+            onClick={() => {
+              setPendingEmail(null);
+              setIsLogin(true);
+              setPassword("");
+            }}
+          >
+            Back to sign in
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
