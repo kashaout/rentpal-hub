@@ -94,6 +94,9 @@ export function useCreateLeaseAgreement() {
       const { data: sessionData } = await supabase.auth.getUser();
       assertAuthUser(sessionData?.user?.id, data.tenant_user_id);
 
+      // 2b) Identity verification is mandatory before any lease can exist
+      await assertIdentityComplete(sessionData?.user?.id);
+
       // 3) Verify property exists and landlord matches — use the same
       // SECURITY DEFINER RPC that tenants use to browse listings, so this
       // check works under tenant RLS (direct reads on `properties` are blocked).
