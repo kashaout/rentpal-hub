@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ShieldCheck, Upload, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -86,7 +86,17 @@ export function IdentityWizard({ onComplete }: Props) {
           <div className="space-y-3">
             <div className="space-y-1.5">
               <Label htmlFor="dob">Date of birth</Label>
-              <Input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} max={new Date().toISOString().split("T")[0]} />
+              <Input
+                id="dob"
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                max={new Date().toISOString().split("T")[0]}
+                disabled={!!savedDob}
+              />
+              {savedDob && (
+                <p className="text-xs text-muted-foreground">Taken from your sign-up details.</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="gid">Government ID number</Label>
