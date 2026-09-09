@@ -97,12 +97,18 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   };
 
   const handleComplete = async () => {
+    // A role is mandatory — onboarding cannot be finished without one.
+    if (!uxRole) {
+      setPhase("role");
+      return;
+    }
     setCompleting(true);
     if (user?.id) {
       await supabase
         .from("profiles")
-        .update({ onboarding_completed: true })
+        .update({ ux_role: uxRole, onboarding_completed: true })
         .eq("user_id", user.id);
+      await refreshRoles();
     }
     setCompleting(false);
     onComplete();
@@ -142,9 +148,9 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
               Continue <ArrowRight className="h-4 w-4" />
             </Button>
 
-            <button onClick={handleComplete} className="block mx-auto text-xs text-muted-foreground hover:text-foreground underline">
-              Skip onboarding
-            </button>
+            <p className="text-center text-xs text-muted-foreground">
+              Please choose an option to continue.
+            </p>
           </CardContent>
         </Card>
       </div>
