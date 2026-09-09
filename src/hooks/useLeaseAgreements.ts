@@ -7,6 +7,7 @@ import {
   assertAuthUser,
   MutationSafetyError,
 } from "@/lib/mutationSafety";
+import { assertIdentityComplete } from "@/lib/identityGuard";
 
 export interface LeaseAgreement {
   id: string;
