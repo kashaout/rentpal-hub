@@ -21,6 +21,7 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
   const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -91,13 +92,24 @@ export default function Auth() {
           navigate("/dashboard");
         }
       } else {
-        const { error } = await signUp(email, password, fullName);
+        const { error, needsEmailConfirmation } = await signUp(
+          email,
+          password,
+          fullName,
+          undefined,
+          dateOfBirth,
+        );
         if (error) {
           toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
         } else {
           resetRateLimit();
-          toast({ title: "Account created successfully!" });
-          navigate("/dashboard");
+          if (needsEmailConfirmation) {
+            setPendingEmail(email);
+            toast({ title: "Check your email", description: "Confirm your address to finish signing up." });
+          } else {
+            toast({ title: "Account created successfully!" });
+            navigate("/dashboard");
+          }
         }
       }
     } finally {
