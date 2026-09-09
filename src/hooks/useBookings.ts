@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { sanitizeErrorMessage } from "@/lib/errorUtils";
 import { applyPricingRules } from "@/lib/pricing/applyPricingRules";
+import { assertIdentityComplete } from "@/lib/identityGuard";
 
 export interface Booking {
   id: string;
@@ -122,6 +123,7 @@ export function useSoftLockBooking() {
 
   return useMutation({
     mutationFn: async (data: CreateBookingData) => {
+      await assertIdentityComplete(user?.id);
       const softLockExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
       const snap = await buildPricingSnapshot(data);
       const { landlord_id, promo_code, months, nights, ...insertData } = data;
@@ -169,6 +171,7 @@ export function useCreateBooking() {
 
   return useMutation({
     mutationFn: async (data: CreateBookingData) => {
+      await assertIdentityComplete(user?.id);
       const snap = await buildPricingSnapshot(data);
       const { landlord_id, promo_code, months, nights, ...insertData } = data;
       const { data: booking, error } = await supabase
