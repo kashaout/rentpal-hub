@@ -17,7 +17,7 @@ import logoImg from "@/assets/rentpal-logo.png";
 import { PLAN_CONFIGS, type SubscriptionPlan } from "@/hooks/useSubscription";
 import { PublicHelpWidget } from "@/components/PublicHelpWidget";
 
-const APP_AUTH_URL = "https://rentpal-hub.lovable.app/auth";
+const APP_AUTH_URL = "/auth";
 
 const NAV_LINKS = [
   { label: "Properties", href: "/properties" },
@@ -97,12 +97,12 @@ export default function Landing() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-3">
-            <a href={APP_AUTH_URL}>
+            <Link to={APP_AUTH_URL}>
               <Button variant="ghost" size="sm">Login</Button>
-            </a>
-            <a href={APP_AUTH_URL}>
+            </Link>
+            <Link to={APP_AUTH_URL}>
               <Button size="sm" className="gap-1">Sign Up <ArrowRight className="h-3 w-3" /></Button>
-            </a>
+            </Link>
           </div>
 
           <button className="lg:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
@@ -120,8 +120,8 @@ export default function Landing() {
               )
             )}
             <div className="flex gap-2 pt-2">
-              <a href={APP_AUTH_URL} className="flex-1"><Button variant="outline" className="w-full" size="sm">Login</Button></a>
-              <a href={APP_AUTH_URL} className="flex-1"><Button className="w-full" size="sm">Sign Up</Button></a>
+              <Link to={APP_AUTH_URL} className="flex-1"><Button variant="outline" className="w-full" size="sm">Login</Button></Link>
+              <Link to={APP_AUTH_URL} className="flex-1"><Button className="w-full" size="sm">Sign Up</Button></Link>
             </div>
           </div>
         )}
@@ -143,11 +143,11 @@ export default function Landing() {
               RentPal is the all-in-one platform for landlords and property managers to manage tenants, maintenance, documents, and finances in one place.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
-              <a href={APP_AUTH_URL}>
+              <Link to={APP_AUTH_URL}>
                 <Button size="lg" className="gap-2 text-base h-12 px-8">
                   Get Started <ArrowRight className="h-4 w-4" />
                 </Button>
-              </a>
+              </Link>
               <a href="#pricing">
                 <Button variant="outline" size="lg" className="gap-2 text-base h-12 px-8">
                   View Plans
@@ -307,11 +307,11 @@ export default function Landing() {
                         );
                       })}
                     </ul>
-                    <a href={APP_AUTH_URL}>
+                    <Link to={APP_AUTH_URL}>
                       <Button className="w-full" variant={isPro ? "default" : "secondary"}>
                         {planKey === "free" ? "Get Started Free" : "Subscribe"}
                       </Button>
-                    </a>
+                    </Link>
                   </CardContent>
                 </Card>
               );
@@ -386,11 +386,11 @@ export default function Landing() {
             Join landlords and property managers who've ditched spreadsheets for RentPal.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <a href={APP_AUTH_URL}>
+            <Link to={APP_AUTH_URL}>
               <Button size="lg" variant="secondary" className="gap-2 text-base h-12 px-8">
                 Start Free Today <ArrowRight className="h-4 w-4" />
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
