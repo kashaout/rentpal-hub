@@ -209,8 +209,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             )}
           </div>
 
-          <button onClick={handleComplete} className="block mx-auto text-xs text-muted-foreground hover:text-foreground underline">
-            Skip onboarding
+          <button onClick={handleComplete} disabled={completing} className="block mx-auto text-xs text-muted-foreground hover:text-foreground underline">
+            Skip tips
           </button>
         </CardContent>
       </Card>

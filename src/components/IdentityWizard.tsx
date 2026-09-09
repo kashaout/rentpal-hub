@@ -22,9 +22,11 @@ interface Props {
  * lease/booking can be created.
  */
 export function IdentityWizard({ onComplete }: Props) {
-  const { user, refreshRoles } = useAuth();
+  const { user, profile, refreshRoles } = useAuth();
   const { toast } = useToast();
-  const [dob, setDob] = useState("");
+  // Date of birth is captured at sign-up — reuse it instead of asking twice.
+  const savedDob = profile?.date_of_birth ?? "";
+  const [dob, setDob] = useState(savedDob);
   const [idNumber, setIdNumber] = useState("");
   const [address, setAddress] = useState("");
   const [file, setFile] = useState<File | null>(null);
