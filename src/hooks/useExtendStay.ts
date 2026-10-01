@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { getSafeErrorMessage } from "@/lib/errorUtils";
+import { sanitizeErrorMessage } from "@/lib/errorUtils";
 
 /** Stays end at 12:00 noon Lagos time (UTC+1, no DST) on the end date. Mirrors public.stay_end_at(). */
 export function stayEndAt(endDate: string): Date {
@@ -46,7 +46,7 @@ export function useExtendStay() {
       toast.success("Your stay has been extended");
     },
     onError: (error: unknown) => {
-      toast.error(getSafeErrorMessage(error));
+      toast.error(sanitizeErrorMessage(error instanceof Error ? error : String((error as { message?: string })?.message ?? error)));
     },
   });
 }
