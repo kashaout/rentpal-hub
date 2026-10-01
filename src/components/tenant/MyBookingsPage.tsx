@@ -76,7 +76,7 @@ export function MyBookingsPage() {
                       <Badge className="bg-warning/10 text-warning text-xs">Pending Landlord Signature</Badge>
                     )}
                   </div>
-                  {lease.status === "active" && !lease.checked_out_at && (
+                  {lease.status === "active" && (
                     <ExtendStayControl endDate={lease.lease_end} leaseId={lease.id} />
                   )}
                 </CardContent>
