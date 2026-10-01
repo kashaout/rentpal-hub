@@ -7,6 +7,7 @@ import { useMyBookings, useCancelBooking } from "@/hooks/useBookings";
 import { useMyLeaseAgreements } from "@/hooks/useLeaseAgreements";
 import { formatCurrency } from "@/lib/formatCurrency";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ExtendStayControl } from "@/components/tenant/ExtendStayControl";
 
 const statusStyles: Record<string, string> = {
   pending: "bg-warning/10 text-warning border-warning/20",
@@ -75,6 +76,9 @@ export function MyBookingsPage() {
                       <Badge className="bg-warning/10 text-warning text-xs">Pending Landlord Signature</Badge>
                     )}
                   </div>
+                  {lease.status === "active" && (
+                    <ExtendStayControl endDate={lease.lease_end} leaseId={lease.id} />
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -128,6 +132,9 @@ export function MyBookingsPage() {
                     );
                   })()}
                   <Badge variant="outline" className="capitalize text-xs">{booking.payment_status}</Badge>
+                  {(booking.status === "pending" || booking.status === "confirmed") && !booking.is_soft_lock && (
+                    <ExtendStayControl endDate={booking.check_out} bookingId={booking.id} />
+                  )}
                   {booking.status === "pending" && (
                     <Button
                       variant="outline"

@@ -46,6 +46,10 @@ serve(async (req) => {
 
     // 2. Release expired unpaid bookings (24h timeout)
     await supabaseClient.rpc("release_expired_bookings");
+
+    // 2b. End stays past checkout/lease end that were not extended (frees the unit)
+    const { data: released } = await supabaseClient.rpc("release_expired_stays");
+    results.stays_released = released;
     
     // 3. Auto-release payouts for completed bookings (24h after checkout, no disputes)
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];

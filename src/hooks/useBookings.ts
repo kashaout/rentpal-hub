@@ -79,6 +79,7 @@ export function usePropertyBookings(propertyId: string) {
     queryKey: ["bookings", propertyId],
     queryFn: async () => {
       // Release expired soft locks and bookings
+      await supabase.rpc("release_expired_stays");
       await supabase.rpc("release_expired_bookings");
       await supabase.rpc("release_soft_locks");
 

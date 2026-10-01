@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -2332,6 +2332,10 @@ export type Database = {
         }[]
       }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
+      extend_stay: {
+        Args: { _booking_id?: string; _extra_days?: number; _lease_id?: string }
+        Returns: Json
+      }
       get_consultant_tenants: {
         Args: { _property_id?: string }
         Returns: {
@@ -2437,6 +2441,7 @@ export type Database = {
         Returns: undefined
       }
       release_expired_bookings: { Args: never; Returns: undefined }
+      release_expired_stays: { Args: never; Returns: Json }
       release_soft_locks: { Args: never; Returns: undefined }
       rpc_admin_all_properties: {
         Args: never
@@ -2571,6 +2576,7 @@ export type Database = {
         }[]
       }
       sign_lease_as_tenant: { Args: { _lease_id: string }; Returns: undefined }
+      stay_end_at: { Args: { _d: string }; Returns: string }
     }
     Enums: {
       app_role:
