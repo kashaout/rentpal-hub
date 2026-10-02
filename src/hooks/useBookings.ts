@@ -78,9 +78,8 @@ export function usePropertyBookings(propertyId: string) {
   return useQuery({
     queryKey: ["bookings", propertyId],
     queryFn: async () => {
-      // Release expired soft locks and bookings
-      await supabase.rpc("release_expired_stays");
-      await supabase.rpc("release_expired_bookings");
+      // Expired stays/bookings are released by the background reconciliation job
+      // (service role only). Soft locks keep their existing on-read cleanup.
       await supabase.rpc("release_soft_locks");
 
       const { data, error } = await supabase
