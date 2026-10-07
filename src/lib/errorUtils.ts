@@ -64,6 +64,11 @@ export function sanitizeErrorMessage(error: Error | string): string {
     return 'An account with this email already exists';
   }
   
+  // Booking date conflicts (raised by the overlap guard)
+  if (lowerMessage.includes('no longer available')) {
+    return 'These dates are no longer available for this property';
+  }
+
   // Generic fallback - don't expose internal details
   return 'An error occurred. Please try again or contact support if the problem persists.';
 }
