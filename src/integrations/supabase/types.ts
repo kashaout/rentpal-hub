@@ -762,6 +762,24 @@ export type Database = {
           },
         ]
       }
+      internal_job_secrets: {
+        Row: {
+          created_at: string
+          name: string
+          secret: string
+        }
+        Insert: {
+          created_at?: string
+          name: string
+          secret: string
+        }
+        Update: {
+          created_at?: string
+          name?: string
+          secret?: string
+        }
+        Relationships: []
+      }
       landlord_notifications: {
         Row: {
           created_at: string
@@ -2577,6 +2595,7 @@ export type Database = {
       }
       sign_lease_as_tenant: { Args: { _lease_id: string }; Returns: undefined }
       stay_end_at: { Args: { _d: string }; Returns: string }
+      verify_cron_secret: { Args: { _secret: string }; Returns: boolean }
     }
     Enums: {
       app_role:
