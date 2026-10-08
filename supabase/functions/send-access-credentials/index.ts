@@ -1,3 +1,4 @@
+import { isAuthorizedCronCall } from "../_shared/cronAuth.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -36,9 +37,7 @@ serve(async (req) => {
   }
 
   // Authenticate cron/scheduled calls via shared secret
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  const incomingSecret = req.headers.get("x-cron-secret");
-  if (!cronSecret || incomingSecret !== cronSecret) {
+  if (!(await isAuthorizedCronCall(req))) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
