@@ -238,21 +238,8 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
       await signAgreement.mutateAsync({ agreementId: agreement.id, role: "tenant" });
       setAgreementSigned(true);
 
-      // Create tenant record
-      try {
-        await supabase.from("tenants").insert({
-          property_id: property.id,
-          user_id: user.id,
-          unit_number: unitNumber,
-          lease_start: format(selectedRange.from, "yyyy-MM-dd"),
-          lease_end: format(selectedRange.to, "yyyy-MM-dd"),
-          rent_amount: Number(property.monthly_rent),
-          tenant_type: isAirbnb ? "short_stay" : "long_stay",
-          payment_status: "pending",
-        });
-      } catch (e) {
-        console.error("Failed to create tenant record:", e);
-      }
+      // The tenancy record is created by the database once both parties sign
+      // (lease activation lifecycle); tenants are not allowed to insert it directly.
 
       // For airbnb, also create booking
       if (isAirbnb) {
@@ -427,7 +414,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
         {rentalStep === "dates" && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">Select your lease period:</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               <DateTimePicker
                 label="Check-in"
                 date={selectedRange.from}
@@ -851,7 +838,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
                 rentalStep !== "browse" ? renderWizardSteps() : (
                 <>
                   {/* Airbnb date+time pickers in sidebar */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3">
                     <DateTimePicker
                       label="Check-in"
                       date={selectedRange.from}
