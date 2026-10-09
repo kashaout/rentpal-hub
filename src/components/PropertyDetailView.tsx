@@ -427,7 +427,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
         {rentalStep === "dates" && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">Select your lease period:</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               <DateTimePicker
                 label="Check-in"
                 date={selectedRange.from}
@@ -851,7 +851,7 @@ export function PropertyDetailView({ propertyId, onBack, paymentSuccess }: Prope
                 rentalStep !== "browse" ? renderWizardSteps() : (
                 <>
                   {/* Airbnb date+time pickers in sidebar */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3">
                     <DateTimePicker
                       label="Check-in"
                       date={selectedRange.from}
