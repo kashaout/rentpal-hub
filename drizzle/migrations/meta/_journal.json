@@ -15,6 +15,13 @@
       "when": 1791438462793,
       "tag": "0001_cron_jobs_send_secret",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791715712143,
+      "tag": "0002_enforce_bookable_listing_with_qa_exception",
+      "breakpoints": true
     }
   ]
 }
