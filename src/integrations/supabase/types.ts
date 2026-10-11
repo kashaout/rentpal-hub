@@ -1533,6 +1533,42 @@ export type Database = {
           },
         ]
       }
+      qa_listing_access: {
+        Row: {
+          created_at: string
+          expires_at: string
+          property_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          property_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          property_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_listing_access_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "admin_all_properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qa_listing_access_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rate_limits: {
         Row: {
           attempts: number
@@ -2426,6 +2462,10 @@ export type Database = {
           plan: Database["public"]["Enums"]["subscription_plan"]
           property_limit: number
         }[]
+      }
+      has_qa_listing_access: {
+        Args: { _property_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {
